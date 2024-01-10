@@ -1,0 +1,25 @@
+# Dependency directories
+node_modules/
+
+# Build output
+build/
+dist/
+
+# Editor-specific files
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Cache and testing files
+.nyc_output/
+coverage/
+.cache/
+
+# Logs
+*.log
+
+# npm lock file
+package-lock.json
