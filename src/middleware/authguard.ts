@@ -24,4 +24,17 @@ export default class AuthGuard {
             return appConstant.MESSAGES.INVALID_TOKEN;
         }
     }
+
+    /**
+     * Generate Auth token
+     */
+
+    generateAuthToken = (userData: Record<string, any>) => jwt.sign({
+        id: userData.ID,
+        userId: userData.UserId,
+        email: userData.Email,
+        displayName: userData.DisplayName,
+    },
+        `${process.env.SECRECT_KEY}`
+    )
 }
