@@ -117,7 +117,7 @@ export default class UserService {
                     if (error) {
                         logger.error(appConstant.LOGGER_MESSAGE.EMAIL_SEND_FAILED)
                     } else {
-                        logger.error(appConstant.LOGGER_MESSAGE.EMAIL_SEND)
+                        logger.info(appConstant.LOGGER_MESSAGE.EMAIL_SEND)
                     }
                 });
 

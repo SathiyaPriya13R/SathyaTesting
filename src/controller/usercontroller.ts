@@ -47,7 +47,7 @@ export default class UserController {
             await userService.forgetPassword(email_address).then((data) => {
                 logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_GENERATION);
                 const finalRes = {
-                    message: appConstant.MESSAGES.LINK_GENERATED
+                    data: encrypt(JSON.stringify({message: appConstant.MESSAGES.LINK_GENERATED}))
                 }
                 res.status(200).json(finalRes);
             })
