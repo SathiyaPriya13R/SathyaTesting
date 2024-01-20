@@ -1,5 +1,5 @@
 import express from 'express';
-import AppConstants from '../src/utls/constants';
+import AppConstants from '../src/utils/constants';
 import bodyParser from 'body-parser';
 const logger = require('./helpers/logger');
 const routes = require('./routes/route')

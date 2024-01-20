@@ -1,6 +1,6 @@
 import { Sequelize, Transaction } from "sequelize";
 import * as _ from 'lodash';
-import AppConstants from "../utls/constants";
+import AppConstants from "../utils/constants";
 import { sequelizeObj } from "./sequelizeobj";
 
 

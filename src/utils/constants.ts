@@ -10,6 +10,17 @@ export default class AppConstants {
     LOGGER_MESSAGE = {
         GET_DATA_TOKEN_FAILED: "getDataByToken - Error:",
         GET_DATA_TOKEN_INVALID: "getDataByToken - Invalid token",
+        LOGIN_STARTED: 'Login funcation is started',
+        LOGIN_FAILED: 'Login funcation is failed',
+        LOGIN_COMPLETED: 'Login funcation is completed',
+        PASSWORD_GENERATION: 'Password generated successful',
+        PASSWORD_GENERATION_FAILED: 'Password generated failed',
+        FORGET_PASSWORD: "Forget password function initiated",
+        EMAIL_SEND: "Email send successful",
+        EMAIL_SEND_FAILED: "Email send failed",
+        FORGET_PASSWORD_COMPLETED: "Forget password function completed",
+        FORGET_PASSWORD_FAILED: "Forget password failed",
+        USER_NOT_FOUND: "User Not found for the email you provide"
     }
     MESSAGES = {
         EMPTY_TOKEN:
@@ -19,5 +30,13 @@ export default class AppConstants {
         INVALID_TOKEN:
             "Invalid token. Please provide a valid authentication token.",
         PORT_LISTEN: "Server is now running on port ",
+        LINK_GENERATED: "Password link Generated",
+        UPDATED_PASSWORD: "Password has been updated",
     };
+    ERROR_MESSAGE = {
+        INVALID_EMAIL: 'Enterted email is not valid',
+        NOT_USER: 'Enterted Email is not valid user',
+    };
+
+    USER_TYPE = ['Group', 'Provider']
 }

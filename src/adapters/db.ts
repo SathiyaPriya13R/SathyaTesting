@@ -2,6 +2,7 @@ import { hostname } from 'os';
 import AppDatabase from '../database/connect';
 import { UserFactory } from '../model/user';
 import { LookUpValueFactory } from '../model/lookupvalue';
+import { PGroupFactory } from '../model/providergroup';
 require('dotenv').config();
 
 const access = {
@@ -17,3 +18,4 @@ export const user = db.init();
 
 export const User = UserFactory(user);
 export const lookupValue = LookUpValueFactory(user);
+export const ProviderGroup = PGroupFactory(user);

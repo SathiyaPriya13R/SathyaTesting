@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
-import AppConstants from '../utls/constants';
+import AppConstants from '../utils/constants';
 const logger = require('../helpers/logger');
 
 const appConstant = new AppConstants();

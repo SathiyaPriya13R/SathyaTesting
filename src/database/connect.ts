@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 const logger = require('../helpers/logger');
-import AppConstants from "../utls/constants";
+import AppConstants from "../utils/constants";
 import {Op} from "sequelize";
 const dotenv = require('dotenv');
 dotenv.config()
