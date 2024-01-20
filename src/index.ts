@@ -15,5 +15,5 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api',routes.route)
 
 app.listen(port, () => {
-    return console.log(`App is listing in port:${port}`);
+    return logger.info(`App is listing in port:${port}`);
 });

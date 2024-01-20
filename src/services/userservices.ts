@@ -98,8 +98,7 @@ export default class UserService {
                 const expireDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
                 // Create a transporter object
                 const transporter = nodemailer.createTransport({
-                    host: "mail.orcacred.com",
-                    port: 587,
+                    service: 'gmail',
                     secure: false,
                     auth: {
                         user: process.env.EMAIL_AUTH_USER,
@@ -113,16 +112,12 @@ export default class UserService {
                     subject: "Password Reset",
                     html: renderedTemplate
                 };
-                console.log('mailOptions  ---', mailOptions)
                 // Send the email
                 transporter.sendMail(mailOptions, function (error: any, info: { response: string; }) {
                     if (error) {
-                        console.log('error ------118', error)
                         logger.error(appConstant.LOGGER_MESSAGE.EMAIL_SEND_FAILED)
-                        console.log(error);
                     } else {
                         logger.error(appConstant.LOGGER_MESSAGE.EMAIL_SEND)
-                        console.log('Email sent: ' + info.response);
                     }
                 });
 
@@ -133,7 +128,6 @@ export default class UserService {
 
             }
         } catch (error: any) {
-            console.log('error ---', error);
             logger.error(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD_FAILED)
             throw new Error(error.message);
         }
