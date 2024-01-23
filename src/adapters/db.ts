@@ -3,6 +3,8 @@ import AppDatabase from '../database/connect';
 import { UserFactory } from '../model/user';
 import { LookUpValueFactory } from '../model/lookupvalue';
 import { PGroupFactory } from '../model/providergroup';
+import { ProviderGroupContactDetailFactory } from '../model/providergroupcontactdetail';
+import { ProviderDoctorFactory } from '../model/provider';
 require('dotenv').config();
 
 const access = {
@@ -19,3 +21,5 @@ export const user = db.init();
 export const User = UserFactory(user);
 export const lookupValue = LookUpValueFactory(user);
 export const ProviderGroup = PGroupFactory(user);
+export const ProviderGroupContact = ProviderGroupContactDetailFactory(user);
+export const ProviderDoctor = ProviderDoctorFactory(user);
