@@ -15,24 +15,29 @@ export default class UserController {
     async loginUser(req: Request, res: Response) {
         try {
             const decryptedData = decrypt(req.body.data);
-            const data = JSON.parse(decryptedData)
-            let { email, password } = data;
-            email = (email as string).toLowerCase();
-            const userData = {
-                Email: email,
-                PasswordHash: password,
-            }
-            await userService.loginUser(userData).then((data: any)=> {
-                if (data.error) {
-                    res.status(400).json(data.error)
-                } else {
-                    res.status(200).json(data);
+            if (decryptedData) {
+                const data = JSON.parse(decryptedData)
+                let { email, password } = data;
+                email = (email as string).toLowerCase();
+                const userData = {
+                    Email: email,
+                    PasswordHash: password,
                 }
-            }). catch((error)=>{
-                res.status(400).json(error);
-            })
+                await userService.loginUser(userData).then((data: any)=> {
+                    if (data.error) {
+                        res.status(400).send(data.error)
+                    } else {
+                        res.status(200).send(data);
+                    }
+                }). catch((error)=>{
+                    res.status(400).send(error);
+                });
+            } else {
+                res.status(400).send(appConstant.MESSAGES.DECRYPT_ERROR);
+            }
         } catch (error) {
             logger.error(error);
+            res.status(400).send(error);
         }
     }
     /**
@@ -49,10 +54,33 @@ export default class UserController {
                 const finalRes = {
                     data: encrypt(JSON.stringify({message: appConstant.MESSAGES.LINK_GENERATED}))
                 }
-                res.status(200).json(finalRes);
+                res.status(200).send(finalRes);
             })
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_GENERATION_FAILED} ${error.message}`);
+            res.status(400).send(error.message);
+        }
+    }
+
+    /**
+     * The below function is used to change the password if the user forgets
+     */
+    async changePassword(req: Request, res: Response): Promise<void> {
+        try {
+            const decryptedData = decrypt(req.body.data);
+            const data = JSON.parse(decryptedData)
+            const userid = data.id;
+            const password = data.password;
+            const type = data.type;
+            const finalResponse: any = await userService.updatePassword(userid, password, type,req, res);
+            logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE);
+            if(finalResponse == appConstant.MESSAGES.FAILED){
+                res.status(400).send(appConstant.ERROR_MESSAGE.RESETPWD_AS_OLD);
+            }else{
+                res.status(200).send(appConstant.MESSAGES.UPDATED_PASSWORD);
+            } 
+        } catch (error: any) {
+            // logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE_FAILED} ${error.message}`);
             res.status(400).send(error.message);
         }
     }
