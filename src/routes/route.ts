@@ -7,7 +7,8 @@ import UserController from "../controller/usercontroller";
 const authGuard = new AuthGuard();
 const users = new UserController();
 
-router.post('/signin' ,users.loginUser)
-router.post('/forgetPassword',users.forgetPassword)
+router.post('/signin' ,users.loginUser);
+router.post('/forgetPassword',users.forgetPassword);
+router.post('/resetPassword', users.changePassword);
 
 module.exports.route = router;

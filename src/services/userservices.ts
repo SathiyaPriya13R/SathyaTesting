@@ -12,9 +12,17 @@ const ejs = require('ejs');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const _ = require("lodash");
+const IORedis = require('ioredis');
 
 const appConstant = new AppConstants();
 const authGuard = new AuthGuard();
+
+const redisClient = new IORedis({
+    host: process.env.REDIS_SERVER_IP,
+    port: process.env.REDIS_SERVER_PORT,
+    password: process.env.REDIS_PASSWORD,
+    db: process.env.REDIS_SERVER_DEFAULT_DB,
+});
 
 export default class UserService {
     /**
@@ -24,50 +32,132 @@ export default class UserService {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.LOGIN_STARTED);
             const commonService = new CommonService(db.user);
-            const emailValidation: sequelizeObj = {};
-            emailValidation.where = {
-                Email: userData.Email
+            const emailValidation: sequelizeObj = {
+                where: { Email: userData.Email }
             };
-            const email = await commonService.getData(emailValidation, db.User);
-            // const providerEmail = await commonService.getData(emailValidation, db.)
-            if (!_.isNil(email)) {
-                const parameters: sequelizeObj = {};
-                parameters.where = userData;
-                const data = await commonService.getData(parameters, db.User);
-                const userTypeCondition: sequelizeObj = {};
-                userTypeCondition.where = {
-                    LookupValueID: data.UserTypeId
-                }
-                const userType = await commonService.getData(userTypeCondition, db.lookupValue);
-                const providerGroupCondition: sequelizeObj = {};
-                providerGroupCondition.where = {
-                    ProviderClientID: data.Id
-                }
-                const providerGroup = await commonService.getData(providerGroupCondition, db.ProviderGroup)
-                if (userType.Name == appConstant.USER_TYPE[0] || appConstant.USER_TYPE[0]) {
-                    data.UserType = userType.Name;
-                } else {
-                    return {
-                        error: appConstant.ERROR_MESSAGE.NOT_USER
-                    }
-                }
-                const jwtToken = authGuard.generateAuthToken(data);
-                const finalData = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate', 'UserType'])
-                finalData.token = jwtToken;
-                const finalres = {
-                    data: encrypt(JSON.stringify(finalData))
-                }
-                logger.info(appConstant.LOGGER_MESSAGE.LOGIN_COMPLETED);
-                return finalres;
+
+            const user = await commonService.getData(emailValidation, db.User);
+            const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
+            const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
+
+            let password;
+            let providerData;
+
+            if ((user && user.PasswordHash) || (providerGroupContact && providerGroupContact.PasswordHash) || (provider && provider.PasswordHash)) {
+                providerData = user || providerGroupContact || provider;
+                password = commonService.passwordHash(userData.PasswordHash, providerData);
             } else {
-                logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL)
-                return {
-                    error: appConstant.ERROR_MESSAGE.INVALID_EMAIL
+                throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
+            }
+            const currentData: any = await new Promise((resolve, reject) => {
+                redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
+                    if (getError) {
+                        logger.error(appConstant.ERROR_MESSAGE.ERROR_FETCHING_TOKEN_DETAILS, getError);
+                        reject(new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED));
+                    } else {
+                        resolve(data);
+                    }
+                });
+            }).catch((error: any) => { throw new Error(error) });
+            const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
+            if (user && password) {
+                const data = user;
+                const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
+                const userType = await commonService.getData(userTypeCondition, db.lookupValue);
+                if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
+                    const finalData = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate', 'ProfileImage']);
+                    finalData.UserType = userType.Name;
+                    const authtoken = authGuard.generateAuthToken(data);
+                    finalData.token = authtoken;
+                    const TokenDetailsString = {
+                        userid: data.Id,
+                        authToken: authtoken
+                    }
+                    const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                    // Push the new token details into the array
+                    newTokenDetailsArray.push(TokenDetailsString);
+                    const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                    await new Promise((resolve, reject) => {
+                        redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                            if (setError) {
+                                console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                                reject(setError)
+                                throw new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED);
+                            } else {
+                                console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                                logger.info(appConstant.LOGGER_MESSAGE.MIST_TOKEN_OTHER_SERVICE_COMPLETED);
+                                resolve(setResult)
+                            }
+                        });
+                    }).catch((error: any) => { throw new Error(error) });
+                    return { data: encrypt(JSON.stringify(finalData)) };
+                } else {
+                    return { error: appConstant.ERROR_MESSAGE.NOT_USER };
                 }
+            } else if (providerGroupContact && password) {
+                const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
+                const data = await commonService.getData(parameters, db.ProviderGroup);
+                const finalData = _.pick(data, ['ProviderGroupID', 'Name', 'Email', 'UserType', 'ProfileImage']);
+                const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                const authtoken = authGuard.generateAuthToken(data);
+                finalData.token = authtoken;
+                const TokenDetailsString = {
+                    userid: data.ProviderGroupContactDetailID,
+                    authToken: authtoken
+                }
+                // Push the new token details into the array
+                newTokenDetailsArray.push(TokenDetailsString);
+                const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                await new Promise((resolve, reject) => {
+                    redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                        if (setError) {
+                            console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                            reject(setError)
+                            throw new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED);
+                        } else {
+                            console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                            logger.info(appConstant.LOGGER_MESSAGE.MIST_TOKEN_OTHER_SERVICE_COMPLETED);
+                            resolve(setResult)
+                        }
+                    });
+                }).catch((error: any) => { throw new Error(error) });
+                finalData.UserType = appConstant.USER_TYPE[0];
+                return { data: encrypt(JSON.stringify(finalData)) };
+            } else if (provider && password) {
+                const data = provider;
+                const finalData = _.pick(provider, ['ProviderDoctorID', 'Name', 'Email', 'UserType', 'ProfileImage']);
+                const authtoken = authGuard.generateAuthToken(data);
+                finalData.token = authtoken;
+                const TokenDetailsString = {
+                    userid: data.ProviderDoctorID,
+                    authToken: authtoken
+                }
+                const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                // Push the new token details into the array
+                newTokenDetailsArray.push(TokenDetailsString);
+                const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                await new Promise((resolve, reject) => {
+                    redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                        if (setError) {
+                            console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                            reject(setError)
+                            throw new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED);
+                        } else {
+                            console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                            logger.info(appConstant.LOGGER_MESSAGE.MIST_TOKEN_OTHER_SERVICE_COMPLETED);
+                            resolve(setResult)
+                        }
+                    });
+                }).catch((error: any) => { throw new Error(error) });
+                finalData.UserType = appConstant.USER_TYPE[1];
+                return { data: encrypt(JSON.stringify(finalData)) };
+            } else {
+                logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
+                return { data: encrypt(JSON.stringify({ error: appConstant.ERROR_MESSAGE.INVALID_EMAIL })) };
             }
         } catch (error) {
             logger.info(appConstant.LOGGER_MESSAGE.LOGIN_FAILED);
-            logger.error(error)
+            logger.error(error);
         }
     }
 
@@ -85,15 +175,18 @@ export default class UserService {
                 Email: email
             };
             const user = await commonService.getData(emailValidation, db.User);
-            if (!_.isNil(user)) {
+            const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
+            const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
+            if (!_.isNil(user) || !_.isNil(providerGroupContact) || !_.isNil(provider)) {
+                const type = user ? 'user' : providerGroupContact ? 'group' : provider ? 'provider' : null;
                 const templateData = {
                     username: user.DisplayName,
-                    userid: user.Id,
-                    redirecturl: process.env.REDIRECT_URL
+                    userid: user ? user.Id : providerGroupContact ? providerGroupContact.ProviderGroupContactDetailID : provider.ProviderDoctorID,
+                    redirecturl: process.env.REDIRECT_URL,
+                    userType: type
                 };
                 // Render the template with the updated data
                 const renderedTemplate = ejs.render(templateFile, templateData);
-
                 const currentDate = new Date();
                 const expireDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
                 // Create a transporter object
@@ -109,7 +202,7 @@ export default class UserService {
                 const mailOptions = {
                     from: process.env.FROM_EMAIL,
                     to: email,
-                    subject: "Password Reset",
+                    subject: appConstant.MESSAGES.RESET_PASSWORD_SUB,
                     html: renderedTemplate
                 };
                 // Send the email
@@ -120,15 +213,78 @@ export default class UserService {
                         logger.info(appConstant.LOGGER_MESSAGE.EMAIL_SEND)
                     }
                 });
-
                 logger.info(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD_COMPLETED)
             } else {
                 logger.info(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND)
                 throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
-
             }
         } catch (error: any) {
             logger.error(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD_FAILED)
+            throw new Error(error.message);
+        }
+    }
+
+    /**
+     *for reset password scenario need to update the new password based on the user id 
+    */
+    async updatePassword(id: string, password: string, type: string, req: Request, res: Response): Promise<string> {
+        try {
+            logger.info(appConstant.LOGGER_MESSAGE.UPDATE_PASSWORD);
+            const commonService = new CommonService(db.user);
+            const passwordHash = await commonService.hashPassword(password);
+            if (type == 'user') {
+                const userCondition: sequelizeObj = {};
+                userCondition.where = {
+                    Id: id
+                };
+                const userData = await commonService.getData(userCondition, db.User);
+                const previousPasswordCheck = commonService.passwordHash(password, userData);
+                if (previousPasswordCheck) {
+                    return appConstant.MESSAGES.FAILED
+                } else {
+                    const userPasswordCondition = {
+                        PasswordHash: passwordHash
+                    }
+                    const user = await commonService.update({ Id: id }, userPasswordCondition, db.User);
+                    return appConstant.MESSAGES.SUCCESS
+                }
+            } else if (type == 'group') {
+                const groupCondition: sequelizeObj = {};
+                groupCondition.where = {
+                    ProviderGroupContactDetailID: id
+                };
+                const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
+                const previousPasswordCheck = commonService.passwordHash(password, groupData);
+                if (previousPasswordCheck) {
+                    return appConstant.MESSAGES.FAILED
+                } else {
+                    const groupPasswordCondition = {
+                        PasswordHash: passwordHash
+                    }
+                    const providerGroup = await commonService.update({ ProviderGroupContactDetailID: id }, groupPasswordCondition, db.ProviderGroupContact);
+                    return appConstant.MESSAGES.SUCCESS
+                }
+            } else if (type = 'doctor') {
+                const doctorCondition: sequelizeObj = {};
+                doctorCondition.where = {
+                    ProviderDoctorID: id
+                };
+                const doctorData = await commonService.getData(doctorCondition, db.ProviderDoctor);
+                const previousPasswordCheck = commonService.passwordHash(password, doctorData);
+                if (previousPasswordCheck) {
+                    return appConstant.MESSAGES.FAILED
+                } else {
+                    const userCondition = {
+                        PasswordHash: passwordHash
+                    }
+                    const provider = await commonService.update({ ProviderDoctorID: id }, userCondition, db.ProviderDoctor);
+                    return appConstant.MESSAGES.SUCCESS
+                }
+            } else {
+                return appConstant.MESSAGES.FAILED
+            }
+        } catch (error: any) {
+            logger.info(appConstant.MESSAGES.FAILED);
             throw new Error(error.message);
         }
     }
