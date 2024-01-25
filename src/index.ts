@@ -43,5 +43,3 @@ app.use('/api', routes.route)
 app.listen(port, () => {
     return logger.info(`App is listing in port:${port}`);
 });
-
-// gitlab notification
