@@ -18,6 +18,8 @@ export default class UserController {
             if (decryptedData) {
                 const data = JSON.parse(decryptedData)
                 let { email, password } = data;
+                console.log('email =====',email);
+                console.log('password ====',password)
                 email = (email as string).toLowerCase();
                 const userData = {
                     Email: email,
