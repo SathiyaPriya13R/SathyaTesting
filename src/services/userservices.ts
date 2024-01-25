@@ -5,6 +5,7 @@ import CommonService from '../helpers/commonService';
 import * as db from '../adapters/db';
 import AuthGuard from '../middleware/authguard';
 import { encrypt } from '../helpers/aes';
+import templates from '../utils/templates/index';
 import path from 'path';
 const logger = require('../helpers/logger');
 const fs = require('fs');
@@ -164,9 +165,8 @@ export default class UserService {
     async forgetPassword(email: string): Promise<void> {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD)
-            const commonService = new CommonService(db.user);
-            const templateFilePath = path.join(__dirname, '..', 'utils', 'templates', 'forgetpasswordtemplate.html');
-            const templateFile = fs.readFileSync(templateFilePath, 'utf8');
+            const commonService = new CommonService(db.user)
+            const templateFile = templates.forgetpasswordtemplate
             const emailValidation: sequelizeObj = {};
             emailValidation.where = {
                 Email: email
@@ -179,7 +179,7 @@ export default class UserService {
                 const templateData = {
                     username: user.DisplayName,
                     userid: user ? user.Id : providerGroupContact ? providerGroupContact.ProviderGroupContactDetailID : provider.ProviderDoctorID,
-                    redirecturl: process.env.REDIRECT_URL,
+                    redirecturl: process.env.FORGET_PASSWORD_REDIRECT_LINK,
                     userType: type
                 };
                 // Render the template with the updated data
