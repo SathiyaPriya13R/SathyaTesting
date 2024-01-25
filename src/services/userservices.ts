@@ -45,7 +45,7 @@ export default class UserService {
             console.log('provider ------',JSON.parse(JSON.stringify(provider)));
             if ((user && user.PasswordHash) || (providerGroupContact && providerGroupContact.PasswordHash) || (provider && provider.PasswordHash)) {
                 const providerData = user || providerGroupContact || provider;
-                let password = commonService.passwordHash(userData.PasswordHash, providerData);
+                let password = await commonService.passwordHash(userData.PasswordHash, providerData);
                 console.log('passw0rd ----',password);
                 const currentData: any = await new Promise((resolve, reject) => {
                     redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
@@ -59,6 +59,7 @@ export default class UserService {
                 }).catch((error: any) => { throw new Error(error) });
                 const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
                 if (user && password) {
+                    console.log('user ------');
                     const data = user;
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
