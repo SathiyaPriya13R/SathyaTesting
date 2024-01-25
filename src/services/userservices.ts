@@ -89,6 +89,7 @@ export default class UserService {
                                 }
                             });
                         }).catch((error: any) => { throw new Error(error) });
+                        console.log('encrypt(JSON.stringify(finalData)) ---',encrypt(JSON.stringify(finalData)))
                         return { data: encrypt(JSON.stringify(finalData)) };
                     } else {
                         return { error: appConstant.ERROR_MESSAGE.NOT_USER };
