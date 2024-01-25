@@ -29,7 +29,7 @@ export default class UserService {
     /**
      * User Payer - Method
      */
-    async loginUser(userData: Record<string, any>): Promise<any> {
+    async signinUser(userData: Record<string, any>): Promise<any> {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.LOGIN_STARTED);
             const commonService = new CommonService(db.user);
@@ -40,10 +40,13 @@ export default class UserService {
             const user = await commonService.getData(emailValidation, db.User);
             const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
             const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
-
+            console.log('user ------',JSON.parse(JSON.stringify(user)));
+            console.log('providerGroupContact ------',JSON.parse(JSON.stringify(providerGroupContact)));
+            console.log('provider ------',JSON.parse(JSON.stringify(provider)));
             if ((user && user.PasswordHash) || (providerGroupContact && providerGroupContact.PasswordHash) || (provider && provider.PasswordHash)) {
                 const providerData = user || providerGroupContact || provider;
                 let password = commonService.passwordHash(userData.PasswordHash, providerData);
+                console.log('passw0rd ----',password);
                 const currentData: any = await new Promise((resolve, reject) => {
                     redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
                         if (getError) {

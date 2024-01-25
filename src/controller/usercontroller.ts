@@ -25,7 +25,7 @@ export default class UserController {
                     Email: email,
                     PasswordHash: password,
                 }
-                await userService.loginUser(userData).then((data: any) => {
+                await userService.signinUser(userData).then((data: any) => {
                     if (data.error) {
                         res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
                     } else {
