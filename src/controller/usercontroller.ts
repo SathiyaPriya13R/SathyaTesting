@@ -25,19 +25,19 @@ export default class UserController {
                 }
                 await userService.loginUser(userData).then((data: any)=> {
                     if (data.error) {
-                        res.status(400).send(data.error)
+                        res.status(400).send(encrypt(JSON.stringify(data.error)));
                     } else {
                         res.status(200).send(data);
                     }
                 }). catch((error)=>{
-                    res.status(400).send(error);
+                    res.status(400).send(encrypt(JSON.stringify(error)));
                 });
             } else {
-                res.status(400).send(appConstant.MESSAGES.DECRYPT_ERROR);
+                res.status(400).send(encrypt(JSON.stringify({message: appConstant.MESSAGES.DECRYPT_ERROR})));
             }
         } catch (error) {
             logger.error(error);
-            res.status(400).send(error);
+            res.status(400).send(encrypt(JSON.stringify(error)));
         }
     }
     /**
@@ -58,7 +58,7 @@ export default class UserController {
             })
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_GENERATION_FAILED} ${error.message}`);
-            res.status(400).send(error.message);
+            res.status(400).send(encrypt(JSON.stringify((error.message))));
         }
     }
 
@@ -75,13 +75,19 @@ export default class UserController {
             const finalResponse: any = await userService.updatePassword(userid, password, type,req, res);
             logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE);
             if(finalResponse == appConstant.MESSAGES.FAILED){
-                res.status(400).send(appConstant.ERROR_MESSAGE.RESETPWD_AS_OLD);
+                const finalRes = {
+                    data: encrypt(JSON.stringify({message: appConstant.ERROR_MESSAGE.RESETPWD_AS_OLD}))
+                }
+                res.status(400).send(finalRes);
             }else{
-                res.status(200).send(appConstant.MESSAGES.UPDATED_PASSWORD);
+                const finalRes = {
+                    data: encrypt(JSON.stringify({message: appConstant.MESSAGES.UPDATED_PASSWORD}))
+                }
+                res.status(200).send(finalRes);
             } 
         } catch (error: any) {
-            // logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE_FAILED} ${error.message}`);
-            res.status(400).send(error.message);
+            logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE_FAILED} ${error.message}`);
+            res.status(400).send(encrypt(JSON.stringify(error.message)));
         }
     }
 }

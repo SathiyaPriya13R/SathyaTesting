@@ -40,37 +40,90 @@ export default class UserService {
             const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
             const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
 
-            let password;
-            let providerData;
-
             if ((user && user.PasswordHash) || (providerGroupContact && providerGroupContact.PasswordHash) || (provider && provider.PasswordHash)) {
-                providerData = user || providerGroupContact || provider;
-                password = commonService.passwordHash(userData.PasswordHash, providerData);
-            } else {
-                throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
-            }
-            const currentData: any = await new Promise((resolve, reject) => {
-                redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
-                    if (getError) {
-                        logger.error(appConstant.ERROR_MESSAGE.ERROR_FETCHING_TOKEN_DETAILS, getError);
-                        reject(new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED));
+                const providerData = user || providerGroupContact || provider;
+                let password = commonService.passwordHash(userData.PasswordHash, providerData);
+                const currentData: any = await new Promise((resolve, reject) => {
+                    redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
+                        if (getError) {
+                            logger.error(appConstant.ERROR_MESSAGE.ERROR_FETCHING_TOKEN_DETAILS, getError);
+                            reject(new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED));
+                        } else {
+                            resolve(data);
+                        }
+                    });
+                }).catch((error: any) => { throw new Error(error) });
+                const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
+                if (user && password) {
+                    const data = user;
+                    const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
+                    const userType = await commonService.getData(userTypeCondition, db.lookupValue);
+                    if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
+                        const finalData = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate', 'ProfileImage']);
+                        finalData.UserType = userType.Name;
+                        const authtoken = authGuard.generateAuthToken(data);
+                        finalData.token = authtoken;
+                        const TokenDetailsString = {
+                            userid: data.Id,
+                            authToken: authtoken
+                        }
+                        const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                        // Push the new token details into the array
+                        newTokenDetailsArray.push(TokenDetailsString);
+                        const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                        await new Promise((resolve, reject) => {
+                            redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                                if (setError) {
+                                    console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                                    reject(setError)
+                                    throw new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED);
+                                } else {
+                                    console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                                    logger.info(appConstant.LOGGER_MESSAGE.MIST_TOKEN_OTHER_SERVICE_COMPLETED);
+                                    resolve(setResult)
+                                }
+                            });
+                        }).catch((error: any) => { throw new Error(error) });
+                        return { data: encrypt(JSON.stringify(finalData)) };
                     } else {
-                        resolve(data);
+                        return { error: appConstant.ERROR_MESSAGE.NOT_USER };
                     }
-                });
-            }).catch((error: any) => { throw new Error(error) });
-            const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
-            if (user && password) {
-                const data = user;
-                const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
-                const userType = await commonService.getData(userTypeCondition, db.lookupValue);
-                if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                    const finalData = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate', 'ProfileImage']);
-                    finalData.UserType = userType.Name;
+                } else if (providerGroupContact && password) {
+                    const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
+                    const data = await commonService.getData(parameters, db.ProviderGroup);
+                    const finalData = _.pick(data, ['ProviderGroupID', 'Name', 'Email', 'UserType', 'ProfileImage']);
+                    const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
                     const authtoken = authGuard.generateAuthToken(data);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
-                        userid: data.Id,
+                        userid: data.ProviderGroupContactDetailID,
+                        authToken: authtoken
+                    }
+                    // Push the new token details into the array
+                    newTokenDetailsArray.push(TokenDetailsString);
+                    const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                    await new Promise((resolve, reject) => {
+                        redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                            if (setError) {
+                                console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                                reject(setError)
+                                throw new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED);
+                            } else {
+                                console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                                logger.info(appConstant.LOGGER_MESSAGE.MIST_TOKEN_OTHER_SERVICE_COMPLETED);
+                                resolve(setResult)
+                            }
+                        });
+                    }).catch((error: any) => { throw new Error(error) });
+                    finalData.UserType = appConstant.USER_TYPE[0];
+                    return { data: encrypt(JSON.stringify(finalData)) };
+                } else if (provider && password) {
+                    const data = provider;
+                    const finalData = _.pick(provider, ['ProviderDoctorID', 'Name', 'Email', 'UserType', 'ProfileImage']);
+                    const authtoken = authGuard.generateAuthToken(data);
+                    finalData.token = authtoken;
+                    const TokenDetailsString = {
+                        userid: data.ProviderDoctorID,
                         authToken: authtoken
                     }
                     const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
@@ -90,70 +143,14 @@ export default class UserService {
                             }
                         });
                     }).catch((error: any) => { throw new Error(error) });
+                    finalData.UserType = appConstant.USER_TYPE[1];
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else {
-                    return { error: appConstant.ERROR_MESSAGE.NOT_USER };
+                    logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
+                    return { data: encrypt(JSON.stringify({ error: appConstant.ERROR_MESSAGE.INVALID_EMAIL })) };
                 }
-            } else if (providerGroupContact && password) {
-                const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
-                const data = await commonService.getData(parameters, db.ProviderGroup);
-                const finalData = _.pick(data, ['ProviderGroupID', 'Name', 'Email', 'UserType', 'ProfileImage']);
-                const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
-                const authtoken = authGuard.generateAuthToken(data);
-                finalData.token = authtoken;
-                const TokenDetailsString = {
-                    userid: data.ProviderGroupContactDetailID,
-                    authToken: authtoken
-                }
-                // Push the new token details into the array
-                newTokenDetailsArray.push(TokenDetailsString);
-                const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
-                await new Promise((resolve, reject) => {
-                    redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
-                        if (setError) {
-                            console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
-                            reject(setError)
-                            throw new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED);
-                        } else {
-                            console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
-                            logger.info(appConstant.LOGGER_MESSAGE.MIST_TOKEN_OTHER_SERVICE_COMPLETED);
-                            resolve(setResult)
-                        }
-                    });
-                }).catch((error: any) => { throw new Error(error) });
-                finalData.UserType = appConstant.USER_TYPE[0];
-                return { data: encrypt(JSON.stringify(finalData)) };
-            } else if (provider && password) {
-                const data = provider;
-                const finalData = _.pick(provider, ['ProviderDoctorID', 'Name', 'Email', 'UserType', 'ProfileImage']);
-                const authtoken = authGuard.generateAuthToken(data);
-                finalData.token = authtoken;
-                const TokenDetailsString = {
-                    userid: data.ProviderDoctorID,
-                    authToken: authtoken
-                }
-                const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
-                // Push the new token details into the array
-                newTokenDetailsArray.push(TokenDetailsString);
-                const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
-                await new Promise((resolve, reject) => {
-                    redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
-                        if (setError) {
-                            console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
-                            reject(setError)
-                            throw new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED);
-                        } else {
-                            console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
-                            logger.info(appConstant.LOGGER_MESSAGE.MIST_TOKEN_OTHER_SERVICE_COMPLETED);
-                            resolve(setResult)
-                        }
-                    });
-                }).catch((error: any) => { throw new Error(error) });
-                finalData.UserType = appConstant.USER_TYPE[1];
-                return { data: encrypt(JSON.stringify(finalData)) };
             } else {
-                logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
-                return { data: encrypt(JSON.stringify({ error: appConstant.ERROR_MESSAGE.INVALID_EMAIL })) };
+                throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
             }
         } catch (error) {
             logger.info(appConstant.LOGGER_MESSAGE.LOGIN_FAILED);
