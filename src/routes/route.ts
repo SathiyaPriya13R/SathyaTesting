@@ -13,6 +13,8 @@ router.post('/signin', users.signinUser);
 router.post('/forgotpassword', users.forgetPassword);
 router.post('/resetpassword', users.changePassword);
 
+router.get('/logincms', users.TermsofservicePrivacyPolicy);
+
 router.post('/dashboard/statisticscount', dashboardcontroller.getStatistic);
 
 module.exports.route = router;

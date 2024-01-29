@@ -9,6 +9,7 @@ import { MobileRolePermissionsFactory } from '../model/mobilerolepermissions';
 import { InsuranceTransactionFactory } from '../model/insurancetransaction';
 import { InsuranceFollowupFactory } from '../model/insurancefollowup';
 import { UserProviderFactory } from '../model/userprovider';
+import { LoginCmsFactory } from '../model/logincms';
 require('dotenv').config();
 
 const access = {
@@ -32,3 +33,4 @@ export const MobileRolePermissions = MobileRolePermissionsFactory(user);
 export const InsuranceTransaction = InsuranceTransactionFactory(user);
 export const InsuranceFollowup = InsuranceFollowupFactory(user);
 export const UserProvider = UserProviderFactory(user);
+export const LoginCms = LoginCmsFactory(user);

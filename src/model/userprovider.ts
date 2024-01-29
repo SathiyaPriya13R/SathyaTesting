@@ -23,16 +23,16 @@ export type UserProviderStatic = typeof Model & {
 export function UserProviderFactory(sequelize: Sequelize): UserProviderStatic {
     return <UserProviderStatic>sequelize.define("UserProvider", {
         UserProviderID: {
-            type: SequelizeStatic.STRING(128),
+            type: SequelizeStatic.UUID,
             allowNull: false,
             primaryKey: true,
         },
         ProviderDoctorID: {
-            type: SequelizeStatic.STRING(128),
+            type: SequelizeStatic.UUID,
             allowNull: false,
         },
         UserID: {
-            type: SequelizeStatic.STRING(128),
+            type: SequelizeStatic.UUID,
             allowNull: false,
         },
         IsActive: {

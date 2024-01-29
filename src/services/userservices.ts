@@ -57,7 +57,7 @@ export default class UserService {
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                        const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName' ]);
+                        const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName']);
                         finalData.UserType = userType.Name;
                         const permissions = await this.getRolePermission(finalData.UserType as any);
                         finalData.UserPermissions = permissions;
@@ -301,6 +301,28 @@ export default class UserService {
             return permissions
         } catch (e) {
             logger.error(e);
+        }
+    }
+
+    /**
+    * Get Terms-of-service or Privacy-policy
+    */
+    async TermsofservicePrivacyPolicy(params: string): Promise<Record<string, any>> {
+        try {
+            const commonService = new CommonService(db.user);
+            logger.info(appConstant.LOGGER_MESSAGE.TERMS_OF)
+            const page_url: string = params;
+            const data = await commonService.getData({ where: { PageUrl: page_url } }, db.LoginCms);
+            const cms_data = JSON.parse(JSON.stringify(data));
+            if (!cms_data) {
+                logger.error(appConstant.LOGGER_MESSAGE.PRIVACY_POLICY + appConstant.ERROR_MESSAGE.RECORD_NOT_FOUND)
+                throw new Error(appConstant.ERROR_MESSAGE.RECORD_NOT_FOUND);
+            }
+            logger.info(appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_COMPLETED);
+            return cms_data;
+        } catch (error: any) {
+            logger.info(appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_FAILED);
+            throw new Error(error.message);
         }
     }
 }

@@ -93,4 +93,20 @@ export default class UserController {
             res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
+
+    /**
+     * The function below is used for the get Terms of service or Privacy Policy
+     */
+    async TermsofservicePrivacyPolicy(req: Request, res: Response): Promise<void> {
+        try {
+            const query: string = JSON.parse(JSON.stringify(req.query.page_url));
+            const responseData = await userService.TermsofservicePrivacyPolicy(query);
+            logger.info(appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE);
+            res.status(200).send({ data: encrypt(JSON.stringify(responseData)) });
+        } catch (error: any) {
+            logger.error(`${appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_FAILED} ${error.message}`);
+            res.status(400).send(error.message);
+        }
+    }
+
 }

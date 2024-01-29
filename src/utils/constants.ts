@@ -30,6 +30,11 @@ export default class AppConstants {
         UPDATE_PASSWORD_FAILED: "Updated password function failed",
         MIST_TOKEN_OTHER_SERVICE_START: "MIST token generation service call started ",
         MIST_TOKEN_OTHER_SERVICE_COMPLETED: "MIST token generation service call completed ",
+        TERMS_OF_SERVICE: 'Terms of service send successful',
+        TERMS_OF_SERVICE_COMPLETED: "Terms of service completed",
+        TERMS_OF_SERVICE_FAILED: 'Terms of service send failed',
+        TERMS_OF: "Terms service function initiated",
+        PRIVACY_POLICY: "Privacy Policy - ",
     }
     MESSAGES = {
         EMPTY_TOKEN:
@@ -63,6 +68,7 @@ export default class AppConstants {
         FETCHING_PROGRESS_PERCENTAGE_MSG_FAILED: "Fetching progress percentage failed",
         MIST_TOKEN_FAILED: "MIST Auth token generation failed",
         MIST_CONNECTION_FAILED: "MIST Connection validate failed",
+        RECORD_NOT_FOUND: "Record not found. Please ensure the correct details are provided.",
     };
 
     STATUS_ACTIVE = 'Active';
