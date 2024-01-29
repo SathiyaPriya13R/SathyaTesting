@@ -126,6 +126,9 @@ export default class UserService {
                     const finalData: any = _.pick(provider, ['Email']);
                     finalData.Id = provider.ProviderDoctorID;
                     finalData.DisplayName = `${provider.FirstName}  ${provider.LastName}`
+                    finalData.UserType = appConstant.USER_TYPE[1];
+                    const permissions = await this.getRolePermission(finalData.UserType as any);
+                    finalData.UserPermissions = permissions;
                     const authtoken = authGuard.generateAuthToken(data);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
@@ -149,7 +152,6 @@ export default class UserService {
                             }
                         });
                     }).catch((error: any) => { throw new Error(error) });
-                    finalData.UserType = appConstant.USER_TYPE[1];
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else {
                     logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
