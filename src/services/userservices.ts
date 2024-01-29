@@ -59,7 +59,7 @@ export default class UserService {
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                        const finalData = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate', 'ProfileImage']);
+                        const finalData = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate' ]);
                         finalData.UserType = userType.Name;
                         const authtoken = authGuard.generateAuthToken(data);
                         finalData.token = authtoken;
@@ -91,7 +91,7 @@ export default class UserService {
                 } else if (providerGroupContact && password) {
                     const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
                     const data = await commonService.getData(parameters, db.ProviderGroup);
-                    const finalData = _.pick(data, ['ProviderGroupID', 'Name', 'Email', 'UserType', 'ProfileImage']);
+                    const finalData = _.pick(data, ['ProviderGroupID', 'Name', 'Email', 'UserType']);
                     const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
                     const authtoken = authGuard.generateAuthToken(data);
                     finalData.token = authtoken;
@@ -119,7 +119,7 @@ export default class UserService {
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else if (provider && password) {
                     const data = provider;
-                    const finalData = _.pick(provider, ['ProviderDoctorID', 'Name', 'Email', 'UserType', 'ProfileImage']);
+                    const finalData = _.pick(provider, ['ProviderDoctorID', 'Name', 'Email', 'UserType']);
                     const authtoken = authGuard.generateAuthToken(data);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
