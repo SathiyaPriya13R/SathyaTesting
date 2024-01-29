@@ -4,15 +4,13 @@ import AppConstants from "../utils/constants";
 import CommonService from '../helpers/commonService';
 import * as db from '../adapters/db';
 import AuthGuard from '../middleware/authguard';
-import { encrypt } from '../helpers/aes';
+import { encrypt, decrypt } from '../helpers/aes';
 import templates from '../utils/templates/index';
-import path from 'path';
 const logger = require('../helpers/logger');
-const fs = require('fs');
 const ejs = require('ejs');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-const _ = require("lodash");
+import _ from 'lodash';
 const IORedis = require('ioredis');
 
 const appConstant = new AppConstants();
@@ -59,8 +57,10 @@ export default class UserService {
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                        const finalData = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate' ]);
+                        const finalData: Record<string,unknown> = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate' ]);
                         finalData.UserType = userType.Name;
+                        const permissions = await this.getRolePermission(finalData.UserType as any);
+                        finalData.UserPermissions = permissions;
                         const authtoken = authGuard.generateAuthToken(data);
                         finalData.token = authtoken;
                         const TokenDetailsString = {
@@ -91,8 +91,10 @@ export default class UserService {
                 } else if (providerGroupContact && password) {
                     const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
                     const data = await commonService.getData(parameters, db.ProviderGroup);
-                    const finalData = _.pick(data, ['ProviderGroupID', 'Name', 'Email', 'UserType']);
+                    const finalData: Record<string, unknown> = _.pick(data, ['ProviderGroupID', 'Name', 'Email', 'UserType']);
                     const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                    const permissions = await this.getRolePermission(finalData.UserType as any);
+                    finalData.UserPermissions = permissions;
                     const authtoken = authGuard.generateAuthToken(data);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
@@ -119,7 +121,9 @@ export default class UserService {
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else if (provider && password) {
                     const data = provider;
-                    const finalData = _.pick(provider, ['ProviderDoctorID', 'Name', 'Email', 'UserType']);
+                    const finalData: Record<string, unknown> = _.pick(provider, ['ProviderDoctorID', 'Name', 'Email', 'UserType']);
+                    const permissions = await this.getRolePermission(finalData.UserType as any);
+                    finalData.UserPermissions = permissions;
                     const authtoken = authGuard.generateAuthToken(data);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
@@ -282,6 +286,17 @@ export default class UserService {
         } catch (error: any) {
             logger.info(appConstant.MESSAGES.FAILED);
             throw new Error(error.message);
+        }
+    }
+
+    async getRolePermission(user_type: string): Promise<void> {
+        try {
+            const commonService = new CommonService(db.user);
+            const mobile_role_permissions = await commonService.getAllList({ where: { RoleName: user_type, Status: appConstant.STATUS_ACTIVE } }, db.MobileRolePermissions);
+            const permissions = !_.isNil(mobile_role_permissions) ? JSON.parse(JSON.stringify(mobile_role_permissions)) : null
+            return permissions
+        } catch (e) {
+            logger.error(e);
         }
     }
 }

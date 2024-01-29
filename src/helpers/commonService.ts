@@ -2,10 +2,12 @@ import { Sequelize, Transaction } from "sequelize";
 import * as _ from 'lodash';
 import AppConstants from "../utils/constants";
 import { sequelizeObj } from "./sequelizeobj";
-import { resolve } from "path";
-import { error } from "console";
 const crypto = require('crypto');
 
+interface queryParamType {
+    type?: string,
+    replacements?: Record<string, unknown>
+}
 
 export default class CommonService {
     db!: Sequelize;
@@ -25,13 +27,14 @@ export default class CommonService {
         });
         return promise;
     }
-    update(condition: Record<string,unknown>, data: Record<string, unknown>, accessObject: any): Promise<Record<string, unknown>> {
-        const promise = new Promise<Record<string, unknown>>((resolve: (value: any)=> void, reject: (value: any)=> void) => {
-            return this.db.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, (t: Transaction) => {
-                return accessObject.update(data, {returning: true, plain: true, where: condition}, {transaction: t}).then(async ()=> {
-                    const finalResult = await accessObject.findOne({where: condition});
+
+    update(condition: Record<string, unknown>, data: Record<string, unknown>, accessObject: any): Promise<Record<string, unknown>> {
+        const promise = new Promise<Record<string, unknown>>((resolve: (value: any) => void, reject: (value: any) => void) => {
+            return this.db.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, (t: Transaction) => {
+                return accessObject.update(data, { returning: true, plain: true, where: condition }, { transaction: t }).then(async () => {
+                    const finalResult = await accessObject.findOne({ where: condition });
                     resolve(finalResult);
-                }).catch((error: Error)=>{
+                }).catch((error: Error) => {
                     t.rollback();
                     reject(error);
                 });
@@ -40,6 +43,30 @@ export default class CommonService {
         return promise;
     }
 
+    getAllList(parameters: sequelizeObj, accessObject: any): Promise<Record<string, unknown>[]> {
+        const promise = new Promise<Record<string, unknown>[]>((resolve: (value: any) => void, reject: (value: any) => void) => {
+            return this.db.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, (t: Transaction) => {
+                return accessObject.findAll(parameters, { transaction: t }).then((data: Record<string, unknown>[]) => {
+                    resolve(data);
+                }).catch((error: Error) => {
+                    t.rollback();
+                    reject(error);
+                });
+            })
+        });
+        return promise;
+    }
+
+    executeQuery(querystring: string, queryparams: queryParamType) {
+        const promise = new Promise<Record<string, unknown> | [unknown[], unknown] | Record<string, string> | Record<string, unknown>[]>((resolve: (value: any) => void, reject: (value: any) => void) => {
+            return this.db.query(querystring, queryparams).then((data: Record<string, unknown> | [unknown[], unknown] | Record<string, string>) => {
+                resolve(data);
+            }).catch((error: Error) => {
+                reject(error);
+            });
+        });
+        return promise;
+    }
 
     passwordHash(password: any, data: any) {
         try {
@@ -64,7 +91,7 @@ export default class CommonService {
 
             // TODO remove debug - logging passwords in prod is considered 
             // tasteless for some odd reason
-            
+
             // This is where the magic happens. 
             // If you are doing your own hashing, you can (and maybe should)
             // perform more iterations of applying the salt and perhaps
@@ -100,5 +127,5 @@ export default class CommonService {
             return error
         }
     }
-    
+
 }

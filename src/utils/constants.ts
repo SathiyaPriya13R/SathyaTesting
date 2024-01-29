@@ -65,5 +65,10 @@ export default class AppConstants {
         MIST_CONNECTION_FAILED: "MIST Connection validate failed",
     };
 
+    STATUS_ACTIVE = 'Active';
+    STATUS_INACTIVE = 'Inactive';
+    STATUS_DELETED = 'Deleted';
+
     USER_TYPE = ['Group', 'Provider']
+    STATISTICS_TYPE = ['Month', 'Week']
 }
