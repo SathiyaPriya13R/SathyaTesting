@@ -40,13 +40,9 @@ export default class UserService {
             const user = await commonService.getData(emailValidation, db.User);
             const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
             const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
-            console.log('user ------',JSON.parse(JSON.stringify(user)));
-            console.log('providerGroupContact ------',JSON.parse(JSON.stringify(providerGroupContact)));
-            console.log('provider ------',JSON.parse(JSON.stringify(provider)));
             if ((user && user.PasswordHash) || (providerGroupContact && providerGroupContact.PasswordHash) || (provider && provider.PasswordHash)) {
                 const providerData = user || providerGroupContact || provider;
                 let password = await commonService.passwordHash(userData.PasswordHash, providerData);
-                console.log('passw0rd ----',password);
                 const currentData: any = await new Promise((resolve, reject) => {
                     redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
                         if (getError) {
@@ -59,7 +55,6 @@ export default class UserService {
                 }).catch((error: any) => { throw new Error(error) });
                 const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
                 if (user && password) {
-                    console.log('user ------');
                     const data = user;
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
@@ -89,7 +84,6 @@ export default class UserService {
                                 }
                             });
                         }).catch((error: any) => { throw new Error(error) });
-                        console.log('encrypt(JSON.stringify(finalData)) ---',encrypt(JSON.stringify(finalData)))
                         return { data: encrypt(JSON.stringify(finalData)) };
                     } else {
                         return { error: appConstant.ERROR_MESSAGE.NOT_USER };

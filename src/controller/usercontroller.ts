@@ -71,9 +71,9 @@ export default class UserController {
         try {
             const decryptedData = decrypt(req.body.data);
             const data = JSON.parse(decryptedData)
-            const userid = req.body.id;
-            const password = req.body.password;
-            const type = req.body.type;
+            const userid = data.id;
+            const password = data.password;
+            const type = data.type;
             const finalResponse: any = await userService.updatePassword(userid, password, type, req, res);
             logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE);
             if (finalResponse == appConstant.MESSAGES.FAILED) {
@@ -83,12 +83,13 @@ export default class UserController {
                 res.status(400).send(finalRes);
             } else {
                 const finalRes = {
-                    data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.UPDATED_PASSWORD }))
+                    data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.SUCCESS }))
                 }
                 res.status(200).send(finalRes);
             }
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE_FAILED} ${error.message}`);
+            console.log('error ---',error);
             res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
