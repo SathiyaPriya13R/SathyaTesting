@@ -57,7 +57,7 @@ export default class UserService {
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                        const finalData: Record<string,unknown> = _.pick(data, ['Id', 'UserId', 'Email', 'DisplayName', 'PasswordExpirationDate' ]);
+                        const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName' ]);
                         finalData.UserType = userType.Name;
                         const permissions = await this.getRolePermission(finalData.UserType as any);
                         finalData.UserPermissions = permissions;
@@ -91,7 +91,9 @@ export default class UserService {
                 } else if (providerGroupContact && password) {
                     const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
                     const data = await commonService.getData(parameters, db.ProviderGroup);
-                    const finalData: Record<string, unknown> = _.pick(data, ['ProviderGroupID', 'Name', 'Email', 'UserType']);
+                    const finalData: any = _.pick(data, ['Email', 'UserType']);
+                    finalData.Id = data.ProviderGroupID;
+                    finalData.DisplayName = providerGroupContact.ContactPerson;
                     const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
                     const permissions = await this.getRolePermission(finalData.UserType as any);
                     finalData.UserPermissions = permissions;
@@ -121,9 +123,9 @@ export default class UserService {
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else if (provider && password) {
                     const data = provider;
-                    const finalData: Record<string, unknown> = _.pick(provider, ['ProviderDoctorID', 'Name', 'Email', 'UserType']);
-                    const permissions = await this.getRolePermission(finalData.UserType as any);
-                    finalData.UserPermissions = permissions;
+                    const finalData: any = _.pick(provider, ['Email']);
+                    finalData.Id = provider.ProviderDoctorID;
+                    finalData.DisplayName = `${provider.FirstName}  ${provider.LastName}`
                     const authtoken = authGuard.generateAuthToken(data);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
