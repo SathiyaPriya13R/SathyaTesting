@@ -11,7 +11,7 @@ const dashboardcontroller = new DashboardController();
 router.post('/signin', users.signinUser);
 router.post('/forgotpassword', users.forgetPassword);
 router.post('/resetpassword', users.changePassword);
-router.post('/dashboard/summarycount', AuthGuard ,users.dashboardsummary);
+router.post('/dashboard/summarycount', AuthGuard ,dashboardcontroller.dashboardsummary);
 
 router.get('/logincms', users.TermsofservicePrivacyPolicy);
 

@@ -5,6 +5,7 @@ import CommonService from '../helpers/commonService';
 import AppConstants from "../utils/constants";
 import { queries } from '../utils/queries';
 import _ from 'lodash';
+import { encrypt } from 'src/helpers/aes';
 const logger = require('../helpers/logger');
 
 const appConstant = new AppConstants();
@@ -51,6 +52,111 @@ export default class DashboardService {
         } catch (error: any) {
             logger.error(error);
             throw new Error(error.message);
+        }
+    }
+    /**
+     * For get the count of provider, location, payer
+     */
+    async getDashBoardSummary(userid: string, user_type: string) {
+        try {
+            logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_STARTED);
+            const commonService = new CommonService(db.user);
+            let payerCondition: sequelizeObj = {};
+            let providerCondition: sequelizeObj = {};
+            let locationCondition: sequelizeObj = {};
+            let finalRes = {};
+            let provider, payer, location = [];
+            let payerUniq = [];
+            switch (user_type) {
+                case appConstant.USER_TYPE[0]:
+                    providerCondition.where = {
+                        ProviderGroupID: userid
+                    };
+                    provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
+                    payerCondition.where = {
+                        ProviderGroupID: userid
+                    };
+                    payer = await commonService.getAllList(payerCondition, db.GroupInsurance);
+                    locationCondition.where = {
+                        ProviderGroupID: userid
+                    };
+                    location = await commonService.getAllList(locationCondition, db.Location);
+                    finalRes = {
+                        provider: provider.length,
+                        payer: payer.length,
+                        location: location.length
+                    }
+                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+                    return { data: encrypt(JSON.stringify(finalRes)) };
+                case appConstant.USER_TYPE[1]:
+                    providerCondition.where = {
+                        ProviderDoctorID: userid
+                    };
+                    provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
+                    payerCondition.where = {
+                        ProviderDoctorID: userid
+                    };
+                    payer = await commonService.getAllList(payerCondition, db.InsuranceTransaction);
+                    payerUniq = _.uniqBy(payer, 'GroupInsuranceID');
+                    locationCondition.where = {
+                        ProviderDoctorID: userid
+                    };
+                    location = await commonService.getAllList(locationCondition, db.DoctorLocation);
+                    finalRes = {
+                        provider: provider.length,
+                        payer: payerUniq.length,
+                        location: location.length
+                    }
+                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+                    return { data: encrypt(JSON.stringify(finalRes)) };
+                case appConstant.USER_TYPE[2]:
+                    providerCondition.where = {
+                        UserProviderID: userid
+                    };
+                    provider = await commonService.getData(providerCondition, db.UserProvider);
+                    payerCondition.where = {
+                        ProviderDoctorID: provider.ProviderDoctorID
+                    };
+                    payer = await commonService.getAllList(payerCondition, db.InsuranceTransaction);
+                    payerUniq = _.uniqBy(payer, 'GroupInsuranceID');
+                    locationCondition.where = {
+                        ProviderDoctorID: provider.ProviderDoctorID
+                    };
+                    location = await commonService.getAllList(locationCondition, db.DoctorLocation);
+                    finalRes = {
+                        provider: [provider].length,
+                        payer: payerUniq.length,
+                        location: location.length
+                    }
+                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+
+                    return { data: encrypt(JSON.stringify(finalRes)) };
+                case appConstant.USER_TYPE[3]:
+                    providerCondition.where = {
+                        UserID: userid
+                    };
+                    provider = await commonService.getData(providerCondition, db.UserProviderGroup);
+                    payerCondition.where = {
+                        ProviderGroupID: provider.ProviderGroupID
+                    };
+                    payer = await commonService.getAllList(payerCondition, db.GroupInsurance);
+                    locationCondition.where = {
+                        ProviderGroupID: provider.ProviderGroupID
+                    };
+                    location = await commonService.getAllList(locationCondition, db.Location);
+                    finalRes = {
+                        provider: [provider].length,
+                        payer: payer.length,
+                        location: location.length
+                    }
+                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+                    return { data: encrypt(JSON.stringify(finalRes)) };
+                default:
+                    break;
+            }
+        } catch (error: any) {
+            logger.error(error.message);
+            throw new Error(error.message)
         }
     }
 }

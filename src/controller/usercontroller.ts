@@ -92,22 +92,6 @@ export default class UserController {
     }
 
     /**
-     * The below funcation is used to get the count of the provider, location, payer
-     */
-    async dashboardsummary(req: Request, res: Response) {
-        try {
-            const decryptedData = decrypt(req.body.data);
-            const data = JSON.parse(decryptedData)
-            const {userid, user_type} = data;
-            const finalRes: any = await userService.getDashBoardSummary(userid, user_type);
-            res.status(200).send(finalRes);
-        } catch (error: any) {
-            logger.error(`${appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_FAILED} ${error.message}`);
-            res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
-        }
-    } 
-
-    /**
      * The function below is used for the get Terms of service or Privacy Policy
      */
     async TermsofservicePrivacyPolicy(req: Request, res: Response): Promise<void> {
