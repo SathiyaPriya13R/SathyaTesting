@@ -14,7 +14,6 @@ import _ from 'lodash';
 const IORedis = require('ioredis');
 
 const appConstant = new AppConstants();
-const authGuard = new AuthGuard();
 
 const redisClient = new IORedis({
     host: process.env.REDIS_SERVER_IP,
@@ -57,11 +56,17 @@ export default class UserService {
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                        const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName']);
-                        finalData.UserType = userType.Name;
+                        const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName', 'ProviderClientID', 'ProviderGroupID']);
+                        finalData.UserType = `User_${userType.Name}`;
                         const permissions = await this.getRolePermission(finalData.UserType as any);
                         finalData.UserPermissions = permissions;
-                        const authtoken = authGuard.generateAuthToken(data);
+                        let tokenData: any = {
+                            ID: data.Id,
+                            Email: data.Email,
+                            user_type: userType.Name,
+                            DisplayName: data.DisplayName
+                        };
+                        const authtoken = commonService.generateAuthToken(tokenData);
                         finalData.token = authtoken;
                         const TokenDetailsString = {
                             userid: data.Id,
@@ -97,7 +102,13 @@ export default class UserService {
                     const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
                     const permissions = await this.getRolePermission(finalData.UserType as any);
                     finalData.UserPermissions = permissions;
-                    const authtoken = authGuard.generateAuthToken(data);
+                    let tokenData: any = {
+                        ID: data.ProviderGroupID,
+                        Email: data.Email,
+                        user_type: appConstant.USER_TYPE[0],
+                        DisplayName: providerGroupContact.ContactPerson
+                    };
+                    const authtoken = commonService.generateAuthToken(tokenData);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
                         userid: data.ProviderGroupContactDetailID,
@@ -125,11 +136,14 @@ export default class UserService {
                     const data = provider;
                     const finalData: any = _.pick(provider, ['Email']);
                     finalData.Id = provider.ProviderDoctorID;
-                    finalData.DisplayName = `${provider.FirstName}  ${provider.LastName}`
-                    finalData.UserType = appConstant.USER_TYPE[1];
-                    const permissions = await this.getRolePermission(finalData.UserType as any);
-                    finalData.UserPermissions = permissions;
-                    const authtoken = authGuard.generateAuthToken(data);
+                    finalData.DisplayName = `${provider.FirstName} ${provider.LastName}`
+                    let tokenData: any = {
+                        ID: provider.ProviderDoctorID,
+                        Email: data.Email,
+                        user_type: appConstant.USER_TYPE[1],
+                        DisplayName: `${provider.FirstName} ${provider.LastName}`
+                    };
+                    const authtoken = commonService.generateAuthToken(tokenData);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
                         userid: data.ProviderDoctorID,
@@ -139,6 +153,8 @@ export default class UserService {
                     // Push the new token details into the array
                     newTokenDetailsArray.push(TokenDetailsString);
                     const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                    const permissions = await this.getRolePermission(finalData.UserType as any);
+                    finalData.UserPermissions = permissions;
                     await new Promise((resolve, reject) => {
                         redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
                             if (setError) {
@@ -167,8 +183,8 @@ export default class UserService {
     }
 
     /**
-    *for Foget password scenario need to verify the user and generate an email to the give email id 
-   */
+     *for Foget password scenario need to verify the user and generate an email to the give email id
+     */
     async forgetPassword(email: string): Promise<void> {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD)
@@ -230,7 +246,7 @@ export default class UserService {
 
     /**
      *for reset password scenario need to update the new password based on the user id 
-    */
+     */
     async updatePassword(id: string, password: string, type: string, req: Request, res: Response): Promise<string> {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.UPDATE_PASSWORD);
@@ -289,7 +305,7 @@ export default class UserService {
             }
         } catch (error: any) {
             logger.info(appConstant.MESSAGES.FAILED);
-            throw new Error(error.message);
+            throw new Error(error);
         }
     }
 
@@ -325,4 +341,5 @@ export default class UserService {
             throw new Error(error.message);
         }
     }
+
 }

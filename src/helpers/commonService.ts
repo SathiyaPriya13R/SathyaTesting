@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import AppConstants from "../utils/constants";
 import { sequelizeObj } from "./sequelizeobj";
 const crypto = require('crypto');
+import jwt from 'jsonwebtoken';
 
 interface queryParamType {
     type?: string,
@@ -127,5 +128,18 @@ export default class CommonService {
             return error
         }
     }
+
+    /**
+     * Generate Auth token
+     */
+
+    generateAuthToken = (userData: Record<string, any>) => jwt.sign({
+        id: userData.ID,
+        user_type: userData.user_type,
+        email: userData.Email,
+        displayName: userData.DisplayName,
+    },
+        `${process.env.SECRECT_KEY}`
+    )
 
 }

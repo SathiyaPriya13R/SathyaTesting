@@ -35,6 +35,9 @@ export default class AppConstants {
         TERMS_OF_SERVICE_FAILED: 'Terms of service send failed',
         TERMS_OF: "Terms service function initiated",
         PRIVACY_POLICY: "Privacy Policy - ",
+        DASHBOARD_SUMMARY_STARTED: "Dashboard summary funcation started",
+        DASHBOARD_SUMMARY_FAILED: "Dashboard summary funcation failed",
+        DASHBOARD_SUMMARY_COMPLETED: "Dashboard summary funcation completed",
     }
     MESSAGES = {
         EMPTY_TOKEN:
@@ -51,6 +54,9 @@ export default class AppConstants {
         DECRYPT_ERROR: "Decrypted error",
         SUCCESS: "Success",
         FAILED: "Failed",
+        INVALID_SESSION: "Invalid session",
+        USER_NOT_ALLOWED: "User Not allowed",
+        NO_TOKEN_FOUND: "Unable to locate a valid user token. Please log out and log back in to resolve this issue"
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',
@@ -75,6 +81,6 @@ export default class AppConstants {
     STATUS_INACTIVE = 'Inactive';
     STATUS_DELETED = 'Deleted';
 
-    USER_TYPE = ['Group', 'Provider']
+    USER_TYPE = ['Group', 'Provider', 'User_Provider', 'User_Group']
     STATISTICS_TYPE = ['Month', 'Week']
 }
