@@ -14,7 +14,6 @@ import _ from 'lodash';
 const IORedis = require('ioredis');
 
 const appConstant = new AppConstants();
-const authGuard = new AuthGuard();
 
 const redisClient = new IORedis({
     host: process.env.REDIS_SERVER_IP,
@@ -57,11 +56,17 @@ export default class UserService {
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                        const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName']);
-                        finalData.UserType = userType.Name;
+                        const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName', 'ProviderClientID', 'ProviderGroupID']);
+                        finalData.UserType = `User_${userType.Name}`;
                         const permissions = await this.getRolePermission(finalData.UserType as any);
                         finalData.UserPermissions = permissions;
-                        const authtoken = authGuard.generateAuthToken(data);
+                        let tokenData: any = {
+                            ID: data.Id,
+                            Email: data.Email,
+                            user_type: userType.Name,
+                            DisplayName: data.DisplayName
+                        };
+                        const authtoken = commonService.generateAuthToken(tokenData);
                         finalData.token = authtoken;
                         const TokenDetailsString = {
                             userid: data.Id,
@@ -97,7 +102,13 @@ export default class UserService {
                     const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
                     const permissions = await this.getRolePermission(finalData.UserType as any);
                     finalData.UserPermissions = permissions;
-                    const authtoken = authGuard.generateAuthToken(data);
+                    let tokenData: any = {
+                        ID: data.ProviderGroupID,
+                        Email: data.Email,
+                        user_type: appConstant.USER_TYPE[0],
+                        DisplayName: providerGroupContact.ContactPerson
+                    };
+                    const authtoken = commonService.generateAuthToken(tokenData);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
                         userid: data.ProviderGroupContactDetailID,
@@ -125,11 +136,14 @@ export default class UserService {
                     const data = provider;
                     const finalData: any = _.pick(provider, ['Email']);
                     finalData.Id = provider.ProviderDoctorID;
-                    finalData.DisplayName = `${provider.FirstName}  ${provider.LastName}`
-                    finalData.UserType = appConstant.USER_TYPE[1];
-                    const permissions = await this.getRolePermission(finalData.UserType as any);
-                    finalData.UserPermissions = permissions;
-                    const authtoken = authGuard.generateAuthToken(data);
+                    finalData.DisplayName = `${provider.FirstName} ${provider.LastName}`
+                    let tokenData: any = {
+                        ID: provider.ProviderDoctorID,
+                        Email: data.Email,
+                        user_type: appConstant.USER_TYPE[1],
+                        DisplayName: `${provider.FirstName} ${provider.LastName}`
+                    };
+                    const authtoken = commonService.generateAuthToken(tokenData);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
                         userid: data.ProviderDoctorID,
@@ -167,8 +181,8 @@ export default class UserService {
     }
 
     /**
-    *for Foget password scenario need to verify the user and generate an email to the give email id 
-   */
+     *for Foget password scenario need to verify the user and generate an email to the give email id
+     */
     async forgetPassword(email: string): Promise<void> {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD)
@@ -230,7 +244,7 @@ export default class UserService {
 
     /**
      *for reset password scenario need to update the new password based on the user id 
-    */
+     */
     async updatePassword(id: string, password: string, type: string, req: Request, res: Response): Promise<string> {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.UPDATE_PASSWORD);
@@ -289,7 +303,7 @@ export default class UserService {
             }
         } catch (error: any) {
             logger.info(appConstant.MESSAGES.FAILED);
-            throw new Error(error.message);
+            throw new Error(error);
         }
     }
 
@@ -323,6 +337,112 @@ export default class UserService {
         } catch (error: any) {
             logger.info(appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_FAILED);
             throw new Error(error.message);
+        }
+    }
+
+    /**
+     * For get the count of provider, location, payer
+     */
+    async getDashBoardSummary(userid: string, user_type: string) {
+        try {
+            logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_STARTED);
+            const commonService = new CommonService(db.user);
+            let payerCondition: sequelizeObj = {};
+            let providerCondition: sequelizeObj = {};
+            let locationCondition: sequelizeObj = {};
+            let finalRes = {};
+            let provider, payer, location = [];
+            let payerUniq = [];
+            switch (user_type) {
+                case appConstant.USER_TYPE[0]:
+                    providerCondition.where = {
+                        ProviderGroupID: userid
+                    };
+                    provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
+                    payerCondition.where = {
+                        ProviderGroupID: userid
+                    };
+                    payer = await commonService.getAllList(payerCondition, db.GroupInsurance);
+                    locationCondition.where = {
+                        ProviderGroupID: userid
+                    };
+                    location = await commonService.getAllList(locationCondition, db.Location);
+                    finalRes = {
+                        provider: provider.length,
+                        payer: payer.length,
+                        location: location.length
+                    }
+                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+                    return { data: encrypt(JSON.stringify(finalRes)) };
+                case appConstant.USER_TYPE[1]:
+                    providerCondition.where = {
+                        ProviderDoctorID: userid
+                    };
+                    provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
+                    payerCondition.where = {
+                        ProviderDoctorID: userid
+                    };
+                    payer = await commonService.getAllList(payerCondition, db.InsuranceTransaction);
+                    payerUniq = _.uniqBy(payer, 'GroupInsuranceID');
+                    locationCondition.where = {
+                        ProviderDoctorID: userid
+                    };
+                    location = await commonService.getAllList(locationCondition, db.DoctorLocation);
+                    finalRes = {
+                        provider: provider.length,
+                        payer: payerUniq.length,
+                        location: location.length
+                    }
+                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+                    return { data: encrypt(JSON.stringify(finalRes)) };
+                case appConstant.USER_TYPE[2]:
+                    providerCondition.where = {
+                        UserProviderID: userid
+                    };
+                    provider = await commonService.getData(providerCondition, db.UserProvider);
+                    payerCondition.where = {
+                        ProviderDoctorID: provider.ProviderDoctorID
+                    };
+                    payer = await commonService.getAllList(payerCondition, db.InsuranceTransaction);
+                    payerUniq = _.uniqBy(payer, 'GroupInsuranceID');
+                    locationCondition.where = {
+                        ProviderDoctorID: provider.ProviderDoctorID
+                    };
+                    location = await commonService.getAllList(locationCondition, db.DoctorLocation);
+                    finalRes = {
+                        provider: [provider].length,
+                        payer: payerUniq.length,
+                        location: location.length
+                    }
+                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+
+                    return { data: encrypt(JSON.stringify(finalRes)) };
+                case appConstant.USER_TYPE[3]:
+                    providerCondition.where = {
+                        UserID: userid
+                    };
+                    provider = await commonService.getData(providerCondition, db.UserProviderGroup);
+                    payerCondition.where = {
+                        ProviderGroupID: provider.ProviderGroupID
+                    };
+                    payer = await commonService.getAllList(payerCondition, db.GroupInsurance);
+                    locationCondition.where = {
+                        ProviderGroupID: provider.ProviderGroupID
+                    };
+                    location = await commonService.getAllList(locationCondition, db.Location);
+                    finalRes = {
+                        provider: [provider].length,
+                        payer: payer.length,
+                        location: location.length
+                    }
+                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+                    return { data: encrypt(JSON.stringify(finalRes)) };
+                default:
+                    break;
+            }
+        } catch (error: any) {
+            logger.error(error.message);
+            throw new Error(error.message)
         }
     }
 }

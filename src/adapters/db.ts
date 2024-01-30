@@ -9,6 +9,10 @@ import { MobileRolePermissionsFactory } from '../model/mobilerolepermissions';
 import { InsuranceTransactionFactory } from '../model/insurancetransaction';
 import { InsuranceFollowupFactory } from '../model/insurancefollowup';
 import { UserProviderFactory } from '../model/userprovider';
+import { DoctorLocationFactory } from '../model/doctorlocation';
+import { LocationFactory } from '../model/location';
+import { GroupInsuranceFactory } from '../model/groupInsurance';
+import { UserProviderGroupFactory } from '../model/userprovidergroup';
 import { LoginCmsFactory } from '../model/logincms';
 require('dotenv').config();
 
@@ -34,3 +38,8 @@ export const InsuranceTransaction = InsuranceTransactionFactory(user);
 export const InsuranceFollowup = InsuranceFollowupFactory(user);
 export const UserProvider = UserProviderFactory(user);
 export const LoginCms = LoginCmsFactory(user);
+export const DoctorLocation = DoctorLocationFactory(user);
+export const Location = LocationFactory(user);
+export const GroupInsurance = GroupInsuranceFactory(user);
+export const UserProviderGroup = UserProviderGroupFactory(user);
+
