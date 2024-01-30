@@ -5,7 +5,7 @@ import CommonService from '../helpers/commonService';
 import AppConstants from "../utils/constants";
 import { queries } from '../utils/queries';
 import _ from 'lodash';
-import { encrypt } from 'src/helpers/aes';
+import { encrypt } from '../helpers/aes';
 const logger = require('../helpers/logger');
 
 const appConstant = new AppConstants();
