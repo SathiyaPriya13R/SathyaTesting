@@ -9,7 +9,7 @@ const logger = require('../helpers/logger');
 
 const appConstant = new AppConstants();
 
-export default class UserService {
+export default class DashboardService {
     async getStatisticsCount(data: { user_id: string, user_type: string, statistics_type: string, providers: Array<string>, payers: Array<string>, locations: Array<string> }): Promise<void> {
         try {
 
