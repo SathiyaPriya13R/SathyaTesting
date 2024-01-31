@@ -11,9 +11,10 @@ const dashboardcontroller = new DashboardController();
 router.post('/signin', users.signinUser);
 router.post('/forgotpassword', users.forgetPassword);
 router.post('/resetpassword', users.changePassword);
-router.get('/dashboard/summarycount', AuthGuard ,dashboardcontroller.dashboardsummary);
 router.get('/logincms', users.TermsofservicePrivacyPolicy);
 
-router.post('/dashboard/statisticscount', dashboardcontroller.getStatistic);
+// dashboard routes
+router.get('/dashboard/summarycount', AuthGuard ,dashboardcontroller.dashboardsummary);
+router.post('/dashboard/statisticscount', AuthGuard, dashboardcontroller.getStatistic);
 
 module.exports.route = router;

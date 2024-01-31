@@ -11,49 +11,59 @@ const logger = require('../helpers/logger');
 const appConstant = new AppConstants();
 
 export default class DashboardService {
-    async getStatisticsCount(data: { user_id: string, user_type: string, statistics_type: string, providers: Array<string>, payers: Array<string>, locations: Array<string> }): Promise<void> {
-        try {
 
+    async getStatisticsCount(user_data: { id: string, user_type: string }, data: { statistics_type: string, providers: Array<string>, payers: Array<string>, locations: Array<string>, year_month: string, week_number: number }): Promise<any> {
+        try {
             const commonService = new CommonService(db.user)
             const queryparams = {} as sequelizeObj;
             const querystring = (data.statistics_type == appConstant.STATISTICS_TYPE[0]) ? queries.month_wise_statistics_count : queries.week_wise_statistics_count;
 
-            const user_object = await commonService.getData({ where: { Id: data.user_id }, attributes: ['Id', 'ProviderGroupID'] }, db.User);
+            const user_object = await commonService.getData({ where: { Id: user_data.id }, attributes: ['Id', 'ProviderGroupID'] }, db.User);
             const user_obj = JSON.parse(JSON.stringify(user_object));
 
-            if (!_.isNil(user_obj) && (data.user_type === appConstant.USER_TYPE[0])) {
-                data.user_id = !_.isNil(user_obj.ProviderGroupID) ? user_obj.ProviderGroupID : null;
+            if (!_.isNil(user_obj) && (user_data.user_type === appConstant.USER_TYPE[0])) {
+                user_data.id = !_.isNil(user_obj.ProviderGroupID) ? user_obj.ProviderGroupID : null;
             }
 
-            if (!_.isNil(user_obj) && (data.user_type === appConstant.USER_TYPE[1])) {
+            if (!_.isNil(user_obj) && (user_data.user_type === appConstant.USER_TYPE[1])) {
                 const usr_pvdrgrp_data = await commonService.getData({ where: { UserID: user_obj.Id }, attributes: ['ProviderDoctorID'] }, db.UserProvider);
                 const provider_id: { ProviderDoctorID: string } = !_.isNil(usr_pvdrgrp_data) ? JSON.parse(JSON.stringify(usr_pvdrgrp_data)) : null
-                data.user_id = provider_id.ProviderDoctorID
+                user_data.id = provider_id.ProviderDoctorID
             }
 
-            if (data.user_type === appConstant.USER_TYPE[1]) {
-                data.providers.push(data.user_id);
+            if (user_data.user_type === appConstant.USER_TYPE[1]) {
+                data.providers.push(user_data.id);
             }
 
             queryparams.type = sequelize.QueryTypes.SELECT;
             queryparams.replacements = {
-                user_id: data.user_id,
-                user_type: data.user_type,
+                user_id: user_data.id,
+                user_type: user_data.user_type,
+                month: data.year_month,
                 providers: data.providers,
                 payers: data.payers,
                 locations: data.locations
             };
 
+            if ((data.statistics_type == appConstant.STATISTICS_TYPE[1])) {
+                queryparams.replacements.week_number = data.week_number;
+            }
+
             const statistics = await commonService.executeQuery(querystring, queryparams);
             const statistic_count = JSON.parse(JSON.stringify(statistics));
 
-            return statistic_count;
+            if (statistic_count && !_.isNil(statistic_count) && !_.isEmpty(statistic_count)) {
+                return { data: statistic_count, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.SCREENS.DASHBOARD_STATISTICS) };
+            } else {
+                return { data: statistic_count, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.SCREENS.DASHBOARD_STATISTICS) };
+            }
 
         } catch (error: any) {
             logger.error(error);
             throw new Error(error.message);
         }
     }
+
     /**
      * For get the count of provider, location, payer
      */

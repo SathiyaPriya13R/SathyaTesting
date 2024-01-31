@@ -13,9 +13,11 @@ export default class DashboardController {
         try {
             const decryptedData = decrypt(req.body.data);
             if (decryptedData) {
-                const data = JSON.parse(decryptedData)
-                const user_data = data;
-                await dashboardService.getStatisticsCount(user_data).then((data: any) => {
+                const filter_data = JSON.parse(decryptedData)
+                const data = filter_data
+                const { id , user_type }:{ id: string, user_type: string} = JSON.parse(JSON.stringify(req.user));
+                const user_data = { id, user_type };
+                await dashboardService.getStatisticsCount(user_data, data).then((data: any) => {
                     if (data.error) {
                         res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
                     } else {

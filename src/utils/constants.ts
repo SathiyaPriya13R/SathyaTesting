@@ -60,7 +60,9 @@ export default class AppConstants {
         INVALID_SESSION: "Invalid session",
         USER_NOT_ALLOWED: "User Not allowed",
         NO_TOKEN_FOUND: "Unable to locate a valid user token. Please log out and log back in to resolve this issue",
-        TOKEN_EXPIRED: "The token you provide is expired"
+        TOKEN_EXPIRED: "The token you provide is expired",
+        DATA_FOUND: "{{}} data found",
+        DATA_NOT_FOUND: "{{}} data not found",
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',
@@ -80,6 +82,9 @@ export default class AppConstants {
         MIST_CONNECTION_FAILED: "MIST Connection validate failed",
         RECORD_NOT_FOUND: "Record not found. Please ensure the correct details are provided.",
     };
+    SCREENS = {
+        DASHBOARD_STATISTICS: 'Dashboard statistics'
+    }
 
     STATUS_ACTIVE = 'Active';
     STATUS_INACTIVE = 'Inactive';
