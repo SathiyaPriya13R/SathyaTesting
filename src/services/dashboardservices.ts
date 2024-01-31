@@ -57,7 +57,7 @@ export default class DashboardService {
     /**
      * For get the count of provider, location, payer
      */
-    async getDashBoardSummary(userid: string, user_type: string) {
+    async getDashBoardSummary(data: any) {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_STARTED);
             const commonService = new CommonService(db.user);
@@ -67,18 +67,19 @@ export default class DashboardService {
             let finalRes = {};
             let provider, payer, location = [];
             let payerUniq = [];
-            switch (user_type) {
+            const { type, id } = data;
+            switch (type) {
                 case appConstant.USER_TYPE[0]:
                     providerCondition.where = {
-                        ProviderGroupID: userid
+                        ProviderGroupID: id
                     };
                     provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
                     payerCondition.where = {
-                        ProviderGroupID: userid
+                        ProviderGroupID: id
                     };
                     payer = await commonService.getAllList(payerCondition, db.GroupInsurance);
                     locationCondition.where = {
-                        ProviderGroupID: userid
+                        ProviderGroupID: id
                     };
                     location = await commonService.getAllList(locationCondition, db.Location);
                     finalRes = {
@@ -90,16 +91,16 @@ export default class DashboardService {
                     return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[1]:
                     providerCondition.where = {
-                        ProviderDoctorID: userid
+                        ProviderDoctorID: id
                     };
                     provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
                     payerCondition.where = {
-                        ProviderDoctorID: userid
+                        ProviderDoctorID: id
                     };
                     payer = await commonService.getAllList(payerCondition, db.InsuranceTransaction);
                     payerUniq = _.uniqBy(payer, 'GroupInsuranceID');
                     locationCondition.where = {
-                        ProviderDoctorID: userid
+                        ProviderDoctorID: id
                     };
                     location = await commonService.getAllList(locationCondition, db.DoctorLocation);
                     finalRes = {
@@ -111,7 +112,7 @@ export default class DashboardService {
                     return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[2]:
                     providerCondition.where = {
-                        UserProviderID: userid
+                        UserProviderID: id
                     };
                     provider = await commonService.getData(providerCondition, db.UserProvider);
                     payerCondition.where = {
@@ -133,7 +134,7 @@ export default class DashboardService {
                     return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[3]:
                     providerCondition.where = {
-                        UserID: userid
+                        UserID: id
                     };
                     provider = await commonService.getData(providerCondition, db.UserProviderGroup);
                     payerCondition.where = {

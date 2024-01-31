@@ -138,8 +138,10 @@ export default class CommonService {
         user_type: userData.user_type,
         email: userData.Email,
         displayName: userData.DisplayName,
+        type: userData.type,
     },
-        `${process.env.SECRECT_KEY}`
+        `${process.env.JWT_SECRECT_KEY}`,
+        { expiresIn: '3d' }
     )
 
 }

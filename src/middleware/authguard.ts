@@ -5,6 +5,8 @@ import { Request, Response } from 'express';
 const IORedis = require('ioredis');
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
+import { encrypt } from '../helpers/aes';
+require('dotenv').config();
 
 const appConstant = new AppConstants();
 const redisClient = new IORedis({
@@ -35,32 +37,45 @@ app.use(async function (req: Request, res: Response, next) {
                         resolve(data);
                     }
                 });
-            }).catch((error: any) => { throw new Error(error) });
+            }).catch((error: any) => { return res.status(401).send({ data: encrypt(JSON.stringify(error.message)) }) });
+
             if (currentData) {
                 const authHeader: string | undefined = req.headers.authorization;
                 const token = authHeader;
                 if (!token) {
                     logger.error(appConstant.LOGGER_MESSAGE.GET_DATA_TOKEN_INVALID);
-                    return appConstant.MESSAGES.INVALID_TOKEN;
+                    return res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_TOKEN)) });
                 }
-                const decodedToken: any = jwt.decode(token);
-                const allToken = currentData ? JSON.parse(currentData) : [];
-                const tokenValid = allToken.filter((item: any) => item.userid == decodedToken.id);
-                if (tokenValid && !_.isEmpty(tokenValid)) {
-                    req.user = JSON.parse(JSON.stringify(decodedToken));
-                    next();
-                } else {
-                    res.status(400).send(appConstant.MESSAGES.INVALID_SESSION)
+
+                try {
+                    const secrectkey = `${process.env.JWT_SECREAT_KEK}`;
+                    const decodedToken: any = jwt.verify(token, secrectkey);
+                    const allToken = currentData ? JSON.parse(currentData) : [];
+                    const tokenValid = allToken.filter((item: any) => item.userid == decodedToken.id);
+                    if (tokenValid && !_.isEmpty(tokenValid)) {
+                        // Check expiration time
+                        const currentTimestamp = Math.floor(Date.now() / 1000);
+                        if (decodedToken.exp && decodedToken.exp < currentTimestamp) {
+                            return res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.TOKEN_EXPIRED)) });
+                        }
+
+                        req.user = JSON.parse(JSON.stringify(decodedToken));
+                        next();
+                    } else {
+                        res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_SESSION)) });
+                    }
+                } catch (verifyError) {
+                    res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_TOKEN)) });
                 }
             } else {
-                res.status(400).send(appConstant.MESSAGES.NO_TOKEN_FOUND)
+                res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.NO_TOKEN_FOUND)) });
             }
         } else {
-            res.status(400).send(appConstant.MESSAGES.USER_NOT_ALLOWED)
+            res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.USER_NOT_ALLOWED)) });
         }
     } catch (E: any) {
-        res.status(400).send(E.message)
+        res.status(401).send({ data: encrypt(JSON.stringify(E.message)) });
     }
-})
+});
 
 export default app;
