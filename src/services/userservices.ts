@@ -57,13 +57,14 @@ export default class UserService {
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
                         const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName', 'ProviderClientID', 'ProviderGroupID']);
-                        finalData.UserType = `User_${userType.Name}`;
+                        finalData.UserType = userType.Name;
                         const permissions = await this.getRolePermission(finalData.UserType as any);
                         finalData.UserPermissions = permissions;
                         let tokenData: any = {
                             ID: data.Id,
                             Email: data.Email,
                             user_type: userType.Name,
+                            type: `User_${userType.Name}`,
                             DisplayName: data.DisplayName
                         };
                         const authtoken = commonService.generateAuthToken(tokenData);
@@ -106,6 +107,7 @@ export default class UserService {
                         ID: data.ProviderGroupID,
                         Email: data.Email,
                         user_type: appConstant.USER_TYPE[0],
+                        type: appConstant.USER_TYPE[0],
                         DisplayName: providerGroupContact.ContactPerson
                     };
                     const authtoken = commonService.generateAuthToken(tokenData);
@@ -141,6 +143,7 @@ export default class UserService {
                         ID: provider.ProviderDoctorID,
                         Email: data.Email,
                         user_type: appConstant.USER_TYPE[1],
+                        type: appConstant.USER_TYPE[1],
                         DisplayName: `${provider.FirstName} ${provider.LastName}`
                     };
                     const authtoken = commonService.generateAuthToken(tokenData);
@@ -198,7 +201,7 @@ export default class UserService {
             const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
             const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
             if (!_.isNil(user) || !_.isNil(providerGroupContact) || !_.isNil(provider)) {
-                const type = user ? 'user' : providerGroupContact ? 'group' : provider ? 'provider' : null;
+                const type = user ? 'User' : providerGroupContact ? 'Group' : provider ? 'Provider' : null;
                 const templateData = {
                     username: user.DisplayName,
                     userid: user ? user.Id : providerGroupContact ? providerGroupContact.ProviderGroupContactDetailID : provider.ProviderDoctorID,
