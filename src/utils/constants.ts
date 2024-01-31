@@ -14,9 +14,9 @@ export default class AppConstants {
         USER_VALIDATION_SUCCESSFUL: 'User validation successful',
         PASSWORD_CHANGE: 'Password changed successful',
         PASSWORD_CHANGE_FAILED: 'Password change failed',
-        LOGIN_STARTED: 'Login funcation is started',
-        LOGIN_FAILED: 'Login funcation is failed',
-        LOGIN_COMPLETED: 'Login funcation is completed',
+        LOGIN_STARTED: 'Login function is started',
+        LOGIN_FAILED: 'Login function is failed',
+        LOGIN_COMPLETED: 'Login function is completed',
         PASSWORD_GENERATION: 'Password generated successful',
         PASSWORD_GENERATION_FAILED: 'Password generated failed',
         FORGET_PASSWORD: "Forget password function initiated",
@@ -35,9 +35,12 @@ export default class AppConstants {
         TERMS_OF_SERVICE_FAILED: 'Terms of service send failed',
         TERMS_OF: "Terms service function initiated",
         PRIVACY_POLICY: "Privacy Policy - ",
-        DASHBOARD_SUMMARY_STARTED: "Dashboard summary funcation started",
-        DASHBOARD_SUMMARY_FAILED: "Dashboard summary funcation failed",
-        DASHBOARD_SUMMARY_COMPLETED: "Dashboard summary funcation completed",
+        DASHBOARD_SUMMARY_STARTED: "Dashboard summary function started",
+        DASHBOARD_SUMMARY_FAILED: "Dashboard summary function failed",
+        DASHBOARD_SUMMARY_COMPLETED: "Dashboard summary function completed",
+        PROFILE_GET_STARTED: "Profile get function started",
+        PROFILE_GET_FAILED: "Profile get function failed",
+        PROFILE_GET_COMPLETED: "Profile get function completed"
     }
     MESSAGES = {
         EMPTY_TOKEN:
@@ -56,7 +59,8 @@ export default class AppConstants {
         FAILED: "Failed",
         INVALID_SESSION: "Invalid session",
         USER_NOT_ALLOWED: "User Not allowed",
-        NO_TOKEN_FOUND: "Unable to locate a valid user token. Please log out and log back in to resolve this issue"
+        NO_TOKEN_FOUND: "Unable to locate a valid user token. Please log out and log back in to resolve this issue",
+        TOKEN_EXPIRED: "The token you provide is expired"
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',
