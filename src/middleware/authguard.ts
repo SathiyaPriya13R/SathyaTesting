@@ -13,6 +13,15 @@ const redisClient = new IORedis({
     password: process.env.REDIS_PASSWORD,
     db: process.env.REDIS_SERVER_DEFAULT_DB,
 });
+
+declare global {
+    namespace Express {
+        interface Request {
+            user?: Record<string, any>;
+        }
+    }
+}
+
 app.use(async function (req: Request, res: Response, next) {
     const token = req.headers.authorization as string;
     try {
@@ -38,6 +47,7 @@ app.use(async function (req: Request, res: Response, next) {
                 const allToken = currentData ? JSON.parse(currentData) : [];
                 const tokenValid = allToken.filter((item: any) => item.userid == decodedToken.id);
                 if (tokenValid && !_.isEmpty(tokenValid)) {
+                    req.user = JSON.parse(JSON.stringify(decodedToken));
                     next();
                 } else {
                     res.status(400).send(appConstant.MESSAGES.INVALID_SESSION)
