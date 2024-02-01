@@ -15,6 +15,7 @@ export interface ProviderGroupContactDetailAttributes {
     CreatedDate: Date,
     ModifiedDate: Date,
     PasswordHash: string,
+    ProfileImage: Blob,
 }
 
 export interface ProviderGroupContactDetailModel extends Model<ProviderGroupContactDetailAttributes>, ProviderGroupContactDetailAttributes { }
@@ -37,6 +38,10 @@ export function ProviderGroupContactDetailFactory(sequelize: Sequelize): Provide
         },
         Email: {
             type: SequelizeStatic.STRING(500),
+            allowNull: false
+        },
+        ContactPerson: {
+            type: SequelizeStatic.STRING(200),
             allowNull: false
         },
         Phone: {
@@ -69,6 +74,10 @@ export function ProviderGroupContactDetailFactory(sequelize: Sequelize): Provide
         },
         PasswordHash: {
             type: SequelizeStatic.TEXT,
+            allowNull: false
+        },
+        ProfileImage: {
+            type: SequelizeStatic.BLOB,
             allowNull: false
         }
     },

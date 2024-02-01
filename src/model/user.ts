@@ -117,6 +117,10 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
             type: SequelizeStatic.TEXT,
             allowNull: false
         },
+        FirstName: {
+            type: SequelizeStatic.TEXT,
+            allowNull: false
+        },
         Middleinitial: {
             type: SequelizeStatic.TEXT,
             allowNull: false

@@ -96,16 +96,17 @@ export default class UserService {
                     }
                 } else if (providerGroupContact && password) {
                     const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
-                    const data = await commonService.getData(parameters, db.ProviderGroup);
-                    const finalData: any = _.pick(data, ['Email', 'UserType']);
-                    finalData.Id = data.ProviderGroupID;
+                    // const data = await commonService.getData(parameters, db.ProviderGroup);
+                    const finalData: any = _.pick(providerGroupContact, ['Email']);
+                    finalData.Id = providerGroupContact.ProviderGroupID;
                     finalData.DisplayName = providerGroupContact.ContactPerson;
-                    const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                    finalData.UserType = appConstant.USER_TYPE[0];
+                    const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== providerGroupContact.ProviderGroupID);
                     const permissions = await this.getRolePermission(finalData.UserType as any);
                     finalData.UserPermissions = permissions;
                     let tokenData: any = {
-                        ID: data.ProviderGroupID,
-                        Email: data.Email,
+                        ID: providerGroupContact.ProviderGroupID,
+                        Email: providerGroupContact.Email,
                         user_type: appConstant.USER_TYPE[0],
                         type: appConstant.USER_TYPE[0],
                         DisplayName: providerGroupContact.ContactPerson
@@ -113,7 +114,7 @@ export default class UserService {
                     const authtoken = commonService.generateAuthToken(tokenData);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
-                        userid: data.ProviderGroupContactDetailID,
+                        userid: providerGroupContact.ProviderGroupID,
                         authToken: authtoken
                     }
                     // Push the new token details into the array
@@ -132,7 +133,6 @@ export default class UserService {
                             }
                         });
                     }).catch((error: any) => { throw new Error(error) });
-                    finalData.UserType = appConstant.USER_TYPE[0];
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else if (provider && password) {
                     const data = provider;
@@ -148,6 +148,7 @@ export default class UserService {
                     };
                     const authtoken = commonService.generateAuthToken(tokenData);
                     finalData.token = authtoken;
+                    finalData.UserType = appConstant.USER_TYPE[1];
                     const TokenDetailsString = {
                         userid: data.ProviderDoctorID,
                         authToken: authtoken
@@ -345,4 +346,73 @@ export default class UserService {
         }
     }
 
+    /**
+     * Used to get the profile information
+     */
+    async profileGet(data: any) {
+        try {
+            const commonService = new CommonService(db.user)
+            let { id, type, email } = data;
+            let finalRes: any;
+            let first_name;
+            let last_name;
+            switch (type) {
+                case appConstant.USER_TYPE[0]:
+                    const providerGroupConiditon: sequelizeObj = {};
+                    id = '6e8fbc52-8399-4f70-ab1c-9d0f355d7b42';
+                    providerGroupConiditon.where = {
+                        ProviderGroupID: id,
+                        Email: email
+                    }
+                    const providerGroupContact: any = await commonService.getData(providerGroupConiditon, db.ProviderGroupContact);
+                    const nameParts = providerGroupContact.ContactPerson.split(" ");
+                    const laname = nameParts.splice(nameParts.length - 1);
+                    const index = nameParts.indexOf(laname);
+                    if (index !== -1) {
+                        nameParts.splice(index, 1);
+                    }
+                    first_name = nameParts.join(' ').trim();
+                    last_name = laname.join(' ').trim();
+                    finalRes = _.pick(providerGroupContact, ['Email', 'ProfileImage']);
+                    finalRes.first_name = first_name;
+                    finalRes.last_name = last_name;
+                    return finalRes;
+                case appConstant.USER_TYPE[1]:
+                    const providerConiditon: sequelizeObj = {};
+                    id = '879154b3-21ea-4644-bb48-05f5881a6a09';
+                    email = 'iespinosa@doctorsgps.com';
+                    providerConiditon.where = {
+                        ProviderDoctorID: id,
+                        Email: email
+                    };
+                    const provider = await commonService.getData(providerConiditon, db.ProviderDoctor);
+                    console.log('provier ----',JSON.parse(JSON.stringify(provider)));
+                    finalRes = _.pick(provider, ['Email', 'ProfileImage']);
+                    finalRes.FirstName = provider.FirstName;
+                    finalRes.LastName = provider.LastName;
+                    return finalRes;
+                case appConstant.USER_TYPE[2]:
+                case appConstant.USER_TYPE[3]:
+                    const userCondition: sequelizeObj = {};
+                    userCondition.where = {
+                        Id: id,
+                        Email: email
+                    }
+                    const user = await commonService.getData(userCondition, db.User);
+                    finalRes = _.pick(user, ['Email', 'ProfileImage']);
+                    finalRes.FirstName = user.FirstName;
+                    finalRes.LastName = user.LastName;
+                    return finalRes;
+                default:
+                    return appConstant.MESSAGES.INVALID_USERTYPE;
+            }
+        } catch (error: any) {
+            logger.error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED, error.message);
+            throw new Error(error.message);
+        }
+    }
+
+    /**
+     * User Update function
+     */
 }

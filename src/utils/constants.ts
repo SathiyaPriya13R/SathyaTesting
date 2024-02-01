@@ -40,7 +40,10 @@ export default class AppConstants {
         DASHBOARD_SUMMARY_COMPLETED: "Dashboard summary function completed",
         PROFILE_GET_STARTED: "Profile get function started",
         PROFILE_GET_FAILED: "Profile get function failed",
-        PROFILE_GET_COMPLETED: "Profile get function completed"
+        PROFILE_GET_COMPLETED: "Profile get function completed",
+        PROFILE_UPDATE_STARTED: "Profile update function started",
+        PROFILE_UPDATE_FAILED: "Profile update function failed",
+        PROFILE_UPDATE_COMPLETED: "Profile update function completed"
     }
     MESSAGES = {
         EMPTY_TOKEN:
@@ -63,6 +66,7 @@ export default class AppConstants {
         TOKEN_EXPIRED: "The token you provide is expired",
         DATA_FOUND: "{{}} data found",
         DATA_NOT_FOUND: "{{}} data not found",
+        INVALID_USERTYPE: "Invalid user_type"
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',
