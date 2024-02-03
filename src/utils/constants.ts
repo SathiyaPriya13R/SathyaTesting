@@ -86,8 +86,9 @@ export default class AppConstants {
         MIST_CONNECTION_FAILED: "MIST Connection validate failed",
         RECORD_NOT_FOUND: "Record not found. Please ensure the correct details are provided.",
     };
-    SCREENS = {
-        DASHBOARD_STATISTICS: 'Dashboard statistics'
+    DASHBOARD_MESSAGES = {
+        DASHBOARD_STATISTICS: 'Dashboard statistics',
+        APP_FILTER: 'App filter'
     }
 
     STATUS_ACTIVE = 'Active';

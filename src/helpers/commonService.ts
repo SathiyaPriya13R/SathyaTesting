@@ -10,6 +10,8 @@ interface queryParamType {
     replacements?: Record<string, unknown>
 }
 
+const appConstant = new AppConstants();
+
 export default class CommonService {
     db!: Sequelize;
     constructor(database: Sequelize) {
@@ -143,5 +145,28 @@ export default class CommonService {
         `${process.env.JWT_SECRECT_KEY}`,
         { expiresIn: '3d' }
     )
+
+    /**
+    * This function used to get the ProviderGroupID or ProviderDoctorID when login as a user.
+    */
+    async getUserGroupProviderId(user_data: { id: string, user_type: string }, user_access_object: any, user_provider_access_object: any): Promise<string> {
+        try {
+            let user_id: string;
+            const user_object = await this.getData({ where: { Id: user_data.id }, attributes: ['Id', 'ProviderGroupID'] }, user_access_object);
+            const user_obj = JSON.parse(JSON.stringify(user_object));
+
+            user_id = (!_.isNil(user_obj) && (user_data.user_type === appConstant.USER_TYPE[0])) ? !_.isNil(user_obj.ProviderGroupID) ? user_obj.ProviderGroupID : null : null;
+
+            if (!_.isNil(user_obj) && (user_data.user_type === appConstant.USER_TYPE[1])) {
+                const usr_pvdrgrp_data = await this.getData({ where: { UserID: user_obj.Id }, attributes: ['ProviderDoctorID'] }, user_provider_access_object);
+                const provider_id: { ProviderDoctorID: string } = !_.isNil(usr_pvdrgrp_data) ? JSON.parse(JSON.stringify(usr_pvdrgrp_data)) : null;
+                user_id = provider_id.ProviderDoctorID;
+            }
+
+            return Promise.resolve(user_id);
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
 
 }
