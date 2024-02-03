@@ -49,4 +49,19 @@ export default class DashboardController {
             res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     } 
+
+    /**
+     * The below funcation is used to get the data of providers, locations and payers.
+     */
+    async appFilter(req: Request, res: Response) {
+        try {
+            const user_data: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user));
+            const filter_data = await dashboardService.getAppFilterData(user_data);
+            res.status(200).send({ data: encrypt(JSON.stringify(filter_data)) });
+        } catch (error) {
+            logger.error(error);
+            res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        }
+    }
+
 }

@@ -14,6 +14,7 @@ import { LocationFactory } from '../model/location';
 import { GroupInsuranceFactory } from '../model/groupInsurance';
 import { UserProviderGroupFactory } from '../model/userprovidergroup';
 import { LoginCmsFactory } from '../model/logincms';
+import { InsuranceMasterFactory } from '../model/insurancemaster';
 require('dotenv').config();
 
 const access = {
@@ -42,4 +43,10 @@ export const DoctorLocation = DoctorLocationFactory(user);
 export const Location = LocationFactory(user);
 export const GroupInsurance = GroupInsuranceFactory(user);
 export const UserProviderGroup = UserProviderGroupFactory(user);
+export const InsuranceMaster = InsuranceMasterFactory(user);
 
+/**
+ * Assositation
+ */
+GroupInsurance.belongsTo(InsuranceMaster, { as: 'payer', foreignKey: 'InsuranceID' })
+DoctorLocation.belongsTo(Location, { as: 'location', foreignKey: 'LocationID' })

@@ -12,6 +12,9 @@ const appConstant = new AppConstants();
 
 export default class DashboardService {
 
+    /**
+     * For get statistics count - payer enrollment status.
+     */
     async getStatisticsCount(user_data: { id: string, user_type: string }, data: { statistics_type: string, providers: Array<string>, payers: Array<string>, locations: Array<string>, year_month: string, week_number: number }): Promise<any> {
         try {
             const commonService = new CommonService(db.user)
@@ -53,9 +56,9 @@ export default class DashboardService {
             const statistic_count = JSON.parse(JSON.stringify(statistics));
 
             if (statistic_count && !_.isNil(statistic_count) && !_.isEmpty(statistic_count)) {
-                return { data: statistic_count, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.SCREENS.DASHBOARD_STATISTICS) };
+                return { data: statistic_count, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.DASHBOARD_STATISTICS) };
             } else {
-                return { data: statistic_count, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.SCREENS.DASHBOARD_STATISTICS) };
+                return { data: statistic_count, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.DASHBOARD_STATISTICS) };
             }
 
         } catch (error: any) {
@@ -170,4 +173,99 @@ export default class DashboardService {
             throw new Error(error.message)
         }
     }
+
+    /**
+     * This function used to get providers, payers and locations data for app filter.
+     */
+    async getAppFilterData(user_data: { id: string, user_type: string }): Promise<{ data: any, message: string }> {
+        try {
+            const commonService = new CommonService(db.user);
+            /**
+             * Checking logged in as a user or not.
+             */
+            const user_id = await commonService.getUserGroupProviderId(user_data, db.User, db.UserProvider);
+            user_data.id = user_id ?? user_data.id;
+
+            /**
+             * get providers details start
+             */
+            const provider_condition: sequelizeObj = {
+                where: { [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id, IsActive: 1 },
+                attributes: ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName']
+            };
+            const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
+            const provider_ids: Array<string> = provider_data.map(provider => provider.ProviderDoctorID);
+            /**
+             * get providers details end
+             */
+
+            /**
+             * get payers details start
+             */
+            const grp_insurance_condition: sequelizeObj = {
+                where: { ProviderDoctorID: { $in: _.uniq(provider_ids) }, IsActive: 1 },
+                attributes: ['GroupInsuranceID']
+            };
+            const grp_insurance: Array<Record<string, any>> = await commonService.getAllList(grp_insurance_condition, db.InsuranceTransaction);
+            const grp_insurance_ids: Array<string> = _.uniq(grp_insurance.map(insurance => insurance.GroupInsuranceID));
+
+            const payer_condition: sequelizeObj = {
+                where: { GroupInsuranceID: { $in: grp_insurance_ids }, IsActive: 1 },
+                attributes: ['InsuranceID'],
+                include: [
+                    {
+                        model: db.InsuranceMaster,
+                        as: 'payer',
+                        where: { IsActive: 1 },
+                        attributes: ['Name']
+                    }
+                ]
+            };
+            const payer_data: Array<Record<string, any>> = await commonService.getAllList(payer_condition, db.GroupInsurance);
+            /**
+             * get payers details end
+             */
+
+            /**
+             * get locations details start
+             */
+            const location_condition: sequelizeObj = {
+                where: { ProviderDoctorID: { $in: provider_ids }, IsActive: 1 },
+                attributes: ['LocationID'],
+                include: [
+                    {
+                        model: db.Location,
+                        as: 'location',
+                        where: { IsActive: 1 },
+                        attributes: ['Name']
+                    }
+                ]
+            };
+            const location_data: Array<Record<string, any>> = await commonService.getAllList(location_condition, db.DoctorLocation);
+            const unique_locations = _.uniqBy(location_data, 'LocationID');
+            /**
+             * get locations details end
+             */
+
+            /**
+             * combain the overall providers, payers, locations data's here
+             */
+            const finalResult: Record<string, any> = {
+                providers: JSON.parse(JSON.stringify(provider_data)),
+                payers: JSON.parse(JSON.stringify(payer_data)),
+                location: JSON.parse(JSON.stringify(unique_locations))
+            };
+
+            if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
+                return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.APP_FILTER) };
+            } else {
+                return { data: finalResult, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.APP_FILTER) };
+            }
+
+        } catch (error: any) {
+            logger.error(error.message);
+            throw new Error(error.message);
+        }
+    }
+
 }
