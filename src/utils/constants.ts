@@ -66,7 +66,9 @@ export default class AppConstants {
         TOKEN_EXPIRED: "The token you provide is expired",
         DATA_FOUND: "{{}} data found",
         DATA_NOT_FOUND: "{{}} data not found",
-        INVALID_USERTYPE: "Invalid user_type"
+        INVALID_USERTYPE: "Invalid user_type",
+        PROFILE_UPDATE_SUCCESSFUL: "Profile has been updated",
+        PROFILE_UPDATE_FAILED: "Profile update failed"
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',

@@ -37,6 +37,10 @@ export default class UserService {
             const user = await commonService.getData(emailValidation, db.User);
             const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
             const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
+            console.log('emailCondition',emailValidation);
+            console.log('user ---',user);
+            console.log('proviergroup',providerGroupContact);
+            console.log('provider --',provider);
             if ((user && user.PasswordHash) || (providerGroupContact && providerGroupContact.PasswordHash) || (provider && provider.PasswordHash)) {
                 const providerData = user || providerGroupContact || provider;
                 let password = await commonService.passwordHash(userData.PasswordHash, providerData);
@@ -90,12 +94,13 @@ export default class UserService {
                                 }
                             });
                         }).catch((error: any) => { throw new Error(error) });
+                        console.log('inalData ----',finalData);
                         return { data: encrypt(JSON.stringify(finalData)) };
                     } else {
                         return { error: appConstant.ERROR_MESSAGE.NOT_USER };
                     }
                 } else if (providerGroupContact && password) {
-                    const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
+                    // const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
                     // const data = await commonService.getData(parameters, db.ProviderGroup);
                     const finalData: any = _.pick(providerGroupContact, ['Email']);
                     finalData.Id = providerGroupContact.ProviderGroupID;
@@ -109,9 +114,11 @@ export default class UserService {
                         Email: providerGroupContact.Email,
                         user_type: appConstant.USER_TYPE[0],
                         type: appConstant.USER_TYPE[0],
-                        DisplayName: providerGroupContact.ContactPerson
+                        DisplayName: providerGroupContact.ContactPerson,
+                        ProviderGroupContactId: providerGroupContact.ProviderGroupContactDetailID
                     };
                     const authtoken = commonService.generateAuthToken(tokenData);
+                    console.log('authtoken ---------', authtoken);
                     finalData.token = authtoken;
                     const TokenDetailsString = {
                         userid: providerGroupContact.ProviderGroupID,
@@ -172,6 +179,7 @@ export default class UserService {
                             }
                         });
                     }).catch((error: any) => { throw new Error(error) });
+                    console.log('finalData -----',finalData);
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else {
                     logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
@@ -256,7 +264,7 @@ export default class UserService {
             logger.info(appConstant.LOGGER_MESSAGE.UPDATE_PASSWORD);
             const commonService = new CommonService(db.user);
             const passwordHash = await commonService.hashPassword(password);
-            if (type == 'user') {
+            if (type == 'User') {
                 const userCondition: sequelizeObj = {};
                 userCondition.where = {
                     Id: id
@@ -272,13 +280,14 @@ export default class UserService {
                     const user = await commonService.update({ Id: id }, userPasswordCondition, db.User);
                     return appConstant.MESSAGES.SUCCESS
                 }
-            } else if (type == 'group') {
+            } else if (type == 'Group') {
                 const groupCondition: sequelizeObj = {};
                 groupCondition.where = {
                     ProviderGroupContactDetailID: id
                 };
                 const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
                 const previousPasswordCheck = commonService.passwordHash(password, groupData);
+                console.log('previousPasswordCheck -----',previousPasswordCheck);
                 if (previousPasswordCheck) {
                     return appConstant.MESSAGES.FAILED
                 } else {
@@ -288,20 +297,32 @@ export default class UserService {
                     const providerGroup = await commonService.update({ ProviderGroupContactDetailID: id }, groupPasswordCondition, db.ProviderGroupContact);
                     return appConstant.MESSAGES.SUCCESS
                 }
-            } else if (type = 'doctor') {
+            } else if (type = 'Provider') {
+                console.log('uiuiuriue')
                 const doctorCondition: sequelizeObj = {};
                 doctorCondition.where = {
                     ProviderDoctorID: id
                 };
                 const doctorData = await commonService.getData(doctorCondition, db.ProviderDoctor);
-                const previousPasswordCheck = commonService.passwordHash(password, doctorData);
-                if (previousPasswordCheck) {
-                    return appConstant.MESSAGES.FAILED
+                if (!_.isNil(doctorData.PasswordHash)) {
+                    const previousPasswordCheck = commonService.passwordHash(password, doctorData);
+                    console.log('previoutPassWordChec----',previousPasswordCheck);
+                    if (previousPasswordCheck) {
+                        return appConstant.MESSAGES.FAILED
+                    } else {
+                        const userCondition = {
+                            PasswordHash: passwordHash
+                        }
+                        const provider = await commonService.update({ ProviderDoctorID: id }, userCondition, db.ProviderDoctor);
+                        console.log('provider -----',provider);
+                        return appConstant.MESSAGES.SUCCESS
+                    }
                 } else {
                     const userCondition = {
                         PasswordHash: passwordHash
                     }
                     const provider = await commonService.update({ ProviderDoctorID: id }, userCondition, db.ProviderDoctor);
+                    console.log('provider -----',provider);
                     return appConstant.MESSAGES.SUCCESS
                 }
             } else {
@@ -356,10 +377,10 @@ export default class UserService {
             let finalRes: any;
             let first_name;
             let last_name;
+            let profileimage;
             switch (type) {
                 case appConstant.USER_TYPE[0]:
                     const providerGroupConiditon: sequelizeObj = {};
-                    id = '6e8fbc52-8399-4f70-ab1c-9d0f355d7b42';
                     providerGroupConiditon.where = {
                         ProviderGroupID: id,
                         Email: email
@@ -373,21 +394,22 @@ export default class UserService {
                     }
                     first_name = nameParts.join(' ').trim();
                     last_name = laname.join(' ').trim();
-                    finalRes = _.pick(providerGroupContact, ['Email', 'ProfileImage']);
+                    finalRes = _.pick(providerGroupContact, ['Email']);
+                    profileimage = btoa(providerGroupContact.ProfileImage);
+                    finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`
                     finalRes.first_name = first_name;
                     finalRes.last_name = last_name;
                     return finalRes;
                 case appConstant.USER_TYPE[1]:
                     const providerConiditon: sequelizeObj = {};
-                    id = '879154b3-21ea-4644-bb48-05f5881a6a09';
-                    email = 'iespinosa@doctorsgps.com';
                     providerConiditon.where = {
                         ProviderDoctorID: id,
                         Email: email
                     };
-                    const provider = await commonService.getData(providerConiditon, db.ProviderDoctor);
-                    console.log('provier ----',JSON.parse(JSON.stringify(provider)));
-                    finalRes = _.pick(provider, ['Email', 'ProfileImage']);
+                    const provider: any = await commonService.getData(providerConiditon, db.ProviderDoctor);
+                    finalRes = _.pick(provider, ['Email']);
+                    profileimage = btoa(provider.ProfileImage);
+                    finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`
                     finalRes.FirstName = provider.FirstName;
                     finalRes.LastName = provider.LastName;
                     return finalRes;
@@ -398,8 +420,10 @@ export default class UserService {
                         Id: id,
                         Email: email
                     }
-                    const user = await commonService.getData(userCondition, db.User);
-                    finalRes = _.pick(user, ['Email', 'ProfileImage']);
+                    const user: any = await commonService.getData(userCondition, db.User);
+                    finalRes = _.pick(user, ['Email']);
+                    profileimage = btoa(user.ProfileImage);
+                    finalRes.Profile = `data:image/png;base64, ${profileimage}`;
                     finalRes.FirstName = user.FirstName;
                     finalRes.LastName = user.LastName;
                     return finalRes;
@@ -415,4 +439,68 @@ export default class UserService {
     /**
      * User Update function
      */
+    async profileUpdate(data: any, image: string){
+        try {
+            const commonService = new CommonService(db.user);
+            let finalRes: any;
+            switch (data.type) {
+                case appConstant.USER_TYPE[0]:
+                    const contactPerson = `${data.FirstName} ${data.LastName}`
+                    const providerGroupUpdateCondition = {
+                        ProfileImage: image,
+                        ContactPerson: contactPerson, 
+                    };
+                    const providerGroupContact: any = await commonService.update({ProviderGroupContactDetailID: data.providergroupcontactid}, providerGroupUpdateCondition, db.ProviderGroupContact);
+                    return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
+                case appConstant.USER_TYPE[1]:
+                    const providerUpdateConiditon = {
+                        ProfileImage: image,
+                        FirstName: data.FirstName, 
+                        LastName: data.LastName
+                    };
+                    const provider = await commonService.update({ProviderDoctorID: data.id},providerUpdateConiditon, db.ProviderDoctor);
+                    return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
+                case appConstant.USER_TYPE[2]:
+                case appConstant.USER_TYPE[3]:
+                    const userUpdateCondition = {
+                        ProfileImage: image,
+                        FirstName: data.FirstName, 
+                        LastName: data.LastName,
+                        DisplayName: `${data.FirstName} ${data.LastName}`
+                    }
+                    const user: any = await commonService.update({ID: data.id}, userUpdateCondition, db.User);
+                    return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
+                default:
+                    return appConstant.MESSAGES.INVALID_USERTYPE;
+            }
+        } catch (error: any) {
+            logger.error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED, error.message);
+            throw new Error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED);
+        }
+    }
+
+    /**
+     * Logout funcation
+     */
+    async logOut(data: any) {
+        try {
+            const { id } = data;
+            const currentData: any = await new Promise((resolve, reject) => {
+                redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
+                    if (getError) {
+                        logger.error(appConstant.ERROR_MESSAGE.ERROR_FETCHING_TOKEN_DETAILS, getError);
+                        reject(new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED));
+                    } else {
+                        resolve(data);
+                    }
+                });
+            }).catch((error: any) => { throw new Error(error) });
+            const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
+            console.log('tokenDetailsArray ----',tokenDetailsArray);
+            console.log('id ----',id);
+        } catch (error: any) {
+            logger.error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED, error.message);
+            throw new Error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED);
+        }
+    }
 }

@@ -50,6 +50,10 @@ app.use(async function (req: Request, res: Response, next) {
                 try {
                     const secrectkey = `${process.env.JWT_SECREAT_KEK}`;
                     const decodedToken: any = jwt.verify(token, secrectkey);
+                    console.log('decodedToken 0000',decodedToken);
+                    // const token1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNkZTM4MDk4LWMzYmItNGM0MC04OGY4LTFkOGJlMjlkNGEyZSIsInVzZXJfdHlwZSI6Ikdyb3VwIiwiZW1haWwiOiJzYXRoZWVzaEBxd2F5LnVzIiwiZGlzcGxheU5hbWUiOiJTYXRoZWVzaCBLdW1hciIsInR5cGUiOiJVc2VyX0dyb3VwIiwiaWF0IjoxNzA2Nzc5ODMyLCJleHAiOjE3MDcwMzkwMzJ9.6NvkBCquGiBNXMGjnesDppSLKl-tY9FCuIwdVWjFN9o'
+                    // const token2 = jwt.verify(token1, secrectkey)
+                    // console.log("jwt.verify(token, secrectkey)",token2);
                     const allToken = currentData ? JSON.parse(currentData) : [];
                     const tokenValid = allToken.filter((item: any) => item.userid == decodedToken.id);
                     if (tokenValid && !_.isEmpty(tokenValid)) {
