@@ -32,7 +32,7 @@ app.use(async function (req: Request, res: Response, next) {
                 redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
                     if (getError) {
                         logger.error(appConstant.ERROR_MESSAGE.ERROR_FETCHING_TOKEN_DETAILS, getError);
-                        reject(new Error(appConstant.ERROR_MESSAGE.MIST_TOKEN_FAILED));
+                        reject(new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED));
                     } else {
                         resolve(data);
                     }

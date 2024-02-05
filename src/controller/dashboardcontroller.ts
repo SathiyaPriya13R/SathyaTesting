@@ -41,8 +41,9 @@ export default class DashboardController {
      */
     async dashboardsummary(req: Request, res: Response) {
         try {
-            const data = req.user;
-            const finalRes: any = await dashboardService.getDashBoardSummary(data);
+            const { id , type }:{ id: string, type: string} = JSON.parse(JSON.stringify(req.user));
+            const user_data = { id, type };
+            const finalRes: any = await dashboardService.getDashBoardSummary(user_data);
             res.status(200).send(finalRes);
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_FAILED} ${error.message}`);

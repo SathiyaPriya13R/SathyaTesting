@@ -14,10 +14,11 @@ export default class UserController {
      */
     async signinUser(req: Request, res: Response) {
         try {
-            const decryptedData = decrypt(req.body.data);
-            if (decryptedData) {
-                const data = JSON.parse(decryptedData)
-                let { email, password } = data;
+            // const decryptedData = decrypt(req.body.data);
+
+            // if (decryptedData) {
+                // const data = JSON.parse(decryptedData)
+                let { email, password } = req.body;
                 email = (email as string).toLowerCase();
                 const userData = {
                     Email: email,
@@ -32,9 +33,9 @@ export default class UserController {
                 }).catch((error) => {
                     res.status(400).send({ data: encrypt(JSON.stringify(error)) });
                 });
-            } else {
-                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
-            }
+            // } else {
+            //     res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+            // }
         } catch (error) {
             logger.error(error);
             res.status(400).send({ data: encrypt(JSON.stringify(error)) });
@@ -67,8 +68,9 @@ export default class UserController {
      */
     async changePassword(req: Request, res: Response): Promise<void> {
         try {
-            const decryptedData = decrypt(req.body.data);
-            const data = JSON.parse(decryptedData)
+            // const decryptedData = decrypt(req.body.data);
+            // const data = JSON.parse(decryptedData)
+            const data = req.body;
             const userid = data.id;
             const password = data.password;
             const type = data.type;
@@ -106,4 +108,57 @@ export default class UserController {
         }
     }
 
+    /**
+     * This function is used to get the profile data
+     */
+    async profileGet(req: Request, res: Response): Promise<void> {
+        try {
+            const data: any = req.user;
+            const finalRes = await userService.profileGet(data);
+            logger.info(appConstant.LOGGER_MESSAGE.PROFILE_GET_COMPLETED)
+            res.status(200).send(finalRes);
+        } catch (error: any) {
+            logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
+            res.status(400).send(error.message);
+        }
+    }
+
+    /**
+     * This function is used to get the profile update
+     */
+    async profileUpdate(req: Request, res: Response): Promise<void> {
+        try {
+            const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
+            const str = req.body.image;
+            const imgStr = atob(str);
+            const { FirstName, LastName } = req.body;
+            const data = {
+                FirstName: FirstName,
+                LastName: LastName,
+                id: id,
+                type: type,
+                providergroupcontactid: providerGroupContactId
+            }
+            const finalRes = await userService.profileUpdate(data, imgStr);
+            res.status(200).send(finalRes)
+        } catch (error: any) {
+            logger.error(`${appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_FAILED} ${error.message}`);
+            res.status(400).send(error.message);
+        }
+    }
+
+    /**
+     * This function is used to logout a user 
+     */
+    async logOut(req: Request, res: Response): Promise<void> {
+        try {
+            const data: any = req.user;
+            const finalRes = await userService.logOut(data);
+            logger.info(appConstant.LOGGER_MESSAGE)
+            res.status(200).send(finalRes);
+        } catch (error: any) {
+            logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
+            res.status(400).send(error.message);
+        }
+    }
 }

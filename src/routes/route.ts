@@ -13,10 +13,15 @@ router.post('/signin', users.signinUser);
 router.post('/forgotpassword', users.forgetPassword);
 router.post('/resetpassword', users.changePassword);
 router.get('/logincms', users.TermsofservicePrivacyPolicy);
+router.get('/logout',AuthGuard, users.logOut);
 
 // dashboard routes
 router.get('/dashboard/summarycount', AuthGuard, dashboardcontroller.dashboardsummary);
 router.post('/dashboard/statisticscount', AuthGuard, dashboardcontroller.getStatistic);
 router.get('/app/filter', AuthGuard, dashboardcontroller.appFilter);
+
+// Profile routes
+router.get('/profileget', AuthGuard, users.profileGet);
+router.post('/profile/update', AuthGuard, users.profileUpdate);
 
 module.exports.route = router;

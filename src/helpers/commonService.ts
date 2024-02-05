@@ -141,6 +141,7 @@ export default class CommonService {
         email: userData.Email,
         displayName: userData.DisplayName,
         type: userData.type,
+        providerGroupContactId: userData.ProviderGroupContactId
     },
         `${process.env.JWT_SECRECT_KEY}`,
         { expiresIn: '3d' }
