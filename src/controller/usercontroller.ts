@@ -14,11 +14,11 @@ export default class UserController {
      */
     async signinUser(req: Request, res: Response) {
         try {
-            // const decryptedData = decrypt(req.body.data);
+            const decryptedData = decrypt(req.body.data);
 
-            // if (decryptedData) {
-                // const data = JSON.parse(decryptedData)
-                let { email, password } = req.body;
+            if (decryptedData) {
+                const data = JSON.parse(decryptedData)
+                let { email, password } = data;
                 email = (email as string).toLowerCase();
                 const userData = {
                     Email: email,
@@ -33,9 +33,9 @@ export default class UserController {
                 }).catch((error) => {
                     res.status(400).send({ data: encrypt(JSON.stringify(error)) });
                 });
-            // } else {
-            //     res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
-            // }
+            } else {
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+            }
         } catch (error) {
             logger.error(error);
             res.status(400).send({ data: encrypt(JSON.stringify(error)) });

@@ -43,7 +43,10 @@ export default class AppConstants {
         PROFILE_GET_COMPLETED: "Profile get function completed",
         PROFILE_UPDATE_STARTED: "Profile update function started",
         PROFILE_UPDATE_FAILED: "Profile update function failed",
-        PROFILE_UPDATE_COMPLETED: "Profile update function completed"
+        PROFILE_UPDATE_COMPLETED: "Profile update function completed",
+        LOGOUT_FUNCTION_STARTED: "Logout function started",
+        LOGOUT_FUNCTION_COMPLETED: "Logout function completed",
+        LOGOUT_FUNCTION_FAILED: "Logout function failed",
     }
     MESSAGES = {
         EMPTY_TOKEN:
@@ -68,7 +71,8 @@ export default class AppConstants {
         DATA_NOT_FOUND: "{{}} data not found",
         INVALID_USERTYPE: "Invalid user_type",
         PROFILE_UPDATE_SUCCESSFUL: "Profile has been updated",
-        PROFILE_UPDATE_FAILED: "Profile update failed"
+        PROFILE_UPDATE_FAILED: "Profile update failed",
+        LOGOUT_FUNCTION_COMPLETED: "Logout successfully"
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',
