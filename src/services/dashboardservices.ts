@@ -81,7 +81,6 @@ export default class DashboardService {
             let provider, payer, location = [];
             let payerUniq = [];
             const { type, id } = data;
-            console.log('type ----',type)
             switch (type) {
                 case appConstant.USER_TYPE[0]:
                     providerCondition.where = {
@@ -156,7 +155,6 @@ export default class DashboardService {
 
                     return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[3]:
-                    console.log('67890-')
                     providerCondition.where = {
                         ProviderGroupID: id,
                         isActive: 1,
