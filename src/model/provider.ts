@@ -43,6 +43,8 @@ export interface ProviderDoctorAttributes {
     AttestationDate: Date,
     ProviderTypeID: UUID,
     PasswordHash: string,
+    PwdExpireDate: Date,
+    ForgotPwd: boolean,
 }
 
 export interface ProviderDoctorModel extends Model<ProviderDoctorAttributes>, ProviderDoctorAttributes { }
@@ -214,7 +216,15 @@ export function ProviderDoctorFactory(sequelize: Sequelize): ProviderDoctorStati
         PasswordHash: {
             type: SequelizeStatic.TEXT,
             allowNull: false
-        }
+        },
+        PwdExpireDate: {
+            type: SequelizeStatic.DATE,
+            allowNull: true
+        },
+        ForgotPwd: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        },
     },
     {
 

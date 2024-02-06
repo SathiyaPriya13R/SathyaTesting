@@ -68,9 +68,8 @@ export default class UserController {
      */
     async changePassword(req: Request, res: Response): Promise<void> {
         try {
-            // const decryptedData = decrypt(req.body.data);
-            // const data = JSON.parse(decryptedData)
-            const data = req.body;
+            const decryptedData = decrypt(req.body.data);
+            const data = JSON.parse(decryptedData)
             const userid = data.id;
             const password = data.password;
             const type = data.type;
@@ -104,7 +103,7 @@ export default class UserController {
             res.status(200).send({ data: encrypt(JSON.stringify(responseData)) });
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_FAILED} ${error.message}`);
-            res.status(400).send(error.message);
+            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
         }
     }
 
@@ -119,7 +118,7 @@ export default class UserController {
             res.status(200).send(finalRes);
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
-            res.status(400).send(error.message);
+            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
         }
     }
 
@@ -142,8 +141,8 @@ export default class UserController {
             const finalRes = await userService.profileUpdate(data, imgStr);
             res.status(200).send(finalRes)
         } catch (error: any) {
-            logger.error(`${appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_FAILED} ${error.message}`);
-            res.status(400).send(error.message);
+            logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
+            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
         }
     }
 
@@ -158,7 +157,23 @@ export default class UserController {
             res.status(200).send(finalRes);
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
-            res.status(400).send(error.message);
+            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
+        }
+    }
+
+    /**
+     * Password expiration check
+     */
+
+    async passwordExpirationCheck(req: Request, res: Response) {
+        try {
+            const {id, type} = req.params
+            const pwdExpirationCheck = await userService.pwdExpirationCheck(id, type);
+            res.status(200).send(pwdExpirationCheck);
+            logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+        } catch (error: any) {
+            logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);
+            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
         }
     }
 }

@@ -31,7 +31,7 @@ export default class UserService {
             logger.info(appConstant.LOGGER_MESSAGE.LOGIN_STARTED);
             const commonService = new CommonService(db.user);
             const emailValidation: sequelizeObj = {
-                where: { Email: userData.Email }
+                where: { Email: userData.Email, IsActive: 1 }
             };
 
             const user = await commonService.getData(emailValidation, db.User);
@@ -39,6 +39,10 @@ export default class UserService {
             const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
             if ((user && user.PasswordHash) || (providerGroupContact && providerGroupContact.PasswordHash) || (provider && provider.PasswordHash)) {
                 const providerData = user || providerGroupContact || provider;
+                if (providerData.ForgotPwd == 1) {
+                    logger.error(appConstant.MESSAGES.PASSWORD_RESET, '');
+                    return ({error: appConstant.MESSAGES.PASSWORD_RESET});
+                }
                 let password = await commonService.passwordHash(userData.PasswordHash, providerData);
                 const currentData: any = await new Promise((resolve, reject) => {
                     redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
@@ -53,7 +57,7 @@ export default class UserService {
                 const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
                 if (user && password) {
                     const data = user;
-                    const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId } };
+                    const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId, IsActive: 1 } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
                         const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName', 'ProviderClientID', 'ProviderGroupID']);
@@ -197,7 +201,8 @@ export default class UserService {
             const templateFile = templates.forgetpasswordtemplate
             const emailValidation: sequelizeObj = {};
             emailValidation.where = {
-                Email: email
+                Email: email,
+                IsActive: 1
             };
             const user = await commonService.getData(emailValidation, db.User);
             const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
@@ -271,7 +276,8 @@ export default class UserService {
             if (type == 'User') {
                 const userCondition: sequelizeObj = {};
                 userCondition.where = {
-                    Id: id
+                    Id: id,
+                    IsActive: 1
                 };
                 const userData = await commonService.getData(userCondition, db.User);
                 const previousPasswordCheck = commonService.passwordHash(password, userData);
@@ -279,7 +285,8 @@ export default class UserService {
                     return appConstant.MESSAGES.FAILED
                 } else {
                     const userPasswordCondition = {
-                        PasswordHash: passwordHash
+                        PasswordHash: passwordHash,
+                        ForgotPwd: 0
                     }
                     const user = await commonService.update({ Id: id }, userPasswordCondition, db.User);
                     return appConstant.MESSAGES.SUCCESS
@@ -287,15 +294,26 @@ export default class UserService {
             } else if (type == 'Group') {
                 const groupCondition: sequelizeObj = {};
                 groupCondition.where = {
-                    ProviderGroupContactDetailID: id
+                    ProviderGroupContactDetailID: id,
+                    IsActive: 1
                 };
                 const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
-                const previousPasswordCheck = commonService.passwordHash(password, groupData);
-                if (previousPasswordCheck) {
-                    return appConstant.MESSAGES.FAILED
+                if (!_.isNil(groupData.PasswordHash)) {
+                    const previousPasswordCheck = commonService.passwordHash(password, groupData);
+                    if (previousPasswordCheck) {
+                        return appConstant.MESSAGES.FAILED
+                    } else {
+                        const groupPasswordCondition = {
+                            PasswordHash: passwordHash,
+                            ForgotPwd: 0
+                        }
+                        const providerGroup = await commonService.update({ ProviderGroupContactDetailID: id }, groupPasswordCondition, db.ProviderGroupContact);
+                        return appConstant.MESSAGES.SUCCESS
+                    }
                 } else {
                     const groupPasswordCondition = {
-                        PasswordHash: passwordHash
+                        PasswordHash: passwordHash,
+                        ForgotPwd: 0
                     }
                     const providerGroup = await commonService.update({ ProviderGroupContactDetailID: id }, groupPasswordCondition, db.ProviderGroupContact);
                     return appConstant.MESSAGES.SUCCESS
@@ -303,7 +321,8 @@ export default class UserService {
             } else if (type = 'Provider') {
                 const doctorCondition: sequelizeObj = {};
                 doctorCondition.where = {
-                    ProviderDoctorID: id
+                    ProviderDoctorID: id,
+                    IsActive: 1
                 };
                 const doctorData = await commonService.getData(doctorCondition, db.ProviderDoctor);
                 if (!_.isNil(doctorData.PasswordHash)) {
@@ -312,14 +331,16 @@ export default class UserService {
                         return appConstant.MESSAGES.FAILED
                     } else {
                         const userCondition = {
-                            PasswordHash: passwordHash
+                            PasswordHash: passwordHash,
+                            ForgotPwd: 0
                         }
                         const provider = await commonService.update({ ProviderDoctorID: id }, userCondition, db.ProviderDoctor);
                         return appConstant.MESSAGES.SUCCESS
                     }
                 } else {
                     const userCondition = {
-                        PasswordHash: passwordHash
+                        PasswordHash: passwordHash,
+                        ForgotPwd: 0
                     }
                     const provider = await commonService.update({ ProviderDoctorID: id }, userCondition, db.ProviderDoctor);
                     return appConstant.MESSAGES.SUCCESS
@@ -382,7 +403,8 @@ export default class UserService {
                     const providerGroupConiditon: sequelizeObj = {};
                     providerGroupConiditon.where = {
                         ProviderGroupID: id,
-                        Email: email
+                        Email: email,
+                        IsActive: 1
                     }
                     const providerGroupContact: any = await commonService.getData(providerGroupConiditon, db.ProviderGroupContact);
                     const nameParts = providerGroupContact.ContactPerson.split(" ");
@@ -398,12 +420,13 @@ export default class UserService {
                     finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`
                     finalRes.first_name = first_name;
                     finalRes.last_name = last_name;
-                    return finalRes;
+                    return {data : encrypt(JSON.stringify(finalRes))};
                 case appConstant.USER_TYPE[1]:
                     const providerConiditon: sequelizeObj = {};
                     providerConiditon.where = {
                         ProviderDoctorID: id,
-                        Email: email
+                        Email: email,
+                        IsActive: 1
                     };
                     const provider: any = await commonService.getData(providerConiditon, db.ProviderDoctor);
                     finalRes = _.pick(provider, ['Email']);
@@ -411,13 +434,14 @@ export default class UserService {
                     finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`
                     finalRes.FirstName = provider.FirstName;
                     finalRes.LastName = provider.LastName;
-                    return finalRes;
+                    return {data : encrypt(JSON.stringify(finalRes))};
                 case appConstant.USER_TYPE[2]:
                 case appConstant.USER_TYPE[3]:
                     const userCondition: sequelizeObj = {};
                     userCondition.where = {
                         Id: id,
-                        Email: email
+                        Email: email,
+                        IsActive: 1
                     }
                     const user: any = await commonService.getData(userCondition, db.User);
                     finalRes = _.pick(user, ['Email']);
@@ -425,9 +449,9 @@ export default class UserService {
                     finalRes.Profile = `data:image/png;base64, ${profileimage}`;
                     finalRes.FirstName = user.FirstName;
                     finalRes.LastName = user.LastName;
-                    return finalRes;
+                    return {data : encrypt(JSON.stringify(finalRes))};
                 default:
-                    return appConstant.MESSAGES.INVALID_USERTYPE;
+                    return {data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_USERTYPE))};
             }
         } catch (error: any) {
             logger.error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED, error.message);
@@ -442,30 +466,49 @@ export default class UserService {
         try {
             const commonService = new CommonService(db.user);
             let finalRes: any;
+            let FirstName;
+            let LastName;
+            let pimage;
             switch (data.type) {
                 case appConstant.USER_TYPE[0]:
-                    const contactPerson = `${data.FirstName} ${data.LastName}`
-                    const providerGroupUpdateCondition = {
-                        ProfileImage: image,
-                        ContactPerson: contactPerson, 
-                    };
+                    const contactPerson = data.FirstName && data.LastName ? `${data.FirstName} ${data.LastName}`: null;
+                    pimage = image ? image: null
+                    const providerGroupUpdateCondition: any = {}
+                    if (!_.isNil(pimage)) {
+                        providerGroupUpdateCondition.ProfileImage = pimage
+                    }
+                    if (!_.isNil(contactPerson)) {
+                        providerGroupUpdateCondition.ContactPerson = contactPerson
+                    }
                     const providerGroupContact: any = await commonService.update({ProviderGroupContactDetailID: data.providergroupcontactid}, providerGroupUpdateCondition, db.ProviderGroupContact);
                     return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
                 case appConstant.USER_TYPE[1]:
-                    const providerUpdateConiditon = {
-                        ProfileImage: image,
-                        FirstName: data.FirstName, 
-                        LastName: data.LastName
-                    };
+                    FirstName = data.FirstName ? data.FirstName: null;
+                    LastName = data.LastName ? data.LastName: null;
+                    pimage = image ? image: null
+                    const providerUpdateConiditon: any = {}
+                    if (!_.isNil(pimage)) {
+                        providerUpdateConiditon.ProfileImage = pimage
+                    }
+                    if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
+                        providerUpdateConiditon.FirstName = FirstName,
+                        providerUpdateConiditon.LastName = LastName
+                    }
                     const provider = await commonService.update({ProviderDoctorID: data.id},providerUpdateConiditon, db.ProviderDoctor);
                     return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
                 case appConstant.USER_TYPE[2]:
                 case appConstant.USER_TYPE[3]:
-                    const userUpdateCondition = {
-                        ProfileImage: image,
-                        FirstName: data.FirstName, 
-                        LastName: data.LastName,
-                        DisplayName: `${data.FirstName} ${data.LastName}`
+                    FirstName = data.FirstName ? data.FirstName: null;
+                    LastName = data.LastName ? data.LastName: null;
+                    pimage = image ? image: null;
+                    const userUpdateCondition: any = {}
+                    if (!_.isNil(image)) {
+                        providerUpdateConiditon.ProfileImage = pimage
+                    }
+                    if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
+                        providerUpdateConiditon.FirstName = FirstName,
+                        providerUpdateConiditon.LastName = LastName,
+                        userUpdateCondition.DisplayName = `${data.FirstName} ${data.LastName}`
                     }
                     const user: any = await commonService.update({ID: data.id}, userUpdateCondition, db.User);
                     return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
@@ -513,6 +556,74 @@ export default class UserService {
         } catch (error: any) {
             logger.error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED, error.message);
             throw new Error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED);
+        }
+    }
+
+    /**
+     * Password expiration check
+     */
+    async pwdExpirationCheck(id: string, type: string) {
+        try {
+            const commonService = new CommonService(db.user);
+            switch (type) {
+                case appConstant.USER_TYPE[0]:
+                    const groupCondition: sequelizeObj = {};
+                    groupCondition.where = {
+                        ProviderGroupContactDetailID: id,
+                        IsActive: 1
+                    };
+                    const providerGroup: any = await commonService.getData(groupCondition, db.ProviderGroupContact);
+                    if (providerGroup.PwdExpireDate >= new Date() && providerGroup.ForgotPwd === 1) {
+                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        return {
+                            message: appConstant.MESSAGES.PWD_NOT_EXPIRED,
+                        }
+                    }
+                    else {
+                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        throw new Error(appConstant.MESSAGES.PWD_EXPIRED);
+                    }
+                case appConstant.USER_TYPE[1]: 
+                    const providerConiditon: sequelizeObj = {};
+                    providerConiditon.where = {
+                        ProviderDoctorID: id,
+                        IsActive: 1
+                    };
+                    const provider: any = await commonService.getData(providerConiditon, db.ProviderDoctor);
+                    if (provider.PwdExpireDate >= new Date() && provider.ForgotPwd === 1) {
+                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        return {
+                            message: appConstant.MESSAGES.PWD_NOT_EXPIRED,
+                        }
+                    }
+                    else {
+                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        throw new Error(appConstant.MESSAGES.PWD_EXPIRED);
+                    }
+                    case appConstant.USER_TYPE[2]: 
+                    case appConstant.USER_TYPE[3]: 
+                    const userCondition: sequelizeObj = {};
+                    userCondition.where = {
+                        Id: id,
+                        IsActive: 1
+                    };
+                    const userData: any = await commonService.getData(userCondition, db.User);
+                    if (userData.PwdExpireDate >= new Date() && userData.ForgotPwd === 1) {
+                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        return {
+                            message: appConstant.MESSAGES.PWD_NOT_EXPIRED,
+                        }
+                    }
+                    else {
+                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        throw new Error(appConstant.MESSAGES.PWD_EXPIRED);
+                    }
+                default:
+                    return appConstant.MESSAGES.INVALID_USERTYPE;
+            }
+        } catch (error: any) {
+            logger.error(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED, error.message);
+            throw new Error(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);
         }
     }
 }

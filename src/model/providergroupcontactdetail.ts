@@ -16,6 +16,9 @@ export interface ProviderGroupContactDetailAttributes {
     ModifiedDate: Date,
     PasswordHash: string,
     ProfileImage: Blob,
+    PwdExpireDate: Date,
+    ForgotPwd: boolean,
+    IsActive: boolean
 }
 
 export interface ProviderGroupContactDetailModel extends Model<ProviderGroupContactDetailAttributes>, ProviderGroupContactDetailAttributes { }
@@ -79,7 +82,19 @@ export function ProviderGroupContactDetailFactory(sequelize: Sequelize): Provide
         ProfileImage: {
             type: SequelizeStatic.BLOB,
             allowNull: false
-        }
+        },
+        PwdExpireDate: {
+            type: SequelizeStatic.DATE,
+            allowNull: true
+        },
+        ForgotPwd: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        },
+        IsActive: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: false
+        },
     },
     {
 

@@ -51,7 +51,9 @@ export interface UserAttributes {
     IsUserAlreadyLogedin: boolean,
     ProviderClientID: UUID,
     ProviderGroupID: UUID,
-    IsSystem: boolean  
+    IsSystem: boolean,
+    PwdExpireDate: Date,
+    ForgotPwd: boolean,
 }
 
 export interface UserModel extends Model<UserAttributes>, UserAttributes { }
@@ -256,7 +258,15 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
         IsSystem: {
             type: SequelizeStatic.BOOLEAN,
             allowNull: true
-        }
+        },
+        PwdExpireDate: {
+            type: SequelizeStatic.DATE,
+            allowNull: true
+        },
+        ForgotPwd: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        },
     },
     {
 

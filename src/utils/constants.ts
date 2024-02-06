@@ -47,6 +47,9 @@ export default class AppConstants {
         LOGOUT_FUNCTION_STARTED: "Logout function started",
         LOGOUT_FUNCTION_COMPLETED: "Logout function completed",
         LOGOUT_FUNCTION_FAILED: "Logout function failed",
+        PWD_EXPIERATION_STARTED: "Password expieration function started",
+        PWD_EXPIERATION_COMPLETED: "Password expieration function completed",
+        PWD_EXPIERATION_FAILED: "Password expieration function failed",
     }
     MESSAGES = {
         EMPTY_TOKEN:
@@ -72,7 +75,10 @@ export default class AppConstants {
         INVALID_USERTYPE: "Invalid user_type",
         PROFILE_UPDATE_SUCCESSFUL: "Profile has been updated",
         PROFILE_UPDATE_FAILED: "Profile update failed",
-        LOGOUT_FUNCTION_COMPLETED: "Logout successfully"
+        LOGOUT_FUNCTION_COMPLETED: "Logout successfully",
+        PASSWORD_RESET: "User have requested for password reset. Please update your new password and try again",
+        PWD_NOT_EXPIRED: "Password generation link is not expired",
+        PWD_EXPIRED: "Password generation link is expired",
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',
