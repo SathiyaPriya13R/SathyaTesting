@@ -516,6 +516,7 @@ export default class UserService {
                     return appConstant.MESSAGES.INVALID_USERTYPE;
             }
         } catch (error: any) {
+            console.log('erro 519 ----',error);
             logger.error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED, error.message);
             throw new Error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED);
         }

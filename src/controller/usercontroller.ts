@@ -156,7 +156,8 @@ export default class UserController {
                 res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
             }
         } catch (error: any) {
-            logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
+            console.log('error ---',error)
+            logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_UPDATE_FAILED} ${error.message}`);
             res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
