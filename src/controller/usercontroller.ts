@@ -129,10 +129,17 @@ export default class UserController {
         try {
             const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
             const decryptedData = decrypt(req.body.data);
-            const reqdata = JSON.parse(decryptedData)
-            const str = reqdata.ProfileImage;
-            const imgStr = atob(str);
-            const { FirstName, LastName } = reqdata;
+            const reqdata = JSON.parse(decryptedData);
+            let imgStr;
+            if (reqdata.ProfileImage) {
+                const str = reqdata.ProfileImage;
+                imgStr = atob(str);
+            }
+            let FirstName, LastName;
+            if (!_.isNil(reqdata.FirstName) && !_.isNil(reqdata.LastName)) {
+                FirstName = reqdata.FirstName;
+                LastName = reqdata.LastName
+            }
             const data = {
                 FirstName: FirstName,
                 LastName: LastName,

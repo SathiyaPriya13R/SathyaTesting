@@ -462,7 +462,7 @@ export default class UserService {
     /**
      * User Update function
      */
-    async profileUpdate(data: any, image: string){
+    async profileUpdate(data: any, image: any){
         try {
             const commonService = new CommonService(db.user);
             let finalRes: any;
