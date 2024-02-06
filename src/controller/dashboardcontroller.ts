@@ -15,7 +15,7 @@ export default class DashboardController {
             if (decryptedData) {
                 const filter_data = JSON.parse(decryptedData)
                 const data = filter_data
-                const { id , user_type }:{ id: string, user_type: string} = JSON.parse(JSON.stringify(req.user));
+                const { id, user_type }: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user));
                 const user_data = { id, user_type };
                 await dashboardService.getStatisticsCount(user_data, data).then((data: any) => {
                     if (data.error) {
@@ -41,15 +41,17 @@ export default class DashboardController {
      */
     async dashboardsummary(req: Request, res: Response) {
         try {
-            const { id , type }:{ id: string, type: string} = JSON.parse(JSON.stringify(req.user));
+            const decryptedData = (req.body.data) ? decrypt(req.body.data) : null
+            const { id, type }: { id: string, type: string } = JSON.parse(JSON.stringify(req.user));
             const user_data = { id, type };
-            const finalRes: any = await dashboardService.getDashBoardSummary(user_data);
+            const filter_data = (decryptedData) ? JSON.parse(decryptedData) : null
+            const finalRes: any = await dashboardService.getDashBoardSummary(user_data, filter_data);
             res.status(200).send(finalRes);
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_FAILED} ${error.message}`);
             res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
-    } 
+    }
 
     /**
      * The below funcation is used to get the data of providers, locations and payers.

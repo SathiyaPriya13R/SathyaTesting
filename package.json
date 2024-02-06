@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon src/index.ts",
-    "build": "tsc && cp .env dist/"
+    "build": "tsc && cp .env src/ddl/qway.sql dist/"
   },
   "author": "",
   "license": "ISC",

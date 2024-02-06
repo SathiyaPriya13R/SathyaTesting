@@ -15,11 +15,15 @@ export default class DashboardService {
     /**
      * For get statistics count - payer enrollment status.
      */
-    async getStatisticsCount(user_data: { id: string, user_type: string }, data: { statistics_type: string, providers: Array<string>, payers: Array<string>, locations: Array<string>, year_month: string, week_number: number }): Promise<any> {
+    async getStatisticsCount(user_data: { id: string, user_type: string }, data: { statistics_type: string, year_month: string, week_number: number, filter?: any }): Promise<any> {
         try {
             const commonService = new CommonService(db.user)
             const queryparams = {} as sequelizeObj;
-            const querystring = (data.statistics_type == appConstant.STATISTICS_TYPE[0]) ? queries.month_wise_statistics_count : queries.week_wise_statistics_count;
+            let providersquery = '';
+            let payersquery = '';
+            let locationsquery = '';
+
+            let querystring = (data.statistics_type == appConstant.STATISTICS_TYPE[0]) ? queries.month_wise_statistics_count : queries.week_wise_statistics_count;
 
             const user_object = await commonService.getData({ where: { Id: user_data.id }, attributes: ['Id', 'ProviderGroupID'] }, db.User);
             const user_obj = JSON.parse(JSON.stringify(user_object));
@@ -34,31 +38,134 @@ export default class DashboardService {
                 user_data.id = provider_id.ProviderDoctorID
             }
 
-            if (user_data.user_type === appConstant.USER_TYPE[1]) {
-                data.providers.push(user_data.id);
-            }
+            const filter_datas: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = (!_.isNil(data) && !_.isNil(data.filter) && (!_.isEmpty(data.filter.providers) || !_.isEmpty(data.filter.payers) || !_.isEmpty(data.filter.locations)))
+                ? await commonService.getFilterDataIds(data.filter.providers, data.filter.payers, data.filter.locations, {
+                    provider_doctor: db.ProviderDoctor,
+                    insurance_transaction: db.InsuranceTransaction,
+                    group_insurance: db.GroupInsurance,
+                    doctor_location: db.DoctorLocation,
+                })
+                : { providers: [], payers: [], locations: [] };
 
             queryparams.type = sequelize.QueryTypes.SELECT;
             queryparams.replacements = {
                 user_id: user_data.id,
                 user_type: user_data.user_type,
                 month: data.year_month,
-                providers: data.providers,
-                payers: data.payers,
-                locations: data.locations
             };
 
-            if ((data.statistics_type == appConstant.STATISTICS_TYPE[1])) {
-                queryparams.replacements.week_number = data.week_number;
+            if (!_.isNil(data.filter)) {
+                if (!_.isEmpty(filter_datas.providers)) {
+                    providersquery = ` AND insurance_transaction.ProviderDoctorID IN (${filter_datas.providers.map((pro: string) => `'${pro}'`).join(', ')})`;
+                }
+
+                if (!_.isEmpty(filter_datas.payers)) {
+                    payersquery = ` AND insurance_master.InsuranceID IN (${filter_datas.payers.map((pay: string) => `'${pay}'`).join(', ')})`;
+                }
+
+                if (!_.isEmpty(filter_datas.locations)) {
+                    locationsquery = ` AND insurance_transaction.LocationID IN (${filter_datas.locations.map((loc: string) => `'${loc}'`).join(', ')})`;
+                }
             }
+
+            querystring = querystring.replace(new RegExp(':providersquery:', 'g'), providersquery);
+            querystring = querystring.replace(new RegExp(':payersquery:', 'g'), payersquery);
+            querystring = querystring.replace(new RegExp(':locationsquery:', 'g'), locationsquery);
+
+            const status_data_condition = {
+                where: { Name: 'InsuranceFollowup Status', IsActive: 1 },
+                attributes: ['LookupTypeID'],
+                include: [
+                    {
+                        model: db.lookupValue,
+                        as: 'followupstatus',
+                        where: { IsActive: 1 },
+                        attributes: ['LookupValueID', 'Name']
+                    }
+                ]
+            }
+            const status_data = await commonService.getData(status_data_condition, db.LookupType);
+            const statuses = JSON.parse(JSON.stringify(status_data))
 
             const statistics = await commonService.executeQuery(querystring, queryparams);
             const statistic_count = JSON.parse(JSON.stringify(statistics));
 
-            if (statistic_count && !_.isNil(statistic_count) && !_.isEmpty(statistic_count)) {
-                return { data: statistic_count, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.DASHBOARD_STATISTICS) };
+            let weeklyData: any = {};
+            if (data.statistics_type == appConstant.STATISTICS_TYPE[1] && !_.isNil(statuses) && !_.isNil(statistic_count)) {
+                // Iterate through statistic count to organize data by week number
+                statistic_count.forEach((stat: any) => {
+                    const { week_number } = stat;
+                    if (!weeklyData[week_number]) {
+                        weeklyData[week_number] = [];
+                    }
+                    weeklyData[week_number].push(stat);
+                });
+
+                // Iterate through each week to add missing statuses with count 0
+                Object.keys(weeklyData).forEach(week => {
+                    const weekData = weeklyData[week];
+                    const existingStatuses = weekData.map((item: any) => item.status);
+
+                    statuses.followupstatus.forEach((status: any) => {
+                        if (!existingStatuses.includes(status.Name)) {
+                            weekData.push({
+                                year: weekData[0].year,
+                                month: weekData[0].month,
+                                week_number: parseInt(week),
+                                status: status.Name,
+                                LookupValueID: status.LookupValueID,
+                                status_count: 0
+                            });
+                        }
+                    });
+
+                    // Sort the data by status
+                    weekData.sort((a: any, b: any) => {
+                        if (a.status < b.status) return -1;
+                        if (a.status > b.status) return 1;
+                        return 0;
+                    });
+                });
+            }
+
+            let monthlyData: any = [];
+            if (data.statistics_type == appConstant.STATISTICS_TYPE[0] && !_.isNil(statuses) && !_.isNil(statistic_count)) {
+                statuses.followupstatus.forEach((statusItem: any) => {
+                    // Check if there is a matching status in month_array
+                    const matchingStatus = statistic_count.find((monthItem: any) => monthItem.LookupValueID === statusItem.LookupValueID);
+
+                    // If a matching status is found in month_array, use its count
+                    if (matchingStatus) {
+                        monthlyData.push({
+                            year: matchingStatus.year,
+                            month: matchingStatus.month,
+                            status: statusItem.Name,
+                            LookupValueID: statusItem.LookupValueID,
+                            status_count: matchingStatus.status_count
+                        });
+                    } else {
+                        // If no matching status is found, set the count value to 0
+                        monthlyData.push({
+                            status: statusItem.Name,
+                            LookupValueID: statusItem.LookupValueID,
+                            status_count: 0
+                        });
+                    }
+                });
+            }
+
+            let final_data: any;
+            if (data.statistics_type == appConstant.STATISTICS_TYPE[1]) {
+                final_data = (!_.isNil(weeklyData)) ? weeklyData : null
+            }
+            if (data.statistics_type == appConstant.STATISTICS_TYPE[0]) {
+                final_data = (!_.isNil(statistic_count)) ? statistic_count : null
+            }
+
+            if (final_data && !_.isNil(final_data) && !_.isEmpty(final_data)) {
+                return { data: final_data, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.DASHBOARD_STATISTICS) };
             } else {
-                return { data: statistic_count, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.DASHBOARD_STATISTICS) };
+                return { data: final_data, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.DASHBOARD_STATISTICS) };
             }
 
         } catch (error: any) {
@@ -70,7 +177,7 @@ export default class DashboardService {
     /**
      * For get the count of provider, location, payer
      */
-    async getDashBoardSummary(data: any) {
+    async getDashBoardSummary(data: any, filter_data?: any) {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_STARTED);
             const commonService = new CommonService(db.user);
@@ -81,21 +188,33 @@ export default class DashboardService {
             let provider, payer, location = [];
             let payerUniq = [];
             const { type, id } = data;
+            const filter_datas: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = (!_.isNil(filter_data) && !_.isNil(filter_data.filter) && (!_.isEmpty(filter_data.filter.providers) || !_.isEmpty(filter_data.filter.payers) || !_.isEmpty(filter_data.filter.locations)))
+                ? await commonService.getFilterDataIds(filter_data.filter.providers, filter_data.filter.payers, filter_data.filter.locations, {
+                    provider_doctor: db.ProviderDoctor,
+                    insurance_transaction: db.InsuranceTransaction,
+                    group_insurance: db.GroupInsurance,
+                    doctor_location: db.DoctorLocation,
+                })
+                : { providers: [], payers: [], locations: [] };
+
             switch (type) {
                 case appConstant.USER_TYPE[0]:
                     providerCondition.where = {
                         ProviderGroupID: id,
                         isActive: 1,
+                        ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
                     };
                     provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
                     payerCondition.where = {
                         ProviderGroupID: id,
                         isActive: 1,
+                        ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.payers)) && { InsuranceID: { $in: filter_datas.payers } }),
                     };
                     payer = await commonService.getAllList(payerCondition, db.GroupInsurance);
                     locationCondition.where = {
                         ProviderGroupID: id,
                         isActive: 1,
+                        ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } }),
                     };
                     location = await commonService.getAllList(locationCondition, db.Location);
                     finalRes = {

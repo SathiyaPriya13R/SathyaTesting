@@ -170,4 +170,109 @@ export default class CommonService {
         }
     }
 
+    /**
+     * Global apply filter functionality.
+     */
+    async getFilterDataIds(providers: Array<string>, payers: Array<string>, locations: Array<string>, access_object: { provider_doctor: any, insurance_transaction: any, group_insurance: any, doctor_location: any }): Promise<{ providers: Array<string>, payers: Array<string>, locations: Array<string> }> {
+        try {
+
+            let data: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = { providers: [], payers: [], locations: [] }
+
+            const getAllNeededIds = async (neededIds: Array<string>, ids: Array<string>, provider: boolean, payer: boolean, location: boolean) => {
+
+                let provider_ids: Array<string> = (provider) ? ids : [];
+                let payer_ids: Array<string> = (payer) ? ids : [];
+                let location_ids: Array<string> = (location) ? ids : [];
+
+                if (location || payer) {
+                    if (location && location_ids.length > 0 && neededIds.includes('provider')) {
+                        const location_data: Array<Record<string, any>> = await this.getAllList({ where: { IsActive: 1, LocationID: { $in: location_ids } }, attributes: ['ProviderDoctorID'] }, access_object.doctor_location);
+                        const location_data_ids: Array<string> = await location_data.map(location_data => location_data.ProviderDoctorID);
+                        provider_ids.push(...location_data_ids);
+                    }
+                    if (payer && payer_ids.length > 0 && neededIds.includes('provider')) {
+                        const group_insurance_data: Array<Record<string, any>> = await this.getAllList({ where: { IsActive: 1, InsuranceID: { $in: payer_ids } }, attributes: ['GroupInsuranceID'] }, access_object.group_insurance);
+                        const group_insurance_data_ids: Array<string> = group_insurance_data.map(grpinsurance => grpinsurance.GroupInsuranceID);
+                        const provider_insurance_data: Array<Record<string, any>> = await this.getAllList({ where: { IsActive: 1, GroupInsuranceID: { $in: group_insurance_data_ids } }, attributes: ['ProviderDoctorID'] }, access_object.insurance_transaction);
+                        const provider_insurance_data_ids: Array<string> = provider_insurance_data.map(pinsurance => pinsurance.ProviderDoctorID);
+                        provider_ids.push(...provider_insurance_data_ids);
+                    }
+                }
+
+                if (neededIds.includes('payer')) {
+                    const group_insurance_data: Array<Record<string, any>> = await this.getAllList({ where: { IsActive: 1, ProviderDoctorID: { $in: provider_ids } }, attributes: ['GroupInsuranceID'] }, access_object.insurance_transaction);
+                    const group_insurance_data_ids: Array<string> = group_insurance_data.map(grpinsurance => grpinsurance.GroupInsuranceID);
+                    const insurance_data: Array<Record<string, any>> = await this.getAllList({ where: { IsActive: 1, GroupInsuranceID: { $in: group_insurance_data_ids } }, attributes: ['InsuranceID'] }, access_object.group_insurance)
+                    const insurance_data_ids: Array<string> = insurance_data.map(insurance => insurance.InsuranceID);
+                    payer_ids.push(...insurance_data_ids);
+                }
+
+                if (neededIds.includes('location')) {
+                    const location_data: Array<Record<string, any>> = await this.getAllList({ where: { IsActive: 1, ProviderDoctorID: { $in: provider_ids } }, attributes: ['LocationID'] }, access_object.doctor_location);
+                    const location_data_ids: Array<string> = location_data.map(location_data => location_data.LocationID);
+                    location_ids.push(...location_data_ids);
+                }
+
+                return {
+                    providers: _.uniq(provider_ids),
+                    payers: _.uniq(payer_ids),
+                    locations: _.uniq(location_ids)
+                }
+            }
+
+            if ((!_.isNil(providers) && !_.isEmpty(providers)) && (!_.isNil(payers) && !_.isEmpty(payers)) && (!_.isNil(locations) && !_.isEmpty(locations))) {
+                data = { providers, payers, locations }
+            }
+
+            if ((!_.isNil(providers) && !_.isEmpty(providers)) && (_.isArray(payers) && _.isEmpty(payers)) && (_.isArray(locations) && _.isEmpty(locations))) {
+                const datas = await getAllNeededIds(['payer', 'location'], providers, true, false, false)
+                data.providers = datas.providers
+                data.payers = datas.payers
+                data.locations = datas.locations
+            }
+
+            if ((!_.isNil(providers) && !_.isEmpty(providers)) && (_.isArray(payers) && _.isEmpty(payers)) && (!_.isNil(locations) && !_.isEmpty(locations))) {
+                const datas = await getAllNeededIds(['payer'], providers, true, false, false)
+                data.providers = datas.providers
+                data.payers = datas.payers
+                data.locations = locations
+            }
+
+            if ((!_.isNil(providers) && !_.isEmpty(providers)) && (!_.isNil(payers) && !_.isEmpty(payers)) && (_.isArray(locations) && _.isEmpty(locations))) {
+                const datas = await getAllNeededIds(['location'], providers, true, false, false)
+                data.providers = datas.providers
+                data.payers = payers
+                data.locations = datas.locations
+            }
+
+            if ((_.isArray(providers) && _.isEmpty(providers)) && (!_.isNil(payers) && !_.isEmpty(payers)) && (_.isArray(locations) && _.isEmpty(locations))) {
+                const datas = await getAllNeededIds(['location', 'provider'], payers, false, true, false)
+                data.providers = datas.providers
+                data.payers = datas.payers
+                data.locations = datas.locations
+            }
+
+            if ((_.isArray(providers) && _.isEmpty(providers)) && (!_.isNil(payers) && !_.isEmpty(payers)) && (!_.isNil(locations) && !_.isEmpty(locations))) {
+                const datas = await getAllNeededIds(['provider'], payers, false, true, false)
+                data.providers = datas.providers
+                data.payers = datas.payers
+                data.locations = locations
+            }
+
+            if ((_.isArray(providers) && _.isEmpty(providers)) && (_.isArray(payers) && _.isEmpty(payers)) && (!_.isNil(locations) && !_.isEmpty(locations))) {
+                const datas = await getAllNeededIds(['provider', 'payer'], locations, false, false, true)
+                data.providers = datas.providers
+                data.payers = datas.payers
+                data.locations = datas.locations
+            }
+
+            data.providers = data.providers.map(provider => provider.toString())
+            data.payers = data.payers.map(payer => payer.toString())
+            data.locations = data.locations.map(location => location.toString())
+            return Promise.resolve(data)
+        } catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
 }
