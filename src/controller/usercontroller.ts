@@ -128,9 +128,11 @@ export default class UserController {
     async profileUpdate(req: Request, res: Response): Promise<void> {
         try {
             const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
-            const str = req.body.image;
+            const decryptedData = decrypt(req.body.data);
+            const reqdata = JSON.parse(decryptedData)
+            const str = reqdata.ProfileImage;
             const imgStr = atob(str);
-            const { FirstName, LastName } = req.body;
+            const { FirstName, LastName } = reqdata;
             const data = {
                 FirstName: FirstName,
                 LastName: LastName,
