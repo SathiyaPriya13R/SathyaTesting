@@ -15,6 +15,7 @@ import { GroupInsuranceFactory } from '../model/groupInsurance';
 import { UserProviderGroupFactory } from '../model/userprovidergroup';
 import { LoginCmsFactory } from '../model/logincms';
 import { InsuranceMasterFactory } from '../model/insurancemaster';
+import { LookupTypeFactory } from '../model/lookuptype';
 require('dotenv').config();
 
 const access = {
@@ -44,9 +45,11 @@ export const Location = LocationFactory(user);
 export const GroupInsurance = GroupInsuranceFactory(user);
 export const UserProviderGroup = UserProviderGroupFactory(user);
 export const InsuranceMaster = InsuranceMasterFactory(user);
+export const LookupType = LookupTypeFactory(user);
 
 /**
  * Assositation
  */
 GroupInsurance.belongsTo(InsuranceMaster, { as: 'payer', foreignKey: 'InsuranceID' })
 DoctorLocation.belongsTo(Location, { as: 'location', foreignKey: 'LocationID' })
+LookupType.hasMany(lookupValue, { as: 'followupstatus', foreignKey: 'LookupTypeID' })
