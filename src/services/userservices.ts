@@ -481,7 +481,7 @@ export default class UserService {
                         providerGroupUpdateCondition.ContactPerson = contactPerson
                     }
                     const providerGroupContact: any = await commonService.update({ProviderGroupContactDetailID: data.providergroupcontactid}, providerGroupUpdateCondition, db.ProviderGroupContact);
-                    return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
+                    return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 case appConstant.USER_TYPE[1]:
                     FirstName = data.FirstName ? data.FirstName: null;
                     LastName = data.LastName ? data.LastName: null;
@@ -495,7 +495,7 @@ export default class UserService {
                         providerUpdateConiditon.LastName = LastName
                     }
                     const provider = await commonService.update({ProviderDoctorID: data.id},providerUpdateConiditon, db.ProviderDoctor);
-                    return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
+                    return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 case appConstant.USER_TYPE[2]:
                 case appConstant.USER_TYPE[3]:
                     FirstName = data.FirstName ? data.FirstName: null;
@@ -503,15 +503,15 @@ export default class UserService {
                     pimage = image ? image: null;
                     const userUpdateCondition: any = {}
                     if (!_.isNil(image)) {
-                        providerUpdateConiditon.ProfileImage = pimage
+                        userUpdateCondition.ProfileImage = pimage
                     }
                     if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
-                        providerUpdateConiditon.FirstName = FirstName,
-                        providerUpdateConiditon.LastName = LastName,
+                        userUpdateCondition.FirstName = FirstName,
+                        userUpdateCondition.LastName = LastName,
                         userUpdateCondition.DisplayName = `${data.FirstName} ${data.LastName}`
                     }
                     const user: any = await commonService.update({ID: data.id}, userUpdateCondition, db.User);
-                    return appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL;
+                    return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 default:
                     return appConstant.MESSAGES.INVALID_USERTYPE;
             }
