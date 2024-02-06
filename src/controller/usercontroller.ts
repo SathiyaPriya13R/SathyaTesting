@@ -103,7 +103,7 @@ export default class UserController {
             res.status(200).send({ data: encrypt(JSON.stringify(responseData)) });
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_FAILED} ${error.message}`);
-            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
+            res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
 
@@ -118,7 +118,7 @@ export default class UserController {
             res.status(200).send(finalRes);
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
-            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
+            res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
 
@@ -127,31 +127,37 @@ export default class UserController {
      */
     async profileUpdate(req: Request, res: Response): Promise<void> {
         try {
-            const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
             const decryptedData = decrypt(req.body.data);
-            const reqdata = JSON.parse(decryptedData);
-            let imgStr;
-            if (reqdata.ProfileImage) {
-                const str = reqdata.ProfileImage;
-                imgStr = atob(str);
+
+            if (decryptedData) {
+                const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
+                const reqdata = JSON.parse(decryptedData);
+                let imgStr;
+                if (reqdata.ProfileImage) {
+                    const str = reqdata.ProfileImage;
+                    imgStr = atob(str);
+                }
+                let FirstName, LastName;
+                if (!_.isNil(reqdata.FirstName) && !_.isNil(reqdata.LastName)) {
+                    FirstName = reqdata.FirstName;
+                    LastName = reqdata.LastName
+                }
+                const data = {
+                    FirstName: FirstName,
+                    LastName: LastName,
+                    id: id,
+                    type: type,
+                    providergroupcontactid: providerGroupContactId
+                }
+                const finalRes = await userService.profileUpdate(data, imgStr);
+                res.status(200).send(finalRes);
             }
-            let FirstName, LastName;
-            if (!_.isNil(reqdata.FirstName) && !_.isNil(reqdata.LastName)) {
-                FirstName = reqdata.FirstName;
-                LastName = reqdata.LastName
+            else {
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
             }
-            const data = {
-                FirstName: FirstName,
-                LastName: LastName,
-                id: id,
-                type: type,
-                providergroupcontactid: providerGroupContactId
-            }
-            const finalRes = await userService.profileUpdate(data, imgStr);
-            res.status(200).send(finalRes)
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
-            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
+            res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
 
@@ -166,7 +172,7 @@ export default class UserController {
             res.status(200).send(finalRes);
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED} ${error.message}`);
-            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
+            res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
 
@@ -176,13 +182,13 @@ export default class UserController {
 
     async passwordExpirationCheck(req: Request, res: Response) {
         try {
-            const {id, type} = req.params
+            const { id, type } = req.params
             const pwdExpirationCheck = await userService.pwdExpirationCheck(id, type);
             res.status(200).send(pwdExpirationCheck);
             logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
         } catch (error: any) {
             logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);
-            res.status(400).send({data: encrypt(JSON.stringify(error.message))});
+            res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
 }
