@@ -446,7 +446,7 @@ export default class UserService {
                     const user: any = await commonService.getData(userCondition, db.User);
                     finalRes = _.pick(user, ['Email']);
                     profileimage = btoa(user.ProfileImage);
-                    finalRes.Profile = `data:image/png;base64, ${profileimage}`;
+                    finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`;
                     finalRes.FirstName = user.FirstName;
                     finalRes.LastName = user.LastName;
                     return {data : encrypt(JSON.stringify(finalRes))};
