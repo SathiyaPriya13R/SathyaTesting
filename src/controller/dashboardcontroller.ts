@@ -11,7 +11,7 @@ export default class DashboardController {
 
     async getStatistic(req: Request, res: Response) {
         try {
-            const decryptedData = decrypt(req.body.data);
+            const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
             if (decryptedData) {
                 const filter_data = JSON.parse(decryptedData)
                 const data = filter_data
@@ -42,8 +42,8 @@ export default class DashboardController {
     async dashboardsummary(req: Request, res: Response) {
         try {
             const decryptedData = (req.body.data) ? decrypt(req.body.data) : null
-            const { id, type }: { id: string, type: string } = JSON.parse(JSON.stringify(req.user));
-            const user_data = { id, type };
+            const { id, user_type }: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user));
+            const user_data = { id, user_type };
             const filter_data = (decryptedData) ? JSON.parse(decryptedData) : null
             const finalRes: any = await dashboardService.getDashBoardSummary(user_data, filter_data);
             res.status(200).send(finalRes);

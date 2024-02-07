@@ -177,17 +177,16 @@ export default class DashboardService {
     /**
      * For get the count of provider, location, payer
      */
-    async getDashBoardSummary(data: any, filter_data?: any) {
+    async getDashBoardSummary(user_data: { id: string, user_type: string }, filter_data?: any) {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_STARTED);
             const commonService = new CommonService(db.user);
-            let payerCondition: sequelizeObj = {};
-            let providerCondition: sequelizeObj = {};
-            let locationCondition: sequelizeObj = {};
-            let finalRes = {};
-            let provider, payer, location = [];
-            let payerUniq = [];
-            const { type, id } = data;
+            /**
+             * Checking logged in as a user or not.
+             */
+            const user_id = await commonService.getUserGroupProviderId(user_data, db.User, db.UserProvider);
+            user_data.id = user_id ?? user_data.id;
+
             const filter_datas: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = (!_.isNil(filter_data) && !_.isNil(filter_data.filter) && (!_.isEmpty(filter_data.filter.providers) || !_.isEmpty(filter_data.filter.payers) || !_.isEmpty(filter_data.filter.locations)))
                 ? await commonService.getFilterDataIds(filter_data.filter.providers, filter_data.filter.payers, filter_data.filter.locations, {
                     provider_doctor: db.ProviderDoctor,
@@ -197,108 +196,57 @@ export default class DashboardService {
                 })
                 : { providers: [], payers: [], locations: [] };
 
-            switch (type) {
-                case appConstant.USER_TYPE[0]:
-                    providerCondition.where = {
-                        ProviderGroupID: id,
-                        isActive: 1,
-                        ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
-                    };
-                    provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
-                    payerCondition.where = {
-                        ProviderGroupID: id,
-                        isActive: 1,
-                        ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.payers)) && { InsuranceID: { $in: filter_datas.payers } }),
-                    };
-                    payer = await commonService.getAllList(payerCondition, db.GroupInsurance);
-                    locationCondition.where = {
-                        ProviderGroupID: id,
-                        isActive: 1,
-                        ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } }),
-                    };
-                    location = await commonService.getAllList(locationCondition, db.Location);
-                    finalRes = {
-                        provider: provider.length,
-                        payer: payer.length,
-                        location: location.length
-                    }
-                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
-                    return { data: encrypt(JSON.stringify(finalRes)) };
-                case appConstant.USER_TYPE[1]:
-                    providerCondition.where = {
-                        ProviderDoctorID: id,
-                        isActive: 1,
-                    };
-                    provider = await commonService.getAllList(providerCondition, db.ProviderDoctor);
-                    payerCondition.where = {
-                        ProviderDoctorID: id,
-                        isActive: 1,
-                    };
-                    payer = await commonService.getAllList(payerCondition, db.InsuranceTransaction);
-                    payerUniq = _.uniqBy(payer, 'GroupInsuranceID');
-                    locationCondition.where = {
-                        ProviderDoctorID: id,
-                        isActive: 1,
-                    };
-                    location = await commonService.getAllList(locationCondition, db.DoctorLocation);
-                    finalRes = {
-                        provider: provider.length,
-                        payer: payerUniq.length,
-                        location: location.length
-                    }
-                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
-                    return { data: encrypt(JSON.stringify(finalRes)) };
-                case appConstant.USER_TYPE[2]:
-                    providerCondition.where = {
-                        ProviderDoctorID: id,
-                        isActive: 1,
-                    };
-                    provider = await commonService.getData(providerCondition, db.UserProvider);
-                    payerCondition.where = {
-                        ProviderDoctorID: provider.ProviderDoctorID,
-                        isActive: 1,
-                    };
-                    payer = await commonService.getAllList(payerCondition, db.InsuranceTransaction);
-                    payerUniq = _.uniqBy(payer, 'GroupInsuranceID');
-                    locationCondition.where = {
-                        ProviderDoctorID: provider.ProviderDoctorID,
-                        isActive: 1,
-                    };
-                    location = await commonService.getAllList(locationCondition, db.DoctorLocation);
-                    finalRes = {
-                        provider: [provider].length,
-                        payer: payerUniq.length,
-                        location: location.length
-                    }
-                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+            // For provider
+            const provider_condition: sequelizeObj = {
+                where: {
+                    [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
+                    IsActive: 1,
+                    ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } })
+                },
+                attributes: ['ProviderDoctorID']
+            };
+            const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
+            const unique_providers_data: Array<string> = _.uniq(provider_data.map(provider_data => provider_data.ProviderDoctorID));
 
-                    return { data: encrypt(JSON.stringify(finalRes)) };
-                case appConstant.USER_TYPE[3]:
-                    providerCondition.where = {
-                        ProviderGroupID: id,
-                        isActive: 1,
-                    };
-                    provider = await commonService.getData(providerCondition, db.UserProviderGroup);
-                    payerCondition.where = {
-                        ProviderGroupID: provider.ProviderGroupID,
-                        isActive: 1,
-                    };
-                    payer = await commonService.getAllList(payerCondition, db.GroupInsurance);
-                    locationCondition.where = {
-                        ProviderGroupID: provider.ProviderGroupID,
-                        isActive: 1,
-                    };
-                    location = await commonService.getAllList(locationCondition, db.Location);
-                    finalRes = {
-                        provider: [provider].length,
-                        payer: payer.length,
-                        location: location.length
-                    }
-                    logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
-                    return { data: encrypt(JSON.stringify(finalRes)) };
-                default:
-                    return appConstant.MESSAGES.INVALID_USERTYPE;
+            // For payers
+            const grp_insurance_condition: sequelizeObj = {
+                where: { ProviderDoctorID: { $in: _.uniq(unique_providers_data) }, IsActive: 1 },
+                attributes: ['GroupInsuranceID']
+            };
+            const grp_insurance: Array<Record<string, any>> = await commonService.getAllList(grp_insurance_condition, db.InsuranceTransaction);
+            const grp_insurance_ids: Array<string> = _.uniq(grp_insurance.map(insurance => insurance.GroupInsuranceID));
+
+            const payer_condition: sequelizeObj = {
+                where: {
+                    GroupInsuranceID: { $in: grp_insurance_ids },
+                    IsActive: 1,
+                    ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.payers)) && { InsuranceID: { $in: filter_datas.payers } })
+                },
+                attributes: ['InsuranceID']
+            };
+            const payer_data: Array<Record<string, any>> = await commonService.getAllList(payer_condition, db.GroupInsurance);
+            const unique_payers_data: Array<string> = _.uniq(payer_data.map(payer_data => payer_data.InsuranceID));
+
+            // For locations
+            const location_condition: sequelizeObj = {
+                where: {
+                    ProviderDoctorID: { $in: _.uniq(unique_providers_data) },
+                    IsActive: 1,
+                    ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } })
+                },
+                attributes: ['LocationID'],
+            };
+            const location_data: Array<Record<string, any>> = await commonService.getAllList(location_condition, db.DoctorLocation);
+            const unique_locations_data: Array<string> = _.uniq(location_data.map(location_data => location_data.LocationID));
+
+            const finalRes = {
+                provider: unique_providers_data.length,
+                payer: unique_payers_data.length,
+                location: unique_locations_data.length
             }
+            logger.info(appConstant.LOGGER_MESSAGE.DASHBOARD_SUMMARY_COMPLETED);
+            return { data: encrypt(JSON.stringify(finalRes)) };
+
         } catch (error: any) {
             logger.error(error.message);
             throw new Error(error.message)
