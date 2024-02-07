@@ -159,7 +159,7 @@ export default class DashboardService {
                 final_data = (!_.isNil(weeklyData)) ? weeklyData : null
             }
             if (data.statistics_type == appConstant.STATISTICS_TYPE[0]) {
-                final_data = (!_.isNil(statistic_count)) ? statistic_count : null
+                final_data = (!_.isNil(monthlyData)) ? monthlyData : null
             }
 
             if (final_data && !_.isNil(final_data) && !_.isEmpty(final_data)) {
