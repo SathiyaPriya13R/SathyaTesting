@@ -185,7 +185,7 @@ export default class UserController {
         try {
             const { id, type } = req.params
             const pwdExpirationCheck = await userService.pwdExpirationCheck(id, type);
-            res.status(200).send(pwdExpirationCheck);
+            res.status(200).send({data: encrypt(JSON.stringify(pwdExpirationCheck))});
             logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
         } catch (error: any) {
             logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);

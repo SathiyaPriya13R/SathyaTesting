@@ -581,7 +581,7 @@ export default class UserService {
                         }
                     }
                     else {
-                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        logger.error(appConstant.MESSAGES.PWD_EXPIRED);
                         throw new Error(appConstant.MESSAGES.PWD_EXPIRED);
                     }
                 case appConstant.USER_TYPE[1]: 
@@ -598,7 +598,7 @@ export default class UserService {
                         }
                     }
                     else {
-                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        logger.error(appConstant.MESSAGES.PWD_EXPIRED);
                         throw new Error(appConstant.MESSAGES.PWD_EXPIRED);
                     }
                     case appConstant.USER_TYPE[2]: 
@@ -616,7 +616,7 @@ export default class UserService {
                         }
                     }
                     else {
-                        logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
+                        logger.error(appConstant.MESSAGES.PWD_EXPIRED);
                         throw new Error(appConstant.MESSAGES.PWD_EXPIRED);
                     }
                 default:
