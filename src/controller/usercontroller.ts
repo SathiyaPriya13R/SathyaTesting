@@ -51,16 +51,20 @@ export default class UserController {
     async forgetPassword(req: Request, res: Response): Promise<void> {
         try {
             const decryptedData = decrypt(req.body.data);
-            const data = JSON.parse(decryptedData)
-            let { email } = data;
-            const email_address = (email as string).toLowerCase();
-            await userService.forgetPassword(email_address).then((data) => {
-                logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_GENERATION);
-                const finalRes = {
-                    data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.LINK_GENERATED }))
-                }
-                res.status(200).send(finalRes);
-            })
+            if (decryptedData) {
+                const data = JSON.parse(decryptedData)
+                let { email } = data;
+                const email_address = (email as string).toLowerCase();
+                await userService.forgetPassword(email_address).then((data) => {
+                    logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_GENERATION);
+                    const finalRes = {
+                        data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.LINK_GENERATED }))
+                    }
+                    res.status(200).send(finalRes);
+                })
+            } else {
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+            }
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_GENERATION_FAILED} ${error.message}`);
             res.status(400).send({ data: encrypt(JSON.stringify((error.message))) });
@@ -73,22 +77,26 @@ export default class UserController {
     async changePassword(req: Request, res: Response): Promise<void> {
         try {
             const decryptedData = decrypt(req.body.data);
-            const data = JSON.parse(decryptedData)
-            const userid = data.id;
-            const password = data.password;
-            const type = data.type;
-            const finalResponse: any = await userService.updatePassword(userid, password, type, req, res);
-            logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE);
-            if (finalResponse == appConstant.MESSAGES.FAILED) {
-                const finalRes = {
-                    data: encrypt(JSON.stringify({ message: appConstant.ERROR_MESSAGE.RESETPWD_AS_OLD }))
+            if (decryptedData) {
+                const data = JSON.parse(decryptedData)
+                const userid = data.id;
+                const password = data.password;
+                const type = data.type;
+                const finalResponse: any = await userService.updatePassword(userid, password, type, req, res);
+                logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE);
+                if (finalResponse == appConstant.MESSAGES.FAILED) {
+                    const finalRes = {
+                        data: encrypt(JSON.stringify({ message: appConstant.ERROR_MESSAGE.RESETPWD_AS_OLD }))
+                    }
+                    res.status(400).send(finalRes);
+                } else {
+                    const finalRes = {
+                        data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.SUCCESS }))
+                    }
+                    res.status(200).send(finalRes);
                 }
-                res.status(400).send(finalRes);
             } else {
-                const finalRes = {
-                    data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.SUCCESS }))
-                }
-                res.status(200).send(finalRes);
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
             }
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE_FAILED} ${error.message}`);
