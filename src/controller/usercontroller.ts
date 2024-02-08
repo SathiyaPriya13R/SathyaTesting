@@ -19,20 +19,24 @@ export default class UserController {
             if (decryptedData) {
                 const data = JSON.parse(decryptedData)
                 let { email, password } = data;
-                email = (email as string).toLowerCase();
-                const userData = {
-                    Email: email,
-                    PasswordHash: password,
-                }
-                await userService.signinUser(userData).then((data: any) => {
-                    if (data && data.error) {
-                        res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
-                    } else {
-                        res.status(200).send(data);
+                if (email) {
+                    email = (email as string).toLowerCase();
+                    const userData = {
+                        Email: email,
+                        PasswordHash: password,
                     }
-                }).catch((error) => {
-                    res.status(400).send({ data: encrypt(JSON.stringify(error)) });
-                });
+                    await userService.signinUser(userData).then((data: any) => {
+                        if (data && data.error) {
+                            res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+                        } else {
+                            res.status(200).send(data);
+                        }
+                    }).catch((error) => {
+                        res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+                    });
+                } else {
+                    res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.EMAIL_EMPTY })) });
+                }
             } else {
                 res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
             }
@@ -156,7 +160,7 @@ export default class UserController {
                 res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
             }
         } catch (error: any) {
-            console.log('error ---',error)
+            console.log('error ---', error)
             logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_UPDATE_FAILED} ${error.message}`);
             res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
@@ -185,7 +189,7 @@ export default class UserController {
         try {
             const { id, type } = req.params
             const pwdExpirationCheck = await userService.pwdExpirationCheck(id, type);
-            res.status(200).send({data: encrypt(JSON.stringify(pwdExpirationCheck))});
+            res.status(200).send({ data: encrypt(JSON.stringify(pwdExpirationCheck)) });
             logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
         } catch (error: any) {
             logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);

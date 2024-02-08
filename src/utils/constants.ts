@@ -24,7 +24,7 @@ export default class AppConstants {
         EMAIL_SEND_FAILED: "Email send failed",
         FORGET_PASSWORD_COMPLETED: "Forget password function completed",
         FORGET_PASSWORD_FAILED: "Forget password failed",
-        USER_NOT_FOUND: "User Not found for the email you provide",
+        USER_NOT_FOUND: "The email and password combination provided does not match our records. Please verify and try again.",
         UPDATE_PASSWORD: "Update password function initiated",
         UPDATE_PASSWORD_COMPLETED: "Updated password function completed",
         UPDATE_PASSWORD_FAILED: "Updated password function failed",
@@ -79,6 +79,7 @@ export default class AppConstants {
         PASSWORD_RESET: "User have requested for password reset. Please update your new password and try again",
         PWD_NOT_EXPIRED: "Password generation link is not expired",
         PWD_EXPIRED: "Password generation link is expired",
+        EMAIL_EMPTY: "Email field is empty"
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',
@@ -88,8 +89,8 @@ export default class AppConstants {
         CLOSE: 'Redis client is offline',
     }
     ERROR_MESSAGE = {
-        INVALID_EMAIL: 'Enterted email is not valid',
-        NOT_USER: 'Enterted Email is not valid user',
+        INVALID_EMAIL: 'Entered email is not valid',
+        NOT_USER: 'Entered Email is not valid user',
         RESETPWD_AS_OLD: "You cannot set the same password as your old one. Please choose a new password.",
         ERROR_FETCHING_TOKEN_DETAILS: "Error fetching token details:",
         ERROR_STORING_TOKEN_DETAILS: 'Error storing token details:',
