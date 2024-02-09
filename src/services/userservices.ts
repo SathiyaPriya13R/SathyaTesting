@@ -30,13 +30,18 @@ export default class UserService {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.LOGIN_STARTED);
             const commonService = new CommonService(db.user);
-            const emailValidation: sequelizeObj = {
+            const userEmailValidation: sequelizeObj = {
                 where: { Email: userData.Email, IsActive: 1 }
             };
-
-            const user = await commonService.getData(emailValidation, db.User);
-            const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
-            const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
+            const ProviderGroupValidation: sequelizeObj = {
+                where: { Email: userData.Email, IsActive: 1 }
+            };
+            const ProviderDoctoreValidation: sequelizeObj = {
+                where: { Email: userData.Email, IsActive: 1 }
+            }
+            const user = await commonService.getData(userEmailValidation, db.User);
+            const providerGroupContact = await commonService.getData(ProviderGroupValidation, db.ProviderGroupContact);
+            const provider = await commonService.getData(ProviderDoctoreValidation, db.ProviderDoctor);
             if ((user && user.PasswordHash) || (providerGroupContact && providerGroupContact.PasswordHash) || (provider && provider.PasswordHash)) {
                 const providerData = user || providerGroupContact || provider;
                 if (providerData.ForgotPwd == 1) {
@@ -99,8 +104,6 @@ export default class UserService {
                         return { error: appConstant.ERROR_MESSAGE.NOT_USER };
                     }
                 } else if (providerGroupContact && password) {
-                    // const parameters: sequelizeObj = { where: { ProviderGroupID: providerGroupContact.ProviderGroupID } };
-                    // const data = await commonService.getData(parameters, db.ProviderGroup);
                     const finalData: any = _.pick(providerGroupContact, ['Email']);
                     finalData.Id = providerGroupContact.ProviderGroupID;
                     finalData.DisplayName = providerGroupContact.ContactPerson;
@@ -346,7 +349,7 @@ export default class UserService {
                     return appConstant.MESSAGES.SUCCESS
                 }
             } else {
-                return appConstant.MESSAGES.FAILED
+                return appConstant.MESSAGES.INVALID_USERTYPE;
             }
         } catch (error: any) {
             logger.info(appConstant.MESSAGES.FAILED);
@@ -469,32 +472,36 @@ export default class UserService {
             let FirstName;
             let LastName;
             let pimage;
+            console.log('data ------.imgremove',data.imgremove);
             switch (data.type) {
                 case appConstant.USER_TYPE[0]:
                     const contactPerson = data.FirstName && data.LastName ? `${data.FirstName} ${data.LastName}`: null;
                     pimage = image ? image: null
                     const providerGroupUpdateCondition: any = {}
-                    if (!_.isNil(pimage)) {
+                    console.log('pimage ---',pimage);
+                    if (!_.isNil(pimage) || data.imgremove) {
                         providerGroupUpdateCondition.ProfileImage = pimage
                     }
                     if (!_.isNil(contactPerson)) {
                         providerGroupUpdateCondition.ContactPerson = contactPerson
                     }
-                    const providerGroupContact: any = await commonService.update({ProviderGroupContactDetailID: data.providergroupcontactid}, providerGroupUpdateCondition, db.ProviderGroupContact);
+                    await commonService.update({ProviderGroupContactDetailID: data.providergroupcontactid}, providerGroupUpdateCondition, db.ProviderGroupContact);
+                    console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
                     return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 case appConstant.USER_TYPE[1]:
                     FirstName = data.FirstName ? data.FirstName: null;
                     LastName = data.LastName ? data.LastName: null;
                     pimage = image ? image: null
                     const providerUpdateConiditon: any = {}
-                    if (!_.isNil(pimage)) {
+                    if (!_.isNil(pimage) || data.imgremove) {
                         providerUpdateConiditon.ProfileImage = pimage
                     }
                     if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
                         providerUpdateConiditon.FirstName = FirstName,
                         providerUpdateConiditon.LastName = LastName
                     }
-                    const provider = await commonService.update({ProviderDoctorID: data.id},providerUpdateConiditon, db.ProviderDoctor);
+                    await commonService.update({ProviderDoctorID: data.id},providerUpdateConiditon, db.ProviderDoctor);
+                    console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
                     return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 case appConstant.USER_TYPE[2]:
                 case appConstant.USER_TYPE[3]:
@@ -502,7 +509,7 @@ export default class UserService {
                     LastName = data.LastName ? data.LastName: null;
                     pimage = image ? image: null;
                     const userUpdateCondition: any = {}
-                    if (!_.isNil(image)) {
+                    if (!_.isNil(image) || data.imgremove) {
                         userUpdateCondition.ProfileImage = pimage
                     }
                     if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
@@ -510,15 +517,19 @@ export default class UserService {
                         userUpdateCondition.LastName = LastName,
                         userUpdateCondition.DisplayName = `${data.FirstName} ${data.LastName}`
                     }
-                    const user: any = await commonService.update({ID: data.id}, userUpdateCondition, db.User);
+                    console.log('userUpdateCondition ----',userUpdateCondition);
+                    console.log('data.id -----',data.id)
+                    await commonService.update({ID: data.id}, {ProfileImage:null}, db.User);
+                    console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
                     return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 default:
+                    console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
                     return appConstant.MESSAGES.INVALID_USERTYPE;
             }
         } catch (error: any) {
-            console.log('erro 519 ----',error);
-            logger.error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED, error.message);
-            throw new Error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED);
+            console.log('530 ------',error);
+            logger.error(appConstant.LOGGER_MESSAGE.PROFILE_UPDATE_FAILED, error.message);
+            throw new Error(appConstant.LOGGER_MESSAGE.PROFILE_UPDATE_FAILED);
         }
     }
 

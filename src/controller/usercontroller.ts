@@ -140,7 +140,7 @@ export default class UserController {
     async profileUpdate(req: Request, res: Response): Promise<void> {
         try {
             const decryptedData = decrypt(req.body.data);
-
+            const imgremove = req.params;
             if (decryptedData) {
                 const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
                 const reqdata = JSON.parse(decryptedData);
@@ -159,7 +159,8 @@ export default class UserController {
                     LastName: LastName,
                     id: id,
                     type: type,
-                    providergroupcontactid: providerGroupContactId
+                    providergroupcontactid: providerGroupContactId,
+                    imgremove: imgremove ? true : false
                 }
                 const finalRes = await userService.profileUpdate(data, imgStr);
                 res.status(200).send(finalRes);
@@ -168,7 +169,6 @@ export default class UserController {
                 res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
             }
         } catch (error: any) {
-            console.log('error ---', error)
             logger.error(`${appConstant.LOGGER_MESSAGE.PROFILE_UPDATE_FAILED} ${error.message}`);
             res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }

@@ -81,7 +81,7 @@ export function ProviderGroupContactDetailFactory(sequelize: Sequelize): Provide
         },
         ProfileImage: {
             type: SequelizeStatic.BLOB,
-            allowNull: false
+            allowNull: true
         },
         PwdExpireDate: {
             type: SequelizeStatic.DATE,

@@ -79,7 +79,8 @@ export default class AppConstants {
         PASSWORD_RESET: "User have requested for password reset. Please update your new password and try again",
         PWD_NOT_EXPIRED: "Password generation link is not expired",
         PWD_EXPIRED: "Password generation link is expired",
-        EMAIL_EMPTY: "Email field is empty"
+        EMAIL_EMPTY: "Email field is empty",
+        INVALID_TYPE: "Invalid type",
     };
     REDIS_CONNECTION = {
         CONNECT: 'Connected to Redis',

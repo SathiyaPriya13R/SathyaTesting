@@ -209,7 +209,7 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
         },
         ProfileImage: {
             type: SequelizeStatic.BLOB,
-            allowNull: false
+            allowNull: true
         },
         AccessAllClients: {
             type: SequelizeStatic.BOOLEAN,

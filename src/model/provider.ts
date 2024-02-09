@@ -195,7 +195,7 @@ export function ProviderDoctorFactory(sequelize: Sequelize): ProviderDoctorStati
         },
         ProfileImage: {
             type: SequelizeStatic.BLOB,
-            allowNull: false
+            allowNull: true
         },
         IsReCredentialRequired: {
             type: SequelizeStatic.BOOLEAN,
