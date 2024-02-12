@@ -11,6 +11,7 @@ const ejs = require('ejs');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 import _ from 'lodash';
+import { Sequelize } from "sequelize";
 const IORedis = require('ioredis');
 
 const appConstant = new AppConstants();
@@ -482,11 +483,13 @@ export default class UserService {
                     if (!_.isNil(pimage) || data.imgremove) {
                         providerGroupUpdateCondition.ProfileImage = pimage
                     }
+                    if (_.isNil(pimage) && data.imgremove) {
+                        providerGroupUpdateCondition.ProfileImage = Sequelize.literal('NULL') // Use Sequelize's literal method
+                    }
                     if (!_.isNil(contactPerson)) {
                         providerGroupUpdateCondition.ContactPerson = contactPerson
                     }
                     await commonService.update({ProviderGroupContactDetailID: data.providergroupcontactid}, providerGroupUpdateCondition, db.ProviderGroupContact);
-                    console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
                     return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 case appConstant.USER_TYPE[1]:
                     FirstName = data.FirstName ? data.FirstName: null;
@@ -496,12 +499,14 @@ export default class UserService {
                     if (!_.isNil(pimage) || data.imgremove) {
                         providerUpdateConiditon.ProfileImage = pimage
                     }
+                    if (_.isNil(pimage) && data.imgremove) {
+                        providerUpdateConiditon.ProfileImage = Sequelize.literal('NULL') // Use Sequelize's literal method
+                    }
                     if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
                         providerUpdateConiditon.FirstName = FirstName,
                         providerUpdateConiditon.LastName = LastName
                     }
                     await commonService.update({ProviderDoctorID: data.id},providerUpdateConiditon, db.ProviderDoctor);
-                    console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
                     return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 case appConstant.USER_TYPE[2]:
                 case appConstant.USER_TYPE[3]:
@@ -509,25 +514,24 @@ export default class UserService {
                     LastName = data.LastName ? data.LastName: null;
                     pimage = image ? image: null;
                     const userUpdateCondition: any = {}
-                    if (!_.isNil(image) || data.imgremove) {
+                    if (!_.isNil(pimage)) {
                         userUpdateCondition.ProfileImage = pimage
+                    } 
+                    if (_.isNil(pimage) && data.imgremove) {
+                        userUpdateCondition.ProfileImage = Sequelize.literal('NULL') // Use Sequelize's literal method
                     }
                     if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
                         userUpdateCondition.FirstName = FirstName,
                         userUpdateCondition.LastName = LastName,
                         userUpdateCondition.DisplayName = `${data.FirstName} ${data.LastName}`
                     }
-                    console.log('userUpdateCondition ----',userUpdateCondition);
-                    console.log('data.id -----',data.id)
-                    await commonService.update({ID: data.id}, {ProfileImage:null}, db.User);
-                    console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
+                    await commonService.update({ID: data.id}, userUpdateCondition, db.User);
                     return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
                 default:
                     console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
                     return appConstant.MESSAGES.INVALID_USERTYPE;
             }
         } catch (error: any) {
-            console.log('530 ------',error);
             logger.error(appConstant.LOGGER_MESSAGE.PROFILE_UPDATE_FAILED, error.message);
             throw new Error(appConstant.LOGGER_MESSAGE.PROFILE_UPDATE_FAILED);
         }
