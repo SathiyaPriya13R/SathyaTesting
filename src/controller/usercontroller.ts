@@ -88,7 +88,7 @@ export default class UserController {
                     const finalRes = {
                         data: encrypt(JSON.stringify({ message: appConstant.ERROR_MESSAGE.RESETPWD_AS_OLD }))
                     }
-                    res.status(400).send(finalRes);
+                    res.status(200).send(finalRes);
                 } else {
                     const finalRes = {
                         data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.SUCCESS }))
