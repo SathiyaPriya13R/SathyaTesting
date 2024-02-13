@@ -493,7 +493,7 @@ export default class UserService {
                 case appConstant.USER_TYPE[0]:
                     const contactPerson = data.FirstName && data.LastName ? `${data.FirstName} ${data.LastName}` : null;
                     const providerGroupUpdateCondition: any = {}
-                    if (!_.isNil(pimage) || data.imgremove) {
+                    if (!_.isNil(pimage)) {
                         providerGroupUpdateCondition.ProfileImage = pimage
                     }
                     if (_.isNil(pimage) && data.imgremove) {
@@ -506,7 +506,7 @@ export default class UserService {
                     return { data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)) }
                 case appConstant.USER_TYPE[1]:
                     const providerUpdateConiditon: any = {}
-                    if (!_.isNil(pimage) || data.imgremove) {
+                    if (!_.isNil(pimage)) {
                         providerUpdateConiditon.ProfileImage = pimage
                     }
                     if (_.isNil(pimage) && data.imgremove) {

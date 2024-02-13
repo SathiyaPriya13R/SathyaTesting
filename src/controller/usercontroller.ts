@@ -50,9 +50,10 @@ export default class UserController {
      */
     async forgetPassword(req: Request, res: Response): Promise<void> {
         try {
-            const decryptedData = decrypt(req.body.data);
-            if (decryptedData) {
-                const data = JSON.parse(decryptedData)
+            // const decryptedData = decrypt(req.body.data);
+            // if (decryptedData) {
+                // const data = JSON.parse(decryptedData)
+                const data = req.body;
                 let { email } = data;
                 const email_address = (email as string).toLowerCase();
                 await userService.forgetPassword(email_address).then((data) => {
@@ -62,9 +63,9 @@ export default class UserController {
                     }
                     res.status(200).send(finalRes);
                 })
-            } else {
-                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
-            }
+            // } else {
+            //     res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+            // }
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_GENERATION_FAILED} ${error.message}`);
             res.status(400).send({ data: encrypt(JSON.stringify((error.message))) });
@@ -140,10 +141,10 @@ export default class UserController {
     async profileUpdate(req: Request, res: Response): Promise<void> {
         try {
             const decryptedData = decrypt(req.body.data);
-            const imgremove = req.params;
+            const query = req.query;
             if (decryptedData) {
                 const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
-                const reqdata = JSON.parse(decryptedData);
+                const reqdata = req.body;
                 let imgStr;
                 if (reqdata.ProfileImage) {
                     const str = reqdata.ProfileImage;
@@ -160,7 +161,7 @@ export default class UserController {
                     id: id,
                     type: type,
                     providergroupcontactid: providerGroupContactId,
-                    imgremove: imgremove ? true : false
+                    imgremove: query.imgremove ? true : false
                 }
                 const finalRes = await userService.profileUpdate(data, imgStr);
                 res.status(200).send(finalRes);
