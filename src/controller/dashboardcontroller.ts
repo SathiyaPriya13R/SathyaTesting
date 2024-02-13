@@ -15,6 +15,7 @@ export default class DashboardController {
             if (decryptedData) {
                 const filter_data = JSON.parse(decryptedData)
                 const data = filter_data
+                data.initial = (!_.isNil(req.query.initial) && req.query.initial == 'true') ? true : false
                 const { id, user_type }: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user));
                 const user_data = { id, user_type };
                 await dashboardService.getStatisticsCount(user_data, data).then((data: any) => {

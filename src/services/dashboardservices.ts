@@ -15,13 +15,15 @@ export default class DashboardService {
     /**
      * For get statistics count - payer enrollment status.
      */
-    async getStatisticsCount(user_data: { id: string, user_type: string }, data: { statistics_type: string, year_month: string, week_number: number, filter?: any }): Promise<any> {
+    async getStatisticsCount(user_data: { id: string, user_type: string }, data: { statistics_type: string, year_month: string, week_number: number, filter?: any, initial: boolean }): Promise<any> {
         try {
             const commonService = new CommonService(db.user)
             const queryparams = {} as sequelizeObj;
             let providersquery = '';
             let payersquery = '';
             let locationsquery = '';
+            let monthquery = '';
+            let weeknumquery = '';
 
             let querystring = (data.statistics_type == appConstant.STATISTICS_TYPE[0]) ? queries.month_wise_statistics_count : queries.week_wise_statistics_count;
 
@@ -51,8 +53,15 @@ export default class DashboardService {
             queryparams.replacements = {
                 user_id: user_data.id,
                 user_type: user_data.user_type,
-                month: data.year_month,
             };
+
+            if (!data.initial && !_.isNil(data.year_month)) {
+                monthquery = ` AND FORMAT(insurance_followup.ModifiedDate, 'yyyy MMM') = '${data.year_month}'`
+            }
+
+            // if (!_.isNil(data.week_number) && !_.isEmpty(data.week_number) && !_.isNil(data.initial) && data.initial === false && !_.isNil(data.year_month)) {
+            //     weeknumquery = ` AND DATEDIFF(WEEK, DATEADD(MONTH, DATEDIFF(MONTH, 0, insurance_followup.ModifiedDate), 0), insurance_followup.ModifiedDate) + 1 = ${data.week_number}`
+            // }
 
             if (!_.isNil(data.filter)) {
                 if (!_.isEmpty(filter_datas.providers)) {
@@ -68,6 +77,8 @@ export default class DashboardService {
                 }
             }
 
+            querystring = querystring.replace(new RegExp(':monthquery:', 'g'), monthquery);
+            querystring = querystring.replace(new RegExp(':weeknumquery:', 'g'), weeknumquery);
             querystring = querystring.replace(new RegExp(':providersquery:', 'g'), providersquery);
             querystring = querystring.replace(new RegExp(':payersquery:', 'g'), payersquery);
             querystring = querystring.replace(new RegExp(':locationsquery:', 'g'), locationsquery);
@@ -91,7 +102,7 @@ export default class DashboardService {
             const statistic_count = JSON.parse(JSON.stringify(statistics));
 
             let weeklyData: any = {};
-            if (data.statistics_type == appConstant.STATISTICS_TYPE[1] && !_.isNil(statuses) && !_.isNil(statistic_count)) {
+            if (data.statistics_type == appConstant.STATISTICS_TYPE[1] && !_.isNil(statuses) && !_.isNil(statistic_count) && !data.initial) {
                 // Iterate through statistic count to organize data by week number
                 statistic_count.forEach((stat: any) => {
                     const { week_number } = stat;
@@ -112,6 +123,42 @@ export default class DashboardService {
                                 year: weekData[0].year,
                                 month: weekData[0].month,
                                 week_number: parseInt(week),
+                                status: status.Name,
+                                LookupValueID: status.LookupValueID,
+                                status_count: 0
+                            });
+                        }
+                    });
+
+                    // Sort the data by status
+                    weekData.sort((a: any, b: any) => {
+                        if (a.status < b.status) return -1;
+                        if (a.status > b.status) return 1;
+                        return 0;
+                    });
+                });
+            } else {
+                // Iterate through statistic count to organize data by year, month, and week number
+                statistic_count.forEach((stat: any) => {
+                    const { year, month, week_number } = stat;
+                    const weekKey = `${year}-${month}-${week_number}`;
+                    if (!weeklyData[weekKey]) {
+                        weeklyData[weekKey] = [];
+                    }
+                    weeklyData[weekKey].push(stat);
+                });
+
+                // Iterate through each week to add missing statuses with count 0
+                Object.keys(weeklyData).forEach(weekKey => {
+                    const weekData = weeklyData[weekKey];
+                    const existingStatuses = weekData.map((item: any) => item.status);
+
+                    statuses.followupstatus.forEach((status: any) => {
+                        if (!existingStatuses.includes(status.Name)) {
+                            weekData.push({
+                                year: weekData[0].year,
+                                month: weekData[0].month,
+                                week_number: weekData[0].week_number,
                                 status: status.Name,
                                 LookupValueID: status.LookupValueID,
                                 status_count: 0
