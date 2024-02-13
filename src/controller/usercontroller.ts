@@ -18,8 +18,8 @@ export default class UserController {
 
             if (decryptedData) {
                 const data = JSON.parse(decryptedData)
-                                let { email, password } = data;
-                                if (email) {
+                let { email, password } = data;
+                if (email) {
                     // email = (email as string).toLowerCase();
                     const userData = {
                         Email: email,
@@ -38,7 +38,7 @@ export default class UserController {
                     res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.EMAIL_EMPTY })) });
                 }
             } else {
-            res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
             }
         } catch (error) {
             logger.error(error);

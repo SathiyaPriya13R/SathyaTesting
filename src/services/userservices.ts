@@ -47,7 +47,7 @@ export default class UserService {
                 const providerData = user || providerGroupContact || provider;
                 if (providerData.ForgotPwd == 1) {
                     logger.error(appConstant.MESSAGES.PASSWORD_RESET, '');
-                    return ({error: appConstant.MESSAGES.PASSWORD_RESET});
+                    return ({ error: appConstant.MESSAGES.PASSWORD_RESET });
                 }
                 let password = await commonService.passwordHash(userData.PasswordHash, providerData);
                 const currentData: any = await new Promise((resolve, reject) => {
@@ -220,11 +220,11 @@ export default class UserService {
             if (!_.isNil(user) || !_.isNil(providerGroupContact) || !_.isNil(provider)) {
                 const type = user ? 'User' : providerGroupContact ? 'Group' : provider ? 'Provider' : null;
                 if (user) {
-                    commonService.update({Email: email}, updateExpireDate, db.User);
-                } else  if (providerGroupContact) {
-                    commonService.update({Email: email}, updateExpireDate, db.ProviderGroupContact);
+                    commonService.update({ Email: email }, updateExpireDate, db.User);
+                } else if (providerGroupContact) {
+                    commonService.update({ Email: email }, updateExpireDate, db.ProviderGroupContact);
                 } else if (provider) {
-                    commonService.update({Email: email}, updateExpireDate, db.ProviderDoctor);
+                    commonService.update({ Email: email }, updateExpireDate, db.ProviderDoctor);
                 }
                 const templateData = {
                     username: user.DisplayName,
@@ -258,7 +258,6 @@ export default class UserService {
                         logger.info(appConstant.LOGGER_MESSAGE.EMAIL_SEND)
                     }
                 });
-                logger.info(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD_COMPLETED)
             } else {
                 logger.info(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND)
                 throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
@@ -420,11 +419,15 @@ export default class UserService {
                     first_name = nameParts.join(' ').trim();
                     last_name = laname.join(' ').trim();
                     finalRes = _.pick(providerGroupContact, ['Email']);
-                    profileimage = btoa(providerGroupContact.ProfileImage);
-                    finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`
+                    if (!_.isNil(providerGroupContact.ProfileImage)) {
+                        profileimage = btoa(providerGroupContact.ProfileImage);
+                        finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`;
+                    } else {
+                        finalRes.ProfileImage = null
+                    }
                     finalRes.first_name = first_name;
                     finalRes.last_name = last_name;
-                    return {data : encrypt(JSON.stringify(finalRes))};
+                    return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[1]:
                     const providerConiditon: sequelizeObj = {};
                     providerConiditon.where = {
@@ -434,11 +437,15 @@ export default class UserService {
                     };
                     const provider: any = await commonService.getData(providerConiditon, db.ProviderDoctor);
                     finalRes = _.pick(provider, ['Email']);
-                    profileimage = btoa(provider.ProfileImage);
-                    finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`
+                    if (!_.isNil(provider.ProfileImage)) {
+                        profileimage = btoa(provider.ProfileImage);
+                        finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`;
+                    } else {
+                        finalRes.ProfileImage = null
+                    }
                     finalRes.FirstName = provider.FirstName;
                     finalRes.LastName = provider.LastName;
-                    return {data : encrypt(JSON.stringify(finalRes))};
+                    return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[2]:
                 case appConstant.USER_TYPE[3]:
                     const userCondition: sequelizeObj = {};
@@ -449,13 +456,17 @@ export default class UserService {
                     }
                     const user: any = await commonService.getData(userCondition, db.User);
                     finalRes = _.pick(user, ['Email']);
-                    profileimage = btoa(user.ProfileImage);
-                    finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`;
+                    if (!_.isNil(user.ProfileImage)) {
+                        profileimage = btoa(user.ProfileImage);
+                        finalRes.ProfileImage = `data:image/png;base64, ${profileimage}`;
+                    } else {
+                        finalRes.ProfileImage = null
+                    }
                     finalRes.FirstName = user.FirstName;
                     finalRes.LastName = user.LastName;
-                    return {data : encrypt(JSON.stringify(finalRes))};
+                    return { data: encrypt(JSON.stringify(finalRes)) };
                 default:
-                    return {data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_USERTYPE))};
+                    return { data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_USERTYPE)) };
             }
         } catch (error: any) {
             logger.error(appConstant.LOGGER_MESSAGE.PROFILE_GET_FAILED, error.message);
@@ -466,20 +477,20 @@ export default class UserService {
     /**
      * User Update function
      */
-    async profileUpdate(data: any, image: any){
+    async profileUpdate(data: any, image: any) {
         try {
             const commonService = new CommonService(db.user);
             let finalRes: any;
             let FirstName;
             let LastName;
             let pimage;
-            console.log('data ------.imgremove',data.imgremove);
+            FirstName = data.FirstName ? data.FirstName : null;
+            LastName = data.LastName ? data.LastName : null;
+            pimage = image ? image : null
             switch (data.type) {
                 case appConstant.USER_TYPE[0]:
-                    const contactPerson = data.FirstName && data.LastName ? `${data.FirstName} ${data.LastName}`: null;
-                    pimage = image ? image: null
+                    const contactPerson = data.FirstName && data.LastName ? `${data.FirstName} ${data.LastName}` : null;
                     const providerGroupUpdateCondition: any = {}
-                    console.log('pimage ---',pimage);
                     if (!_.isNil(pimage) || data.imgremove) {
                         providerGroupUpdateCondition.ProfileImage = pimage
                     }
@@ -489,12 +500,9 @@ export default class UserService {
                     if (!_.isNil(contactPerson)) {
                         providerGroupUpdateCondition.ContactPerson = contactPerson
                     }
-                    await commonService.update({ProviderGroupContactDetailID: data.providergroupcontactid}, providerGroupUpdateCondition, db.ProviderGroupContact);
-                    return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
+                    await commonService.update({ ProviderGroupContactDetailID: data.providergroupcontactid }, providerGroupUpdateCondition, db.ProviderGroupContact);
+                    return { data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)) }
                 case appConstant.USER_TYPE[1]:
-                    FirstName = data.FirstName ? data.FirstName: null;
-                    LastName = data.LastName ? data.LastName: null;
-                    pimage = image ? image: null
                     const providerUpdateConiditon: any = {}
                     if (!_.isNil(pimage) || data.imgremove) {
                         providerUpdateConiditon.ProfileImage = pimage
@@ -502,33 +510,29 @@ export default class UserService {
                     if (_.isNil(pimage) && data.imgremove) {
                         providerUpdateConiditon.ProfileImage = Sequelize.literal('NULL') // Use Sequelize's literal method
                     }
-                    if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
+                    if (!_.isNil(FirstName) && !_.isNil(LastName)) {
                         providerUpdateConiditon.FirstName = FirstName,
-                        providerUpdateConiditon.LastName = LastName
+                            providerUpdateConiditon.LastName = LastName
                     }
-                    await commonService.update({ProviderDoctorID: data.id},providerUpdateConiditon, db.ProviderDoctor);
-                    return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
+                    await commonService.update({ ProviderDoctorID: data.id }, providerUpdateConiditon, db.ProviderDoctor);
+                    return { data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)) }
                 case appConstant.USER_TYPE[2]:
                 case appConstant.USER_TYPE[3]:
-                    FirstName = data.FirstName ? data.FirstName: null;
-                    LastName = data.LastName ? data.LastName: null;
-                    pimage = image ? image: null;
                     const userUpdateCondition: any = {}
                     if (!_.isNil(pimage)) {
                         userUpdateCondition.ProfileImage = pimage
-                    } 
+                    }
                     if (_.isNil(pimage) && data.imgremove) {
                         userUpdateCondition.ProfileImage = Sequelize.literal('NULL') // Use Sequelize's literal method
                     }
-                    if (!_.isNil(FirstName) &&!_.isNil(LastName)) {
+                    if (!_.isNil(FirstName) && !_.isNil(LastName)) {
                         userUpdateCondition.FirstName = FirstName,
-                        userUpdateCondition.LastName = LastName,
-                        userUpdateCondition.DisplayName = `${data.FirstName} ${data.LastName}`
+                            userUpdateCondition.LastName = LastName,
+                            userUpdateCondition.DisplayName = `${data.FirstName} ${data.LastName}`
                     }
-                    await commonService.update({ID: data.id}, userUpdateCondition, db.User);
-                    return {data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL))}
+                    await commonService.update({ ID: data.id }, userUpdateCondition, db.User);
+                    return { data: encrypt(JSON.stringify(appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)) }
                 default:
-                    console.log('appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL', appConstant.MESSAGES.PROFILE_UPDATE_SUCCESSFUL)
                     return appConstant.MESSAGES.INVALID_USERTYPE;
             }
         } catch (error: any) {
@@ -599,7 +603,7 @@ export default class UserService {
                         logger.error(appConstant.MESSAGES.PWD_EXPIRED);
                         throw new Error(appConstant.MESSAGES.PWD_EXPIRED);
                     }
-                case appConstant.USER_TYPE[1]: 
+                case appConstant.USER_TYPE[1]:
                     const providerConiditon: sequelizeObj = {};
                     providerConiditon.where = {
                         ProviderDoctorID: id,
@@ -616,8 +620,8 @@ export default class UserService {
                         logger.error(appConstant.MESSAGES.PWD_EXPIRED);
                         throw new Error(appConstant.MESSAGES.PWD_EXPIRED);
                     }
-                    case appConstant.USER_TYPE[2]: 
-                    case appConstant.USER_TYPE[3]: 
+                case appConstant.USER_TYPE[2]:
+                case appConstant.USER_TYPE[3]:
                     const userCondition: sequelizeObj = {};
                     userCondition.where = {
                         Id: id,
