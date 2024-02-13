@@ -50,10 +50,9 @@ export default class UserController {
      */
     async forgetPassword(req: Request, res: Response): Promise<void> {
         try {
-            // const decryptedData = decrypt(req.body.data);
-            // if (decryptedData) {
-                // const data = JSON.parse(decryptedData)
-                const data = req.body;
+            const decryptedData = decrypt(req.body.data);
+            if (decryptedData) {
+                const data = JSON.parse(decryptedData)
                 let { email } = data;
                 const email_address = (email as string).toLowerCase();
                 await userService.forgetPassword(email_address).then((data) => {
@@ -63,9 +62,9 @@ export default class UserController {
                     }
                     res.status(200).send(finalRes);
                 })
-            // } else {
-            //     res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
-            // }
+            } else {
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+            }
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.PASSWORD_GENERATION_FAILED} ${error.message}`);
             res.status(400).send({ data: encrypt(JSON.stringify((error.message))) });
