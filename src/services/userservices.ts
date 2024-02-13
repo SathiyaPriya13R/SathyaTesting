@@ -214,7 +214,7 @@ export default class UserService {
             const currentDate = new Date();
             const expireDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
             const updateExpireDate = {
-                PwdExpireDate: expireDate,
+                PwdExpireDate: Sequelize.literal('CURRENT_TIMESTAMP'),
                 ForgotPwd: 1
             }
             if (!_.isNil(user) || !_.isNil(providerGroupContact) || !_.isNil(provider)) {
@@ -254,8 +254,10 @@ export default class UserService {
                 transporter.sendMail(mailOptions, function (error: any, info: { response: string; }) {
                     if (error) {
                         logger.error(appConstant.LOGGER_MESSAGE.EMAIL_SEND_FAILED)
+                        throw new Error(appConstant.LOGGER_MESSAGE.EMAIL_SEND_FAILED)
                     } else {
                         logger.info(appConstant.LOGGER_MESSAGE.EMAIL_SEND)
+                        return appConstant.LOGGER_MESSAGE.EMAIL_SEND
                     }
                 });
             } else {
