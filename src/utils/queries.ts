@@ -25,7 +25,6 @@ WHERE
 	END ) IN (:user_id)
 	AND insurance_followup.ModifiedDate >= DATEADD(DAY, -180, GETDATE())
 	:monthquery:
-    :weeknumquery:
     :providersquery:
     :payersquery:
     :locationsquery:
@@ -104,8 +103,7 @@ WHERE
     END ) IN (:user_id)
     AND
     insurance_followup.ModifiedDate >= DATEADD(DAY, -180, GETDATE())
-    AND
-    FORMAT(insurance_followup.ModifiedDate, 'yyyy MMM') = :month
+    :monthquery:
     :providersquery:
     :payersquery:
     :locationsquery:
