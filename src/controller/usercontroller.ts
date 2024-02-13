@@ -143,7 +143,7 @@ export default class UserController {
             const query = req.query;
             if (decryptedData) {
                 const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
-                const reqdata = req.body;
+                const reqdata = JSON.parse(decryptedData);
                 let imgStr;
                 if (reqdata.ProfileImage) {
                     const str = reqdata.ProfileImage;
