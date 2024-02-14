@@ -7,8 +7,31 @@ import ProviderService from '../services/providerservice';
 import { encrypt, decrypt } from '../helpers/aes';
 
 const appConstant = new AppConstants();
-const userService = new ProviderService();
+const providerService = new ProviderService();
 
 export default class ProviderController {
+
+    /**
+     * List all provider data
+     */
+    async getProvider(req: Request, res: Response) {
+        try {
+            const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
+            const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : null
+            const user_data: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user))
+            await providerService.getProviderData(user_data, filter_data).then((data: any) => {
+                if (data.error) {
+                    res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+                } else {
+                    res.status(200).send({ data: encrypt(JSON.stringify(data)) });
+                }
+            }).catch((error) => {
+                res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+            });
+        } catch (error) {
+            logger.error(error);
+            res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        }
+    }
 
 }

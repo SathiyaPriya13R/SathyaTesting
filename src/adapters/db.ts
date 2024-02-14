@@ -48,8 +48,20 @@ export const InsuranceMaster = InsuranceMasterFactory(user);
 export const LookupType = LookupTypeFactory(user);
 
 /**
- * Assositation
+ * Associations
  */
 GroupInsurance.belongsTo(InsuranceMaster, { as: 'payer', foreignKey: 'InsuranceID' })
 DoctorLocation.belongsTo(Location, { as: 'location', foreignKey: 'LocationID' })
 LookupType.hasMany(lookupValue, { as: 'followupstatus', foreignKey: 'LookupTypeID' })
+
+/**
+ * Provider Suffix and Certification associations
+ */
+
+ProviderDoctor.belongsTo(lookupValue, { as: 'suffix_name', foreignKey: 'SuffixID' })
+ProviderDoctor.belongsTo(lookupValue, { as: 'certification_name', foreignKey: 'CertificationID' })
+
+/**
+ * For provider associations
+ */
+ProviderDoctor.belongsTo(ProviderGroup, { as: 'provider_group_detail', foreignKey: 'ProviderGroupID' })

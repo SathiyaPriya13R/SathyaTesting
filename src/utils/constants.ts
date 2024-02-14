@@ -105,6 +105,10 @@ export default class AppConstants {
         APP_FILTER: 'App filter'
     }
 
+    PROVIDER_MESSAGES = {
+        PROVIDER: 'Provider list'
+    }
+
     STATUS_ACTIVE = 'Active';
     STATUS_INACTIVE = 'Inactive';
     STATUS_DELETED = 'Deleted';
