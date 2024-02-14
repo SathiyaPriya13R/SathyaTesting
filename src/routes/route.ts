@@ -17,7 +17,7 @@ router.get('/logout',AuthGuard, users.logOut);
 router.get('/pwdexpirationtime', users.passwordExpirationCheck);
 
 // dashboard routes
-router.get('/dashboard/summarycount', AuthGuard, dashboardcontroller.dashboardsummary);
+router.post('/dashboard/summarycount', AuthGuard, dashboardcontroller.dashboardsummary);
 router.post('/dashboard/statisticscount', AuthGuard, dashboardcontroller.getStatistic);
 router.get('/app/filter', AuthGuard, dashboardcontroller.appFilter);
 
