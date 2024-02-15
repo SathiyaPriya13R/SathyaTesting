@@ -1,13 +1,18 @@
-import { Request, Response } from 'express';
 import { sequelizeObj } from '../helpers/sequelizeobj';
 import { encrypt, decrypt } from '../helpers/aes';
 import * as db from '../adapters/db';
-import _ from 'lodash';
 import AppConstants from "../utils/constants";
 import CommonService from '../helpers/commonService';
 const logger = require('../helpers/logger');
+require('dotenv').config();
+import _ from 'lodash';
+import DateConvertor from '../helpers/date';
+import { Sequelize } from 'sequelize';
+const moment = require('moment-timezone');
+const { Op } = require('sequelize');
 
 const appConstant = new AppConstants();
+const dateConvert = new DateConvertor();
 
 export default class ProviderService {
 
@@ -101,5 +106,61 @@ export default class ProviderService {
             throw new Error(error.message)
         }
     }
+    async providerSpec(id: any, body: any) {
+        try {
+            const commonService = new CommonService(db.user);
+            const providerspec_condition: sequelizeObj = {
+                where: { ProviderDoctorID: id, IsActive: 1 },
+                include: [
+                    {
+                        model: db.Speciality,
+                        as: 'ProviderSpec',
+                        where: { IsActive: 1 },
+                        attributes: ['Name']
+                    },
+                    {
+                        model: db.lookupValue,
+                        as: 'BoardStatus',
+                        where: { IsActive: 1 },
+                        attributes: ['Name']
+                    }
+                ],
+                attributes: ['SpecialityID', 'IssueDate', 'ExpireDate', 'BoardStatusID']
+            };
 
+            if (body.searchtext) {
+                const searchTextLike = `%${body.searchtext}%`;
+                const convertedDate = moment(body.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD'); // Convert to SQL-friendly format
+                providerspec_condition.where = {
+                    [Op.and]: [
+                        { ProviderDoctorID: id, IsActive: 1 },
+                        {
+                            [Op.or]: [
+                                Sequelize.literal(`ProviderSpec.Name LIKE '${searchTextLike}'`),
+                                Sequelize.literal(`BoardStatus.Name LIKE '${searchTextLike}'`)
+                            ]
+                        }
+                    ],
+                    [Op.and]: Sequelize.literal(`CAST(IssueDate AS DATE) = '${convertedDate}'`),
+                    [Op.and]: Sequelize.literal(`CAST(ExpireDate AS DATE) = '${convertedDate}'`)
+                };
+            }
+
+            let providerSpecData: Array<Record<string, any>> = await commonService.getAllList(providerspec_condition, db.ProviderSpec);
+            providerSpecData = JSON.parse(JSON.stringify(providerSpecData));
+            let finalRes: any = [];
+            const promises = providerSpecData.map(async (specdata: any) => {
+                const updatedIssueDate = await dateConvert.dateFormat(specdata.IssueDate);
+                const updatedExpireDate = await dateConvert.dateFormat(specdata.ExpireDate);
+                specdata.IssueDate = updatedIssueDate;
+                specdata.ExpireDate = updatedExpireDate;
+                finalRes.push(specdata);
+            });
+            await Promise.all(promises);
+            return { data: finalRes };
+        } catch (error: any) {
+            logger.error(appConstant.LOGGER_MESSAGE.PROVIDER_SPEC_FUNCTION_FAILED);
+            throw new Error(error.message);
+        }
+    }
 }

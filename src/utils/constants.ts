@@ -50,6 +50,9 @@ export default class AppConstants {
         PWD_EXPIERATION_STARTED: "Password expieration function started",
         PWD_EXPIERATION_COMPLETED: "Password expieration function completed",
         PWD_EXPIERATION_FAILED: "Password expieration function failed",
+        PROVIDER_SPEC_FUNCTION_STARTED: "Provider Spec function started",
+        PROVIDER_SPEC_FUNCTION_COMPLETED: "Provider Spec function completed",
+        PROVIDER_SPEC_FUNCTION_FAILED: "Provider Spec function failed",
     }
     MESSAGES = {
         EMPTY_TOKEN:

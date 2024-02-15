@@ -6,17 +6,17 @@ import UserController from "../controller/usercontroller";
 import DashboardController from "../controller/dashboardcontroller";
 import ProviderController from "../controller/providercontroller";
 
-const users = new UserController();
+const usercontroller = new UserController();
 const dashboardcontroller = new DashboardController();
-const providercontroller = new ProviderController()
+const providercontroller = new ProviderController();
 
 // login routes
-router.post('/signin', users.signinUser);
-router.post('/forgotpassword', users.forgetPassword);
-router.post('/resetpassword', users.changePassword);
-router.get('/logincms', users.TermsofservicePrivacyPolicy);
-router.get('/logout', AuthGuard, users.logOut);
-router.get('/pwdexpirationtime', users.passwordExpirationCheck);
+router.post('/signin', usercontroller.signinUser);
+router.post('/forgotpassword', usercontroller.forgetPassword);
+router.post('/resetpassword', usercontroller.changePassword);
+router.get('/logincms', usercontroller.TermsofservicePrivacyPolicy);
+router.get('/logout', AuthGuard, usercontroller.logOut);
+router.get('/pwdexpirationtime', usercontroller.passwordExpirationCheck);
 
 // dashboard routes
 router.post('/dashboard/summarycount', AuthGuard, dashboardcontroller.dashboardsummary);
@@ -24,10 +24,11 @@ router.post('/dashboard/statisticscount', AuthGuard, dashboardcontroller.getStat
 router.get('/app/filter', AuthGuard, dashboardcontroller.appFilter);
 
 // Profile routes
-router.get('/profileget', AuthGuard, users.profileGet);
-router.post('/profile/update', AuthGuard, users.profileUpdate);
+router.get('/profileget', AuthGuard, usercontroller.profileGet);
+router.post('/profile/update', AuthGuard, usercontroller.profileUpdate);
 
 //Provider routes
 router.get('/provider', AuthGuard, providercontroller.getProvider);
+router.post('/provider/spec/:id', AuthGuard, providercontroller.providerSpec);
 
 module.exports.route = router;

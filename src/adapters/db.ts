@@ -16,6 +16,9 @@ import { UserProviderGroupFactory } from '../model/userprovidergroup';
 import { LoginCmsFactory } from '../model/logincms';
 import { InsuranceMasterFactory } from '../model/insurancemaster';
 import { LookupTypeFactory } from '../model/lookuptype';
+import { ProviderSpecFactory } from '../model/providerspec';
+import { SpecialityFactory } from '../model/speciality';
+
 require('dotenv').config();
 
 const access = {
@@ -46,6 +49,8 @@ export const GroupInsurance = GroupInsuranceFactory(user);
 export const UserProviderGroup = UserProviderGroupFactory(user);
 export const InsuranceMaster = InsuranceMasterFactory(user);
 export const LookupType = LookupTypeFactory(user);
+export const ProviderSpec = ProviderSpecFactory(user);
+export const Speciality = SpecialityFactory(user);
 
 /**
  * Associations
@@ -65,3 +70,10 @@ ProviderDoctor.belongsTo(lookupValue, { as: 'certification_name', foreignKey: 'C
  * For provider associations
  */
 ProviderDoctor.belongsTo(ProviderGroup, { as: 'provider_group_detail', foreignKey: 'ProviderGroupID' })
+
+/**
+ * For Provider Speciality
+ */
+ProviderSpec.belongsTo(Speciality, { as: 'ProviderSpec', foreignKey: 'SpecialityID' })
+ProviderSpec.belongsTo(lookupValue, { as: 'BoardStatus', foreignKey: 'BoardStatusID'})
+

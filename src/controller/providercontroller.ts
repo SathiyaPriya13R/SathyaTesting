@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import Validation from "../validations/validators"
 import AppConstants from '../utils/constants';
 import _ from 'lodash';
 const logger = require('../helpers/logger');
@@ -33,5 +32,18 @@ export default class ProviderController {
             res.status(400).send({ data: encrypt(JSON.stringify(error)) });
         }
     }
-
+    async providerSpec(req: Request, res: Response) {
+        try {
+            const data = req.params;
+            let { id } = data;
+            const body = req.body;
+            await providerService.providerSpec(id, body).then((data) => {
+                logger.info(appConstant.LOGGER_MESSAGE.PROVIDER_SPEC_FUNCTION_COMPLETED);
+                res.status(200).send(data);
+            }) 
+        } catch (error) {
+            logger.error(appConstant.LOGGER_MESSAGE.PROVIDER_SPEC_FUNCTION_FAILED);
+            res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        }
+    }    
 }
