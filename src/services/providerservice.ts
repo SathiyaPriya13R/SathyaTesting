@@ -19,6 +19,7 @@ export default class ProviderService {
     async getProviderData(user_data: { id: string, user_type: string }, filter_data?: any): Promise<any> {
         try {
             const commonService = new CommonService(db.user);
+            logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_STARTED)
             /**
              * Checking logged in as a user or not.
              */
@@ -97,15 +98,21 @@ export default class ProviderService {
             const finalResult: Array<Record<string, any>> = provider_list
 
             if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
+                logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_COMPLETED)
                 return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER) };
             } else {
+                logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_COMPLETED)
                 return { data: finalResult, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER) };
             }
         } catch (error: any) {
-            logger.error(error.message);
+            logger.error(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_FAILED, error.message);
             throw new Error(error.message)
         }
     }
+
+    /**
+     * For provider speciality
+     */
     async providerSpec(id: any, body: any) {
         try {
             const commonService = new CommonService(db.user);

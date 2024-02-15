@@ -109,7 +109,17 @@ export default class AppConstants {
     }
 
     PROVIDER_MESSAGES = {
-        PROVIDER: 'Provider list'
+        PROVIDER: 'Provider list',
+        PROVIDER_FUNCTION_STARTED: 'Provider list function started',
+        PROVIDER_FUNCTION_COMPLETED: 'Provider list fucntion completed',
+        PROVIDER_FUNCTION_FAILED: 'Provider list funciton failed'
+    }
+
+    PAYER_MESSAGES = {
+        PATER: 'Payer list',
+        PAYER_FUNCTION_STARTED: 'Payer list function started',
+        PAYER_FUNCTION_COMPLETED: 'Payer list fucntion completed',
+        PAYER_FUNCTION_FAILED: 'Payer list funciton failed'
     }
 
     STATUS_ACTIVE = 'Active';

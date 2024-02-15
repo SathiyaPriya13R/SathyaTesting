@@ -28,10 +28,14 @@ export default class ProviderController {
                 res.status(400).send({ data: encrypt(JSON.stringify(error)) });
             });
         } catch (error) {
-            logger.error(error);
+            logger.error(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_FAILED, error);
             res.status(400).send({ data: encrypt(JSON.stringify(error)) });
         }
     }
+
+    /**
+     * For provider specility
+     */
     async providerSpec(req: Request, res: Response) {
         try {
             const data = req.params;
@@ -40,10 +44,10 @@ export default class ProviderController {
             await providerService.providerSpec(id, body).then((data) => {
                 logger.info(appConstant.LOGGER_MESSAGE.PROVIDER_SPEC_FUNCTION_COMPLETED);
                 res.status(200).send(data);
-            }) 
+            })
         } catch (error) {
             logger.error(appConstant.LOGGER_MESSAGE.PROVIDER_SPEC_FUNCTION_FAILED);
             res.status(400).send({ data: encrypt(JSON.stringify(error)) });
         }
-    }    
+    }
 }

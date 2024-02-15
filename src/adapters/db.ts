@@ -75,5 +75,15 @@ ProviderDoctor.belongsTo(ProviderGroup, { as: 'provider_group_detail', foreignKe
  * For Provider Speciality
  */
 ProviderSpec.belongsTo(Speciality, { as: 'ProviderSpec', foreignKey: 'SpecialityID' })
-ProviderSpec.belongsTo(lookupValue, { as: 'BoardStatus', foreignKey: 'BoardStatusID'})
+ProviderSpec.belongsTo(lookupValue, { as: 'BoardStatus', foreignKey: 'BoardStatusID' })
 
+
+/**
+ * For payer associations
+ */
+ProviderDoctor.hasMany(InsuranceTransaction, { as: 'insurance_details', foreignKey: 'ProviderDoctorID' })
+InsuranceTransaction.belongsTo(GroupInsurance, { as: 'grp_insurance', foreignKey: 'GroupInsuranceID' })
+GroupInsurance.belongsTo(InsuranceMaster, { as: 'insurance_name', foreignKey: 'InsuranceID' })
+InsuranceTransaction.belongsTo(Location, { as: 'insurance_location', foreignKey: 'LocationID' })
+InsuranceTransaction.hasOne(InsuranceFollowup, { as: 'insurance_status', foreignKey: 'InsuranceTransactionID' })
+InsuranceFollowup.belongsTo(lookupValue, { as: 'status_name', foreignKey: 'StatusID' })
