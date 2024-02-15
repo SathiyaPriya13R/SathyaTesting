@@ -122,6 +122,13 @@ export default class AppConstants {
         PAYER_FUNCTION_FAILED: 'Payer list funciton failed'
     }
 
+    LOCATION_MESSAGES = {
+        LOCATION: 'Location list',
+        LOCATION_FUNCTION_STARTED: 'Location list function started',
+        LOCATION_FUNCTION_COMPLETED: 'Location list fucntion completed',
+        LOCATION_FUNCTION_FAILED: 'Location list funciton failed'
+    }
+
     STATUS_ACTIVE = 'Active';
     STATUS_INACTIVE = 'Inactive';
     STATUS_DELETED = 'Deleted';

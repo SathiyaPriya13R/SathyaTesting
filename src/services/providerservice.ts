@@ -75,7 +75,7 @@ export default class ProviderService {
                 searchparams.MiddleName = { $like: '%' + filter_data.searchtext + '%' };
                 searchparams.LastName = { $like: '%' + filter_data.searchtext + '%' };
                 // searchparams.IsActive = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$provider_group_detail.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
+                // searchparams['$provider_group_detail.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
                 searchparams['$suffix_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
                 searchparams['$certification_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
 

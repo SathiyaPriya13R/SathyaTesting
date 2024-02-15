@@ -6,11 +6,13 @@ import UserController from "../controller/usercontroller";
 import DashboardController from "../controller/dashboardcontroller";
 import ProviderController from "../controller/providercontroller";
 import PayerController from "../controller/payercontroller"
+import LocationController from "../controller/locationcontroller";
 
 const usercontroller = new UserController();
 const dashboardcontroller = new DashboardController();
 const providercontroller = new ProviderController();
 const payercontroller = new PayerController()
+const locationcontroller = new LocationController();
 
 // login routes
 router.post('/signin', usercontroller.signinUser);
@@ -35,5 +37,8 @@ router.post('/provider/spec/:id', AuthGuard, providercontroller.providerSpec);
 
 //Payer routes
 router.get('/payer', AuthGuard, payercontroller.getPayer);
+
+//Location routes
+router.get('/location', AuthGuard, locationcontroller.getLocation);
 
 module.exports.route = router;
