@@ -60,7 +60,7 @@ export function InsuranceFollowupFactory(sequelize: Sequelize): InsuranceFollowu
             allowNull: true
         },
         ModifiedBy: {
-            type: SequelizeStatic.UUID,
+            type: SequelizeStatic.STRING(128),
             allowNull: true
         },
         CreatedDate: {

@@ -87,6 +87,9 @@ GroupInsurance.belongsTo(InsuranceMaster, { as: 'insurance_name', foreignKey: 'I
 InsuranceTransaction.belongsTo(Location, { as: 'insurance_location', foreignKey: 'LocationID' })
 InsuranceTransaction.hasOne(InsuranceFollowup, { as: 'insurance_status', foreignKey: 'InsuranceTransactionID' })
 InsuranceFollowup.belongsTo(lookupValue, { as: 'status_name', foreignKey: 'StatusID' })
+InsuranceTransaction.belongsTo(ProviderDoctor, { as: 'provider_details', foreignKey: 'ProviderDoctorID' })
+InsuranceTransaction.hasMany(InsuranceFollowup, { as: 'history_details', foreignKey: 'InsuranceTransactionID' })
+InsuranceFollowup.belongsTo(User, { as: 'followedby_user', foreignKey: 'ModifiedBy' })
 
 /**
  * For Location associations

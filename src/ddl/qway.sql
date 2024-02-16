@@ -69,3 +69,8 @@ CREATE TABLE sec.LoginCms (
     UpdatedBy UNIQUEIDENTIFIER DEFAULT NULL,
     UpdatedDate DATETIME DEFAULT GETDATE() NOT NULL
 );
+
+-- 16-0-2024 For insurance history - followed by user start --
+ALTER TABLE pvdr.InsuranceFollowup
+ALTER COLUMN ModifiedBy NVARCHAR(128);
+-- end --

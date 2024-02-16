@@ -37,6 +37,7 @@ router.post('/provider/spec', AuthGuard, providercontroller.providerSpec);
 
 //Payer routes
 router.get('/payer', AuthGuard, payercontroller.getPayer);
+router.get('/payer/history', AuthGuard, payercontroller.getPayerHistory);
 
 //Location routes
 router.get('/location', AuthGuard, locationcontroller.getLocation);

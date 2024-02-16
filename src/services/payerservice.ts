@@ -67,7 +67,7 @@ export default class ProviderService {
                     model: db.InsuranceTransaction,
                     as: 'insurance_details',
                     where: { IsActive: 1 },
-                    attributes: ['TaskID', 'EffectiveDate', 'RecredentialingDate'],
+                    attributes: ['InsuranceTransactionID', 'TaskID', 'EffectiveDate', 'RecredentialingDate'],
                     include: [
                         {
                             model: db.GroupInsurance,
@@ -147,6 +147,113 @@ export default class ProviderService {
             }
         } catch (error: any) {
             logger.error(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_FAILED, error.message);
+            throw new Error(error.message)
+        }
+    }
+
+    /**
+     * For Payer history list
+     */
+    async getPayerHistoryData(filter_data: any): Promise<any> {
+        try {
+            const commonService = new CommonService(db.user);
+            logger.info(appConstant.PAYER_MESSAGES.PAYER_HISTORY_FUNCTION_STARTED);
+            if (_.isNil(filter_data.transaction_id) || filter_data.transaction_id == '') {
+                logger.info(appConstant.PAYER_MESSAGES.PAYER_HISTORY_FUNCTION_FAILED);
+                return { message: 'Please enter transaction id' };
+            }
+
+            const insurance_transaction_condition: sequelizeObj = {};
+
+            insurance_transaction_condition.where = {
+                InsuranceTransactionID: filter_data.transaction_id,
+                IsActive: 1
+            }
+            insurance_transaction_condition.attributes = ['InsuranceTransactionID']
+
+            insurance_transaction_condition.include = [
+                {
+                    model: db.ProviderDoctor,
+                    as: 'provider_details',
+                    where: { IsActive: 1 },
+                    attributes: ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName'],
+                    include: [
+                        {
+                            model: db.lookupValue,
+                            as: 'suffix_name',
+                            required: true,
+                            where: { IsActive: 1 },
+                            attributes: ['Name']
+                        },
+                        {
+                            model: db.lookupValue,
+                            as: 'certification_name',
+                            where: { IsActive: 1 },
+                            attributes: ['Name']
+                        },
+                    ]
+                },
+                {
+                    model: db.GroupInsurance,
+                    as: 'grp_insurance',
+                    where: {
+                        IsActive: 1,
+                    },
+                    attributes: ['GroupInsuranceID'],
+                    include: [
+                        {
+                            model: db.InsuranceMaster,
+                            as: 'insurance_name',
+                            where: { IsActive: 1 },
+                            attributes: ['InsuranceID', 'Name']
+                        }
+                    ]
+                },
+                {
+                    model: db.InsuranceFollowup,
+                    as: 'history_details',
+                    where: { IsActive: 1 },
+                    attributes: ['ModifiedDate', 'NextFollowupDate', 'Remarks'],
+                    include: [
+                        {
+                            model: db.lookupValue,
+                            as: 'status_name',
+                            where: { IsActive: 1 },
+                            attributes: ['Name']
+                        },
+                        {
+                            model: db.User,
+                            as: 'followedby_user',
+                            where: { IsActive: 1 },
+                            attributes: ['DisplayName']
+                        }
+                    ]
+                }
+            ]
+
+            const insurance_history_data = await commonService.getData(insurance_transaction_condition, db.InsuranceTransaction)
+            const payer_data = JSON.parse(JSON.stringify(insurance_history_data));
+
+            await payer_data.history_details.map(async (history: any) => {
+                const formattedModifiedDate = !_.isNil(history.ModifiedDate) ? await dateConvert.dateFormat(history.ModifiedDate) : null
+                const formattedNextFollowupDate = !_.isNil(history.NextFollowupDate) ? await dateConvert.dateFormat(history.NextFollowupDate) : null
+                history.NextFollowupDate = formattedNextFollowupDate
+                history.LastFollowedDate = formattedModifiedDate
+                delete history.ModifiedDate
+            })
+
+            const finalResult: Array<Record<string, any>> = payer_data;
+
+            if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
+                logger.info(appConstant.PAYER_MESSAGES.PAYER_HISTORY_FUNCTION_COMPLETED);
+                return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.PAYER_MESSAGES.PAYER_HISTORY) };
+            } else {
+                logger.info(appConstant.PAYER_MESSAGES.PAYER_HISTORY_FUNCTION_COMPLETED);
+                return { data: finalResult, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.PAYER_MESSAGES.PAYER_HISTORY) };
+            }
+
+        } catch (error: any) {
+            logger.error(appConstant.PAYER_MESSAGES.PAYER_HISTORY_FUNCTION_FAILED, error.message);
             throw new Error(error.message)
         }
     }

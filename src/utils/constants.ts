@@ -119,9 +119,13 @@ export default class AppConstants {
 
     PAYER_MESSAGES = {
         PATER: 'Payer list',
+        PAYER_HISTORY: 'Payer history list',
         PAYER_FUNCTION_STARTED: 'Payer list function started',
+        PAYER_HISTORY_FUNCTION_STARTED: 'Payer history list function started',
         PAYER_FUNCTION_COMPLETED: 'Payer list fucntion completed',
-        PAYER_FUNCTION_FAILED: 'Payer list funciton failed'
+        PAYER_HISTORY_FUNCTION_COMPLETED: 'Payer history list fucntion completed',
+        PAYER_FUNCTION_FAILED: 'Payer list funciton failed',
+        PAYER_HISTORY_FUNCTION_FAILED: 'Payer history list funciton failed'
     }
 
     LOCATION_MESSAGES = {
