@@ -61,14 +61,15 @@ export default class UserService {
                     });
                 }).catch((error: any) => { throw new Error(error) });
                 const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
-                const id = (user && user.ID) || (providerGroupContact && providerGroupContact.ProviderGroupID) || (provider && provider.ProviderDoctorID) || '';
-                const TokenDetails = tokenDetailsArray.filter((item: any) => item.userid === id);
-                if (TokenDetails && userData.signin) {
-                    logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
-                    return {
-                        data: encrypt(JSON.stringify({ multilogin: true }))
-                    }
-                } else if (user && password) {
+                // const id = (user && user.ID) || (providerGroupContact && providerGroupContact.ProviderGroupID) || (provider && provider.ProviderDoctorID) || '';
+                // const TokenDetails = tokenDetailsArray.filter((item: any) => item.userid === id);
+                // if (TokenDetails && userData.signin) {
+                //     logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
+                //     return {
+                //         data: encrypt(JSON.stringify({ multilogin: true }))
+                //     }
+                // } else 
+                if (user && password) {
                     const data = user;
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId, IsActive: 1 } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
