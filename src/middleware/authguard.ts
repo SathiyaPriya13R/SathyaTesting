@@ -56,6 +56,20 @@ app.use(async function (req: Request, res: Response, next) {
                         // Check expiration time
                         const currentTimestamp = Math.floor(Date.now() / 1000);
                         if (decodedToken.exp && decodedToken.exp < currentTimestamp) {
+                            const updatedTokenDetailsString = allToken.filter((item: any) => item.userid != decodedToken.id);
+                            await new Promise((resolve, reject) => {
+                                redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                                    if (setError) {
+                                        console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                                        reject(setError)
+                                        throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
+                                    } else {
+                                        console.log(appConstant.MESSAGES.TOKEN_DELETED_SUCCESSFULLY, setResult);
+                                        logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
+                                        resolve(setResult)
+                                    }
+                                });
+                            }).catch((error: any) => { throw new Error(error) });
                             return res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.TOKEN_EXPIRED)) });
                         }
 
