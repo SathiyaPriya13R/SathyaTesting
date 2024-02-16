@@ -109,7 +109,7 @@ export default class UserService {
                         }).catch((error: any) => { throw new Error(error) });
                         return { data: encrypt(JSON.stringify(finalData)) };
                     } else {
-                        return { error: appConstant.ERROR_MESSAGE.NOT_USER };
+                        return { error: appConstant.LOGGER_MESSAGE.USER_NOT_FOUND };
                     }
                 } else if (providerGroupContact && password) {
                     const finalData: any = _.pick(providerGroupContact, ['Email']);
@@ -191,7 +191,7 @@ export default class UserService {
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else {
                     logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
-                    throw new Error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
+                    throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
                 }
             } else {
                 throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
