@@ -191,11 +191,18 @@ export default class UserService {
                     }).catch((error: any) => { throw new Error(error) });
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else {
-                    logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
-                    throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
+                    logger.error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
+                    const finres = {
+                        error: appConstant.LOGGER_MESSAGE.USER_NOT_FOUND
+                    }
+                    return finres;
                 }
             } else {
-                throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
+                logger.error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
+                const finres = {
+                    error: appConstant.LOGGER_MESSAGE.USER_NOT_FOUND
+                }
+                return finres;
             }
         } catch (error) {
             logger.info(appConstant.LOGGER_MESSAGE.LOGIN_FAILED);
