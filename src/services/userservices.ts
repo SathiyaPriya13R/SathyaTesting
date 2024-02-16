@@ -61,7 +61,14 @@ export default class UserService {
                     });
                 }).catch((error: any) => { throw new Error(error) });
                 const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
-                if (user && password) {
+                const id = (user && user.ID) || (providerGroupContact && providerGroupContact.ProviderGroupID) || (provider && provider.ProviderDoctorID) || '';
+                const TokenDetails = tokenDetailsArray.filter((item: any) => item.userid === id);
+                if (TokenDetails && userData.signin) {
+                    logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
+                    return {
+                        data: encrypt(JSON.stringify({ multilogin: true }))
+                    }
+                } else if (user && password) {
                     const data = user;
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId, IsActive: 1 } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
@@ -184,7 +191,7 @@ export default class UserService {
                     return { data: encrypt(JSON.stringify(finalData)) };
                 } else {
                     logger.error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
-                    return { data: encrypt(JSON.stringify({ error: appConstant.ERROR_MESSAGE.INVALID_EMAIL })) };
+                    throw new Error(appConstant.ERROR_MESSAGE.INVALID_EMAIL);
                 }
             } else {
                 throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
@@ -192,6 +199,7 @@ export default class UserService {
         } catch (error) {
             logger.info(appConstant.LOGGER_MESSAGE.LOGIN_FAILED);
             logger.error(error);
+            throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
         }
     }
 
@@ -569,7 +577,7 @@ export default class UserService {
                         reject(setError)
                         throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
                     } else {
-                        console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                        console.log(appConstant.MESSAGES.TOKEN_DELETED_SUCCESSFULLY, setResult);
                         logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
                         resolve(setResult)
                     }

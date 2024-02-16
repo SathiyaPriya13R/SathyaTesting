@@ -38,10 +38,10 @@ export default class ProviderController {
      */
     async providerSpec(req: Request, res: Response) {
         try {
-            const data = req.params;
-            let { id } = data;
-            const body = req.body;
-            await providerService.providerSpec(id, body).then((data) => {
+            const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
+            const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : null
+            const body = filter_data;
+            await providerService.providerSpec(body).then((data) => {
                 logger.info(appConstant.LOGGER_MESSAGE.PROVIDER_SPEC_FUNCTION_COMPLETED);
                 res.status(200).send(data);
             })

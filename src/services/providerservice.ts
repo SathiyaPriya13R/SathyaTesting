@@ -113,11 +113,11 @@ export default class ProviderService {
     /**
      * For provider speciality
      */
-    async providerSpec(id: any, body: any) {
+    async providerSpec(body: any) {
         try {
             const commonService = new CommonService(db.user);
             const providerspec_condition: sequelizeObj = {
-                where: { ProviderDoctorID: id, IsActive: 1 },
+                where: { ProviderDoctorID: body.id, IsActive: 1 },
                 include: [
                     {
                         model: db.Speciality,
@@ -140,7 +140,7 @@ export default class ProviderService {
                 const convertedDate = moment(body.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD'); // Convert to SQL-friendly format
                 providerspec_condition.where = {
                     [Op.and]: [
-                        { ProviderDoctorID: id, IsActive: 1 },
+                        { ProviderDoctorID: body.id, IsActive: 1 },
                         {
                             [Op.or]: [
                                 Sequelize.literal(`ProviderSpec.Name LIKE '${searchTextLike}'`),
@@ -164,7 +164,7 @@ export default class ProviderService {
                 finalRes.push(specdata);
             });
             await Promise.all(promises);
-            return { data: finalRes };
+            return { data: encrypt(JSON.stringify(finalRes)) };
         } catch (error: any) {
             logger.error(appConstant.LOGGER_MESSAGE.PROVIDER_SPEC_FUNCTION_FAILED);
             throw new Error(error.message);

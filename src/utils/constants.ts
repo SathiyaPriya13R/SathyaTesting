@@ -53,6 +53,7 @@ export default class AppConstants {
         PROVIDER_SPEC_FUNCTION_STARTED: "Provider Spec function started",
         PROVIDER_SPEC_FUNCTION_COMPLETED: "Provider Spec function completed",
         PROVIDER_SPEC_FUNCTION_FAILED: "Provider Spec function failed",
+        USER_ALREADY_LOGEEDIN: "The user is currently logged in on another device.",
     }
     MESSAGES = {
         EMPTY_TOKEN:
@@ -66,13 +67,14 @@ export default class AppConstants {
         UPDATED_PASSWORD: "Password has been updated",
         RESET_PASSWORD_SUB: "ORCA CRED Password Change Activity Reset",
         TOEKN_DETAILS_STORED_SUCCESSFULLY: 'Token details stored successfully:',
+        TOKEN_DELETED_SUCCESSFULLY: "Token has been deleted successfully",
         DECRYPT_ERROR: "Decrypted error",
         SUCCESS: "Success",
         FAILED: "Failed",
         INVALID_SESSION: "Invalid session",
         USER_NOT_ALLOWED: "User Not allowed",
         NO_TOKEN_FOUND: "Unable to locate a valid user token. Please log out and log back in to resolve this issue",
-        TOKEN_EXPIRED: "The token you provide is expired",
+        TOKEN_EXPIRED: "The token you provided is expired",
         DATA_FOUND: "{{}} data found",
         DATA_NOT_FOUND: "{{}} data not found",
         INVALID_USERTYPE: "Invalid user_type",

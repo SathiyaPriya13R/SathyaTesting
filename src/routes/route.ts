@@ -33,7 +33,7 @@ router.post('/profile/update', AuthGuard, usercontroller.profileUpdate);
 
 //Provider routes
 router.get('/provider', AuthGuard, providercontroller.getProvider);
-router.post('/provider/spec/:id', AuthGuard, providercontroller.providerSpec);
+router.post('/provider/spec', AuthGuard, providercontroller.providerSpec);
 
 //Payer routes
 router.get('/payer', AuthGuard, payercontroller.getPayer);
