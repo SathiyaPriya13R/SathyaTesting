@@ -3,7 +3,6 @@ export class Queries {
     week_wise_statistics_count = `SELECT
 	FORMAT(insurance_followup.ModifiedDate, 'yyyy') AS year,
     FORMAT(insurance_followup.ModifiedDate, 'MMM') AS month,
---	DATEPART(MONTH, insurance_followup.ModifiedDate) AS month,
 	DATEDIFF(WEEK, DATEADD(MONTH, DATEDIFF(MONTH, 0, insurance_followup.ModifiedDate), 0), insurance_followup.ModifiedDate) + 1 AS week_number,
 	lookup_value.Name AS status,
 	lookup_value.LookupValueID AS LookupValueID,
@@ -24,7 +23,7 @@ WHERE
 		WHEN :user_type = 'Group' THEN insurance_transaction.ProviderGroupID
 		ELSE insurance_transaction.ProviderDoctorID
 	END ) IN (:user_id)
-	AND insurance_followup.ModifiedDate >= DATEADD(DAY, -180, GETDATE())
+	AND insurance_followup.ModifiedDate >= DATEADD(MONTH, -6, DATEADD(DAY, 1, EOMONTH(GETDATE())))
 	:monthquery:
     :providersquery:
     :payersquery:
@@ -32,7 +31,6 @@ WHERE
 GROUP BY
 	FORMAT(insurance_followup.ModifiedDate, 'yyyy'),
     FORMAT(insurance_followup.ModifiedDate, 'MMM'),
---	DATEPART(MONTH, insurance_followup.ModifiedDate),
 	DATEDIFF(WEEK, DATEADD(MONTH, DATEDIFF(MONTH, 0, insurance_followup.ModifiedDate), 0), insurance_followup.ModifiedDate) + 1,
 	lookup_value.LookupValueID,
 	lookup_value.Name
@@ -103,8 +101,7 @@ WHERE
         WHEN :user_type = 'Group' THEN insurance_transaction.ProviderGroupID
         ELSE insurance_transaction.ProviderDoctorID
     END ) IN (:user_id)
-    AND
-    insurance_followup.ModifiedDate >= DATEADD(DAY, -180, GETDATE())
+    AND insurance_followup.ModifiedDate >= DATEADD(MONTH, -6, DATEADD(DAY, 1, EOMONTH(GETDATE())))
     :monthquery:
     :providersquery:
     :payersquery:

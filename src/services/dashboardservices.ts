@@ -154,28 +154,32 @@ export default class DashboardService {
 
                 // Main function to generate weekly data
                 function generateWeeklyData(statistic_count: any, statuses: any) {
-                    const today = new Date();
-                    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+
+                    const today = new Date()
+                    const sixMonthsAgo = new Date(today.getFullYear(), (today.getMonth() + 1) - 6, 1);
 
                     // Initialize weeklyData object to store data by year, month, and week number
                     const weekly_data: any = {};
 
-                    for (let d = new Date(sixMonthsAgo); d <= today; d.setDate(d.getDate() + 1)) {
+                    for (let d = new Date(sixMonthsAgo); d <= today; d.setMonth(d.getMonth() + 1)) {
                         const year = d.getFullYear();
                         const month = d.getMonth() + 1; // Adding 1 since getMonth() returns 0-based index
-                        const firstDayOfMonth = new Date(year, month - 1, 1); // First day of the month
+
+                        let firstDayOfMonth = new Date(year, month - 1, 1); // First day of the month
+                        firstDayOfMonth = new Date(firstDayOfMonth.setDate((firstDayOfMonth.getDate() + 1)))
                         const lastDayOfMonth = new Date(year, month, 0).getDate(); // Last day of the month
                         let weeksInMonth = 1; // Initialize to 1, as there is at least one week in a month
 
                         // Initialize a variable to hold the day of the week of the first day of the month
-                        let firstDayOfWeek = firstDayOfMonth.getDay();
+                        let firstDayOfWeek = firstDayOfMonth.getDay() - 1;
 
                         // Adjust the first day of the week to start from Sunday (0-indexed)
-                        firstDayOfWeek = firstDayOfWeek === 0 ? 7 : firstDayOfWeek;
+                        // firstDayOfWeek = firstDayOfWeek === 0 ? 7 : firstDayOfWeek;
 
                         // Calculate the number of weeks in the month
                         let currentDayOfWeek = firstDayOfWeek;
                         for (let day = 1; day <= lastDayOfMonth; day++) {
+
                             // Check if the current day is the first day of a week (Sunday)
                             if (currentDayOfWeek === 7) {
                                 weeksInMonth++;
@@ -183,6 +187,7 @@ export default class DashboardService {
 
                             // Move to the next day of the week
                             currentDayOfWeek = (currentDayOfWeek % 7) + 1;
+
                         }
 
                         // Define an array with month names
