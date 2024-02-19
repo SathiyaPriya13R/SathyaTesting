@@ -112,9 +112,13 @@ export default class AppConstants {
 
     PROVIDER_MESSAGES = {
         PROVIDER: 'Provider list',
+        PROVIDER_VIEWPLAN: 'Provider view plan list',
         PROVIDER_FUNCTION_STARTED: 'Provider list function started',
         PROVIDER_FUNCTION_COMPLETED: 'Provider list fucntion completed',
-        PROVIDER_FUNCTION_FAILED: 'Provider list funciton failed'
+        PROVIDER_FUNCTION_FAILED: 'Provider list funciton failed',
+        PROVIDER_VIEWPLAN_FUNCTION_STARTED: 'Provider view plan list function started',
+        PROVIDER_VIEWPLAN_FUNCTION_COMPLETED: 'Provider view plan list fucntion completed',
+        PROVIDER_VIEWPLAN_FUNCTION_FAILED: 'Provider view plan list funciton failed'
     }
 
     PAYER_MESSAGES = {

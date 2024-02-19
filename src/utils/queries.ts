@@ -2,7 +2,8 @@ export class Queries {
 
     week_wise_statistics_count = `SELECT
 	FORMAT(insurance_followup.ModifiedDate, 'yyyy') AS year,
-	FORMAT(insurance_followup.ModifiedDate, 'MMM') AS month,
+    FORMAT(insurance_followup.ModifiedDate, 'MMM') AS month,
+--	DATEPART(MONTH, insurance_followup.ModifiedDate) AS month,
 	DATEDIFF(WEEK, DATEADD(MONTH, DATEDIFF(MONTH, 0, insurance_followup.ModifiedDate), 0), insurance_followup.ModifiedDate) + 1 AS week_number,
 	lookup_value.Name AS status,
 	lookup_value.LookupValueID AS LookupValueID,
@@ -30,7 +31,8 @@ WHERE
     :locationsquery:
 GROUP BY
 	FORMAT(insurance_followup.ModifiedDate, 'yyyy'),
-	FORMAT(insurance_followup.ModifiedDate, 'MMM'),
+    FORMAT(insurance_followup.ModifiedDate, 'MMM'),
+--	DATEPART(MONTH, insurance_followup.ModifiedDate),
 	DATEDIFF(WEEK, DATEADD(MONTH, DATEDIFF(MONTH, 0, insurance_followup.ModifiedDate), 0), insurance_followup.ModifiedDate) + 1,
 	lookup_value.LookupValueID,
 	lookup_value.Name

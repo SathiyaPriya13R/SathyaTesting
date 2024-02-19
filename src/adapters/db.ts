@@ -18,6 +18,8 @@ import { InsuranceMasterFactory } from '../model/insurancemaster';
 import { LookupTypeFactory } from '../model/lookuptype';
 import { ProviderSpecFactory } from '../model/providerspec';
 import { SpecialityFactory } from '../model/speciality';
+import { EnrollmentPlansFactory } from '../model/enrollmentplans';
+import { InsurancePlanFactory } from '../model/insuranceplan';
 
 require('dotenv').config();
 
@@ -51,6 +53,9 @@ export const InsuranceMaster = InsuranceMasterFactory(user);
 export const LookupType = LookupTypeFactory(user);
 export const ProviderSpec = ProviderSpecFactory(user);
 export const Speciality = SpecialityFactory(user);
+export const EnrollmentPlans = EnrollmentPlansFactory(user);
+export const InsurancePlan = InsurancePlanFactory(user);
+
 
 /**
  * Associations
@@ -70,6 +75,11 @@ ProviderDoctor.belongsTo(lookupValue, { as: 'certification_name', foreignKey: 'C
  * For provider associations
  */
 ProviderDoctor.belongsTo(ProviderGroup, { as: 'provider_group_detail', foreignKey: 'ProviderGroupID' })
+// InsuranceTransaction.hasMany(EnrollmentPlans, { as: 'provider_transaction_plans', foreignKey: 'InsuranceTransactionID' })
+InsuranceMaster.hasMany(InsurancePlan, { as: 'plan_details', foreignKey: 'InsuranceID' })
+InsurancePlan.hasMany(EnrollmentPlans, { as: 'enrolled_plans', foreignKey: 'InsurancePlanID' })
+InsuranceMaster.belongsTo(lookupValue, { as: 'insurance_location', foreignKey: 'StateID' })
+EnrollmentPlans.belongsTo(ProviderSpec, { as: 'provider_spec', foreignKey: 'ProviderDepartmentSpecialityID' })
 
 /**
  * For Provider Speciality

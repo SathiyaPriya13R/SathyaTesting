@@ -138,41 +138,144 @@ export default class DashboardService {
                     });
                 });
             } else {
-                // Iterate through statistic count to organize data by year, month, and week number
-                statistic_count.forEach((stat: any) => {
-                    const { year, month, week_number } = stat;
-                    const weekKey = `${year}-${month}-${week_number}`;
-                    if (!weeklyData[weekKey]) {
-                        weeklyData[weekKey] = [];
-                    }
-                    weeklyData[weekKey].push(stat);
-                });
 
-                // Iterate through each week to add missing statuses with count 0
-                Object.keys(weeklyData).forEach(weekKey => {
-                    const weekData = weeklyData[weekKey];
-                    const existingStatuses = weekData.map((item: any) => item.status);
+                // Function to get the number of weeks in a month
+                function getWeeksInMonth(year: any, month: any) {
+                    const firstDay = new Date(year, month - 1, 1);
+                    const lastDay = new Date(year, month, 0);
+                    const daysInMonth = lastDay.getDate();
+                    const firstDayOfWeek = firstDay.getDay();
+                    const lastDayOfWeek = lastDay.getDay();
+                    const daysInFirstWeek = 7 - firstDayOfWeek;
+                    const daysInLastWeek = lastDayOfWeek + 1;
 
-                    statuses.followupstatus.forEach((status: any) => {
-                        if (!existingStatuses.includes(status.Name)) {
-                            weekData.push({
-                                year: weekData[0].year,
-                                month: weekData[0].month,
-                                week_number: weekData[0].week_number,
-                                status: status.Name,
-                                LookupValueID: status.LookupValueID,
-                                status_count: 0
-                            });
+                    return Math.ceil((daysInMonth - daysInFirstWeek - (7 - daysInLastWeek)) / 7) + 2;
+                }
+
+                // Main function to generate weekly data
+                function generateWeeklyData(statistic_count: any, statuses: any) {
+                    const today = new Date();
+                    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+
+                    // Initialize weeklyData object to store data by year, month, and week number
+                    const weekly_data: any = {};
+
+                    for (let d = new Date(sixMonthsAgo); d <= today; d.setDate(d.getDate() + 1)) {
+                        const year = d.getFullYear();
+                        const month = d.getMonth() + 1; // Adding 1 since getMonth() returns 0-based index
+                        const firstDayOfMonth = new Date(year, month - 1, 1); // First day of the month
+                        const lastDayOfMonth = new Date(year, month, 0).getDate(); // Last day of the month
+                        let weeksInMonth = 1; // Initialize to 1, as there is at least one week in a month
+
+                        // Initialize a variable to hold the day of the week of the first day of the month
+                        let firstDayOfWeek = firstDayOfMonth.getDay();
+
+                        // Adjust the first day of the week to start from Sunday (0-indexed)
+                        firstDayOfWeek = firstDayOfWeek === 0 ? 7 : firstDayOfWeek;
+
+                        // Calculate the number of weeks in the month
+                        let currentDayOfWeek = firstDayOfWeek;
+                        for (let day = 1; day <= lastDayOfMonth; day++) {
+                            // Check if the current day is the first day of a week (Sunday)
+                            if (currentDayOfWeek === 7) {
+                                weeksInMonth++;
+                            }
+
+                            // Move to the next day of the week
+                            currentDayOfWeek = (currentDayOfWeek % 7) + 1;
                         }
+
+                        // Define an array with month names
+                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                        // Create a week for each week number in the month
+                        for (let i = 1; i <= weeksInMonth; i++) {
+                            const monthName = monthNames[month - 1];
+                            const weekKey = `${year}-${monthName}-${i}`;
+                            weekly_data[weekKey] = [];
+                        }
+                    }
+
+                    statistic_count.forEach((stat: any) => {
+                        const { year, month, week_number } = stat;
+                        const weekKey = `${year}-${month}-${week_number}`;
+                        if (!weekly_data[weekKey]) {
+                            weekly_data[weekKey] = [];
+                        }
+                        weekly_data[weekKey].push(stat);
                     });
 
-                    // Sort the data by status
-                    weekData.sort((a: any, b: any) => {
-                        if (a.status < b.status) return -1;
-                        if (a.status > b.status) return 1;
-                        return 0;
+                    // Iterate through each week to add missing statuses with count 0
+                    Object.keys(weekly_data).forEach((weekKey: any) => {
+                        const weekData = weekly_data[weekKey];
+                        const existingStatuses = weekData.map((item: any) => item.status);
+
+                        statuses.followupstatus.forEach((status: any) => {
+                            if (!existingStatuses.includes(status.Name)) {
+                                weekData.push({
+                                    year: weekData.length > 0 ? weekData[0].year : null,
+                                    month: weekData.length > 0 ? weekData[0].month : null,
+                                    week_number: weekData.length > 0 ? weekData[0].week_number : null,
+                                    status: status.Name,
+                                    LookupValueID: status.LookupValueID,
+                                    status_count: 0
+                                });
+                            }
+                        });
+
+                        // Sort the data by status
+                        weekData.sort((a: any, b: any) => {
+                            if (a.status < b.status) return -1;
+                            if (a.status > b.status) return 1;
+                            return 0;
+                        });
                     });
-                });
+
+                    return weekly_data;
+                }
+
+                weeklyData = generateWeeklyData(statistic_count, statuses);
+
+                /**
+                 * Old method just commented for a referance.
+                 */
+
+                // // Iterate through statistic count to organize data by year, month, and week number
+                // statistic_count.forEach((stat: any) => {
+                //     const { year, month, week_number } = stat;
+                //     const weekKey = `${year}-${month}-${week_number}`;
+                //     if (!weeklyData[weekKey]) {
+                //         weeklyData[weekKey] = [];
+                //     }
+                //     weeklyData[weekKey].push(stat);
+                // });
+
+                // // Iterate through each week to add missing statuses with count 0
+                // Object.keys(weeklyData).forEach(weekKey => {
+                //     const weekData = weeklyData[weekKey];
+                //     const existingStatuses = weekData.map((item: any) => item.status);
+
+                //     statuses.followupstatus.forEach((status: any) => {
+                //         if (!existingStatuses.includes(status.Name)) {
+                //             weekData.push({
+                //                 year: weekData[0].year,
+                //                 month: weekData[0].month,
+                //                 week_number: weekData[0].week_number,
+                //                 status: status.Name,
+                //                 LookupValueID: status.LookupValueID,
+                //                 status_count: 0
+                //             });
+                //         }
+                //     });
+
+                //     // Sort the data by status
+                //     weekData.sort((a: any, b: any) => {
+                //         if (a.status < b.status) return -1;
+                //         if (a.status > b.status) return 1;
+                //         return 0;
+                //     });
+                // });
+
             }
 
             let monthlyData: any = [];

@@ -34,6 +34,7 @@ router.post('/profile/update', AuthGuard, usercontroller.profileUpdate);
 //Provider routes
 router.get('/provider', AuthGuard, providercontroller.getProvider);
 router.post('/provider/spec', AuthGuard, providercontroller.providerSpec);
+router.get('/provider/viewplans', AuthGuard, providercontroller.getViewPlans);
 
 //Payer routes
 router.get('/payer', AuthGuard, payercontroller.getPayer);

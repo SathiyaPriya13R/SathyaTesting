@@ -170,4 +170,107 @@ export default class ProviderService {
             throw new Error(error.message);
         }
     }
+
+    /**
+     * For View plans
+     */
+    async viewPlans(filter_data: any) {
+        try {
+            const commonService = new CommonService(db.user);
+            logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_VIEWPLAN_FUNCTION_STARTED);
+
+            if (_.isNil(filter_data.provider_id) || filter_data.provider_id == '') {
+                logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_VIEWPLAN_FUNCTION_FAILED);
+                return { message: 'Please enter provider id' };
+            }
+
+            const provider_condition: sequelizeObj = {};
+
+            provider_condition.where = {
+                ProviderDoctorID: filter_data.provider_id,
+            }
+
+            provider_condition.attributes = ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName']
+
+            provider_condition.include = [
+                {
+                    model: db.InsuranceTransaction,
+                    as: 'insurance_details',
+                    where: { IsActive: 1 },
+                    attributes: ['InsuranceTransactionID'],
+                    include: [
+                        {
+                            model: db.GroupInsurance,
+                            as: 'grp_insurance',
+                            where: {
+                                IsActive: 1,
+                            },
+                            attributes: ['GroupInsuranceID'],
+                            include: [
+                                {
+                                    model: db.InsuranceMaster,
+                                    as: 'insurance_name',
+                                    where: { IsActive: 1 },
+                                    attributes: ['InsuranceID', 'Name'],
+                                    include: [
+                                        {
+                                            model: db.lookupValue,
+                                            as: 'insurance_location',
+                                            attributes: ['Name']
+                                        },
+                                        {
+                                            model: db.InsurancePlan,
+                                            as: 'plan_details',
+                                            where: { IsActive: 1 },
+                                            attributes: ['InsurancePlanID', 'PlanName'],
+                                            include: [
+                                                {
+                                                    model: db.EnrollmentPlans,
+                                                    as: 'enrolled_plans',
+                                                    where: { IsActive: 1 },
+                                                    attributes: ['EffectiveOn', 'ExpiresOn'],
+                                                    include: [
+                                                        {
+                                                            model: db.ProviderSpec,
+                                                            as: 'provider_spec',
+                                                            where: { IsActive: 1 },
+                                                            attributes: ['ProviderDepartmentSpecialityID'],
+                                                            include: [
+                                                                {
+                                                                    model: db.Speciality,
+                                                                    as: 'ProviderSpec',
+                                                                    attributes: ['Name']
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                    ]
+                }
+            ]
+
+            const provider_plan_data = await commonService.getData(provider_condition, db.ProviderDoctor)
+            const provider_data = JSON.parse(JSON.stringify(provider_plan_data));
+
+            const finalResult: Array<Record<string, any>> = provider_data;
+
+            if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
+                logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_VIEWPLAN_FUNCTION_COMPLETED);
+                return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER_VIEWPLAN) };
+            } else {
+                logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_VIEWPLAN_FUNCTION_COMPLETED);
+                return { data: finalResult, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER_VIEWPLAN) };
+            }
+
+        } catch (error: any) {
+            logger.error(appConstant.PROVIDER_MESSAGES.PROVIDER_VIEWPLAN_FUNCTION_FAILED);
+            throw new Error(error.message);
+        }
+    }
 }
