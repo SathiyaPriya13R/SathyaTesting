@@ -443,8 +443,8 @@ export default class UserService {
                     } else {
                         finalRes.ProfileImage = null
                     }
-                    finalRes.first_name = first_name;
-                    finalRes.last_name = last_name;
+                    finalRes.FirstName = first_name;
+                    finalRes.LastName = last_name;
                     return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[1]:
                     const providerConiditon: sequelizeObj = {};
