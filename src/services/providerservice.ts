@@ -135,7 +135,7 @@ export default class ProviderService {
                 attributes: ['SpecialityID', 'IssueDate', 'ExpireDate', 'BoardStatusID']
             };
 
-            if (body.searchtext) {
+            if (body.searchtext&& body.searchtext != '' && !_.isNil(body.searchtext)) {
                 const searchTextLike = `%${body.searchtext}%`;
                 const convertedDate = moment(body.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD'); // Convert to SQL-friendly format
                 providerspec_condition.where = {
@@ -157,10 +157,13 @@ export default class ProviderService {
             providerSpecData = JSON.parse(JSON.stringify(providerSpecData));
             let finalRes: any = [];
             const promises = providerSpecData.map(async (specdata: any) => {
-                const updatedIssueDate = await dateConvert.dateFormat(specdata.IssueDate);
-                const updatedExpireDate = await dateConvert.dateFormat(specdata.ExpireDate);
-                specdata.IssueDate = updatedIssueDate;
-                specdata.ExpireDate = updatedExpireDate;
+                if (specdata.IssueDate) {
+                    const updatedIssueDate = await dateConvert.dateFormat(specdata.IssueDate);
+                    specdata.IssueDate = updatedIssueDate;
+                } else if (specdata.ExpireDate) {
+                    const updatedExpireDate = await dateConvert.dateFormat(specdata.ExpireDate);
+                    specdata.ExpireDate = updatedExpireDate;
+                }
                 finalRes.push(specdata);
             });
             await Promise.all(promises);
