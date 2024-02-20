@@ -283,6 +283,42 @@ export default class DashboardService {
 
             }
 
+            // Sorting function in descending order
+            function sortDataDescending(data: any) {
+                // Extract keys and sort them in descending order
+                const sortedKeys = Object.keys(data).sort((a: any, b: any) => {
+                    // Split keys to extract year, month, and week_number
+                    const [yearA, monthA, weekA] = a.split("-");
+                    const [yearB, monthB, weekB] = b.split("-");
+
+                    // Compare years in descending order
+                    if (yearA !== yearB) {
+                        return yearB - yearA;
+                    }
+                    // Compare months in descending order
+                    if (monthA !== monthB) {
+                        // Convert month names to numbers for comparison
+                        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        return months.indexOf(monthB) - months.indexOf(monthA);
+                    }
+                    // Compare week numbers in descending order
+                    return weekB - weekA;
+                });
+
+                // Create a new object with sorted keys
+                const sortedData: any = {};
+                sortedKeys.forEach(key => {
+                    sortedData[key] = data[key];
+                });
+
+                return sortedData;
+            }
+
+            let sortedData
+            if (data.initial && !_.isNil(weeklyData)) {
+                sortedData = await sortDataDescending(weeklyData);
+            }
+
             let monthlyData: any = [];
             if (data.statistics_type == appConstant.STATISTICS_TYPE[0] && !_.isNil(statuses) && !_.isNil(statistic_count)) {
                 statuses.followupstatus.forEach((statusItem: any) => {
@@ -311,7 +347,7 @@ export default class DashboardService {
 
             let final_data: any;
             if (data.statistics_type == appConstant.STATISTICS_TYPE[1]) {
-                final_data = (!_.isNil(weeklyData)) ? weeklyData : null
+                final_data = (!_.isNil(weeklyData)) ? (data.initial) ? sortedData : weeklyData : null
             }
             if (data.statistics_type == appConstant.STATISTICS_TYPE[0]) {
                 final_data = (!_.isNil(monthlyData)) ? monthlyData : null
