@@ -63,7 +63,7 @@ export default class UserService {
                 const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
                 const id = (user && user.ID) || (providerGroupContact && providerGroupContact.ProviderGroupID) || (provider && provider.ProviderDoctorID) || '';
                 const TokenDetails = tokenDetailsArray.filter((item: any) => item.userid === id);
-                if (TokenDetails && userData.signin) {
+                if (TokenDetails && !userData.signin) {
                     logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
                     return {
                         data: encrypt(JSON.stringify({ multiLogin: true }))
