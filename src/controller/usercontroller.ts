@@ -19,11 +19,13 @@ export default class UserController {
             if (decryptedData) {
                 const data = JSON.parse(decryptedData)
                 let { email, password } = data;
+                const query = req.query;
                 if (email) {
                     // email = (email as string).toLowerCase();
                     const userData = {
                         Email: email,
                         PasswordHash: password,
+                        signin: query ? query.signin : ''
                     }
                     await userService.signinUser(userData).then((data: any) => {
                         if (data && data.error) {
