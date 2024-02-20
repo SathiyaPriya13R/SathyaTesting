@@ -160,7 +160,8 @@ export default class ProviderService {
                 if (specdata.IssueDate) {
                     const updatedIssueDate = await dateConvert.dateFormat(specdata.IssueDate);
                     specdata.IssueDate = updatedIssueDate;
-                } else if (specdata.ExpireDate) {
+                }
+                if (specdata.ExpireDate) {
                     const updatedExpireDate = await dateConvert.dateFormat(specdata.ExpireDate);
                     specdata.ExpireDate = updatedExpireDate;
                 }
