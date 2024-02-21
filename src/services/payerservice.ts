@@ -85,26 +85,6 @@ export default class ProviderService {
                                     attributes: ['InsuranceID', 'Name']
                                 }
                             ]
-                        },
-                        {
-                            model: db.Location,
-                            as: 'insurance_location',
-                            where: { IsActive: 1 },
-                            attributes: ['AddressLine1', 'ZipCode']
-                        },
-                        {
-                            model: db.InsuranceFollowup,
-                            as: 'insurance_status',
-                            where: { IsActive: 1, IsLast: 1 },
-                            attributes: ['StatusID'],
-                            include: [
-                                {
-                                    model: db.lookupValue,
-                                    as: 'status_name',
-                                    where: { IsActive: 1 },
-                                    attributes: ['Name']
-                                }
-                            ]
                         }
                     ]
                 }
@@ -122,6 +102,29 @@ export default class ProviderService {
 
             const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
             const provider_list = JSON.parse(JSON.stringify(provider_data));
+            const provider_ids: Array<string> = provider_list.map((provider: any) => provider.ProviderDoctorID)
+
+            const payer_array: Array<any> = await this.getAllPayers(provider_ids, filter_data, filter_datas)
+
+            await provider_list.map((provider: any) => {
+                delete provider.insurance_details
+            })
+
+            const final_data: Array<Record<string, any>> = []
+
+            await provider_list.map((provider: any) => {
+                payer_array.map((payer: any) => {
+                    if (provider.ProviderDoctorID == payer.details_insurance.ProviderDoctorID) {
+                        if (!provider.insurance_details) {
+                            provider.insurance_details = [];
+                        }
+                        provider.insurance_details.push(payer);
+                    }
+                })
+                if (!_.isNil(payer_array) && !_.isEmpty(payer_array)) {
+                    final_data.push(provider)
+                }
+            })
 
             await provider_list.map((provider: any) => {
                 if (!_.isNil(provider.insurance_details)) {
@@ -136,15 +139,16 @@ export default class ProviderService {
                 }
             })
 
-            const finalResult: Array<Record<string, any>> = provider_list
+            const finalResult: Array<Record<string, any>> = await final_data
 
             if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
                 logger.info(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_COMPLETED);
                 return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.PAYER_MESSAGES.PATER) };
             } else {
                 logger.info(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_COMPLETED);
-                return { data: finalResult, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.PAYER_MESSAGES.PATER) };
+                return { data: null, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.PAYER_MESSAGES.PATER) };
             }
+
         } catch (error: any) {
             logger.error(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_FAILED, error.message);
             throw new Error(error.message)
@@ -256,6 +260,99 @@ export default class ProviderService {
             logger.error(appConstant.PAYER_MESSAGES.PAYER_HISTORY_FUNCTION_FAILED, error.message);
             throw new Error(error.message)
         }
+    }
+
+    async getAllPayers(provider_ids: Array<any>, filter_data: any, filter_datas: any) {
+
+        return new Promise((resolve: (value: Array<any>) => void, reject: (value: any) => void): void => {
+            const commonService = new CommonService(db.user);
+            try {
+                const payer_datas: Array<any> = []
+                const payer_condition: sequelizeObj = {}
+                const idx: number = 0;
+                grtPayers(idx);
+                async function grtPayers(idx: number) {
+                    const provider_id = provider_ids[idx];
+                    if (idx != provider_ids.length) {
+                        payer_condition.where = { IsActive: 1, ProviderDoctorID: { $eq: provider_id } }
+
+                        payer_condition.attributes = ['InsuranceTransactionID', 'TaskID', 'EffectiveDate', 'RecredentialingDate']
+
+                        payer_condition.include = [
+                            {
+                                model: db.ProviderDoctor,
+                                as: 'details_insurance',
+                                required: true,
+                                attributes: ['ProviderDoctorID']
+                            },
+                            {
+                                model: db.GroupInsurance,
+                                as: 'grp_insurance',
+                                where: {
+                                    IsActive: 1,
+                                    ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.payers)) && { InsuranceID: { $in: filter_datas.payers } })
+                                },
+                                attributes: ['GroupInsuranceID'],
+                                include: [
+                                    {
+                                        model: db.InsuranceMaster,
+                                        as: 'insurance_name',
+                                        where: { IsActive: 1 },
+                                        attributes: ['InsuranceID', 'Name']
+                                    }
+                                ]
+                            },
+                            {
+                                model: db.Location,
+                                as: 'insurance_location',
+                                where: { IsActive: 1 },
+                                attributes: ['AddressLine1', 'ZipCode']
+                            },
+                            {
+                                model: db.InsuranceFollowup,
+                                as: 'insurance_status',
+                                where: { IsActive: 1, IsLast: 1 },
+                                attributes: ['StatusID'],
+                                include: [
+                                    {
+                                        model: db.lookupValue,
+                                        as: 'status_name',
+                                        where: { IsActive: 1 },
+                                        attributes: ['Name']
+                                    }
+                                ]
+                            }
+                        ]
+
+                        if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
+                            const searchparams: Record<string, unknown> = {};
+
+                            searchparams['$grp_insurance.insurance_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
+                            searchparams.TaskID = { $like: '%' + filter_data.searchtext + '%' };
+
+                            payer_condition.where['$or'] = searchparams;
+                            payer_condition.where = _.omit(payer_condition.where, ['searchtext']);
+                        }
+
+                        payer_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
+                        payer_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
+
+                        const payer_data: Array<Record<string, any>> = await commonService.getAllList(payer_condition, db.InsuranceTransaction);
+                        const payer_list = JSON.parse(JSON.stringify(payer_data));
+                        payer_datas.push(payer_list)
+                        idx++
+                        grtPayers(idx)
+
+                    } else {
+                        const flatted_payers = payer_datas.flat();
+                        resolve(flatted_payers)
+                    }
+                }
+            } catch (e) {
+                reject(e);
+            }
+        })
+
     }
 
 }

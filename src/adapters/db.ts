@@ -92,6 +92,7 @@ ProviderSpec.belongsTo(lookupValue, { as: 'BoardStatus', foreignKey: 'BoardStatu
  * For payer associations
  */
 ProviderDoctor.hasMany(InsuranceTransaction, { as: 'insurance_details', foreignKey: 'ProviderDoctorID' })
+InsuranceTransaction.belongsTo(ProviderDoctor, { as: 'details_insurance', foreignKey: 'ProviderDoctorID' })
 InsuranceTransaction.belongsTo(GroupInsurance, { as: 'grp_insurance', foreignKey: 'GroupInsuranceID' })
 GroupInsurance.belongsTo(InsuranceMaster, { as: 'insurance_name', foreignKey: 'InsuranceID' })
 InsuranceTransaction.belongsTo(Location, { as: 'insurance_location', foreignKey: 'LocationID' })
