@@ -117,22 +117,20 @@ export default class ProviderService {
         try {
             const commonService = new CommonService(db.user);
             const providerspec_condition: sequelizeObj = {
-                where: { ProviderDoctorID: body.id, IsActive: 1 },
+                where: { ProviderDoctorID: body.id },
                 include: [
                     {
                         model: db.Speciality,
                         as: 'ProviderSpec',
-                        where: { IsActive: 1 },
                         attributes: ['Name']
                     },
                     {
                         model: db.lookupValue,
                         as: 'BoardStatus',
-                        where: { IsActive: 1 },
                         attributes: ['Name']
                     }
                 ],
-                attributes: ['SpecialityID', 'IssueDate', 'ExpireDate', 'BoardStatusID']
+                attributes: ['SpecialityID', 'IssueDate', 'ExpireDate', 'BoardStatusID', 'IsActive']
             };
 
             if (body.searchtext&& body.searchtext != '' && !_.isNil(body.searchtext)) {
@@ -140,7 +138,7 @@ export default class ProviderService {
                 const convertedDate = moment(body.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD'); // Convert to SQL-friendly format
                 providerspec_condition.where = {
                     [Op.and]: [
-                        { ProviderDoctorID: body.id, IsActive: 1 },
+                        { ProviderDoctorID: body.id },
                         {
                             [Op.or]: [
                                 Sequelize.literal(`ProviderSpec.Name LIKE '${searchTextLike}'`),
@@ -164,6 +162,11 @@ export default class ProviderService {
                 if (specdata.ExpireDate) {
                     const updatedExpireDate = await dateConvert.dateFormat(specdata.ExpireDate);
                     specdata.ExpireDate = updatedExpireDate;
+                }
+                if (specdata.IsActive) {
+                    specdata.status = 'Active'
+                } else {
+                    specdata.status = 'Inactive'
                 }
                 finalRes.push(specdata);
             });
