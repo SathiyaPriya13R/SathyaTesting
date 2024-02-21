@@ -83,6 +83,9 @@ export default class ProviderService {
                 provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
             }
 
+            provider_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
+            provider_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
+
             const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
             const provider_list = JSON.parse(JSON.stringify(provider_data));
 
@@ -102,7 +105,7 @@ export default class ProviderService {
                 return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER) };
             } else {
                 logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_COMPLETED)
-                return { data: finalResult, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER) };
+                return { data: null, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER) };
             }
         } catch (error: any) {
             logger.error(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_FAILED, error.message);
@@ -133,7 +136,7 @@ export default class ProviderService {
                 attributes: ['SpecialityID', 'IssueDate', 'ExpireDate', 'BoardStatusID', 'IsActive']
             };
 
-            if (body.searchtext&& body.searchtext != '' && !_.isNil(body.searchtext)) {
+            if (body.searchtext && body.searchtext != '' && !_.isNil(body.searchtext)) {
                 const searchTextLike = `%${body.searchtext}%`;
                 const convertedDate = moment(body.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD'); // Convert to SQL-friendly format
                 providerspec_condition.where = {

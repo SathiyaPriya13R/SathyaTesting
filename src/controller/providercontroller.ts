@@ -17,6 +17,9 @@ export default class ProviderController {
         try {
             const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
             const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : null
+            const { limit, offset }: { limit: number, offset: number } = JSON.parse(JSON.stringify(req.query));
+            filter_data.limit = (limit) ? limit : null;
+            filter_data.offset = (offset) ? offset : null
             const user_data: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user))
             await providerService.getProviderData(user_data, filter_data).then((data: any) => {
                 if (data.error) {
