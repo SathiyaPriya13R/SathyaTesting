@@ -105,5 +105,6 @@ InsuranceFollowup.belongsTo(User, { as: 'followedby_user', foreignKey: 'Modified
  * For Location associations
  */
 ProviderDoctor.hasMany(DoctorLocation, { as: 'provider_location', foreignKey: 'ProviderDoctorID' })
+DoctorLocation.belongsTo(ProviderDoctor, { as: 'location_provider', foreignKey: 'ProviderDoctorID' })
 DoctorLocation.belongsTo(Location, { as: 'location_details', foreignKey: 'LocationID' })
 Location.belongsTo(lookupValue, { as: 'state_name', foreignKey: 'StateID' })

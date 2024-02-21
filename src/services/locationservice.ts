@@ -69,21 +69,8 @@ export default class LocationService {
                         IsActive: location_status,
                         ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } })
                     },
-                    attributes: ['IsActive'],
-                    include: [
-                        {
-                            model: db.Location,
-                            as: 'location_details',
-                            attributes: ['Name', 'AddressLine1', 'AddressLine2', 'ZipCode', 'City'],
-                            include: [
-                                {
-                                    model: db.lookupValue,
-                                    as: 'state_name',
-                                    attributes: ['Name']
-                                }
-                            ]
-                        }
-                    ]
+                    required: true,
+                    attributes: ['IsActive']
                 }
             ]
 
@@ -99,20 +86,117 @@ export default class LocationService {
 
             const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
             const provider_list = JSON.parse(JSON.stringify(provider_data));
+            const provider_ids: Array<string> = provider_list.map((provider: any) => provider.ProviderDoctorID)
 
-            const finalResult: Array<Record<string, any>> = provider_list
+            const location_array: Array<any> = await this.getAllLocations(provider_ids, location_status, filter_data, filter_datas)
+
+            await provider_list.map((provider: any) => {
+                delete provider.provider_location
+            })
+
+            const final_data: Array<Record<string, any>> = []
+
+            await provider_list.map((provider: any) => {
+                location_array.map((location: any) => {
+                    if (provider.ProviderDoctorID == location.location_provider.ProviderDoctorID) {
+                        if (!provider.provider_location) {
+                            provider.provider_location = [];
+                        }
+                        provider.provider_location.push(location);
+                    }
+                })
+                if (!_.isNil(location_array) && !_.isEmpty(location_array)) {
+                    final_data.push(provider)
+                }
+            })
+
+            const finalResult: Array<Record<string, any>> = await final_data
 
             if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
                 logger.info(appConstant.LOCATION_MESSAGES.LOCATION_FUNCTION_COMPLETED);
                 return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.LOCATION_MESSAGES.LOCATION) };
             } else {
                 logger.info(appConstant.LOCATION_MESSAGES.LOCATION_FUNCTION_COMPLETED);
-                return { data: finalResult, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.LOCATION_MESSAGES.LOCATION) };
+                return { data: null, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.LOCATION_MESSAGES.LOCATION) };
             }
+
         } catch (error: any) {
             logger.error(appConstant.LOCATION_MESSAGES.LOCATION_FUNCTION_FAILED, error.message);
             throw new Error(error.message)
         }
+    }
+
+    async getAllLocations(provider_ids: Array<any>, location_status: boolean, filter_data: any, filter_datas: any) {
+
+        return new Promise((resolve: (value: Array<any>) => void, reject: (value: any) => void): void => {
+            const commonService = new CommonService(db.user);
+            try {
+                const location_datas: Array<any> = []
+                const location_condition: sequelizeObj = {}
+                const idx: number = 0;
+                getLocation(idx);
+                async function getLocation(idx: number) {
+                    const provider_id = provider_ids[idx];
+                    if (idx != provider_ids.length) {
+
+                        location_condition.where = {
+                            IsActive: location_status,
+                            ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } }),
+                            ProviderDoctorID: { $eq: provider_id }
+                        }
+
+                        location_condition.attributes = ['IsActive']
+
+                        location_condition.include = [
+                            {
+                                model: db.Location,
+                                as: 'location_details',
+                                attributes: ['Name', 'AddressLine1', 'AddressLine2', 'ZipCode', 'City'],
+                                include: [
+                                    {
+                                        model: db.lookupValue,
+                                        as: 'state_name',
+                                        attributes: ['Name']
+                                    }
+                                ]
+                            },
+                            {
+                                model: db.ProviderDoctor,
+                                as: 'location_provider',
+                                required: true,
+                                attributes: ['ProviderDoctorID']
+                            }
+                        ]
+
+                        if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
+                            const searchparams: Record<string, unknown> = {};
+
+                            searchparams['$location_details.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
+                            searchparams['$location_details.City$'] = { $like: '%' + filter_data.searchtext + '%' };
+
+                            location_condition.where['$or'] = searchparams;
+                            location_condition.where = _.omit(location_condition.where, ['searchtext']);
+                        }
+
+                        location_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
+                        location_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
+
+                        const location_data: Array<Record<string, any>> = await commonService.getAllList(location_condition, db.DoctorLocation);
+                        const location_list = JSON.parse(JSON.stringify(location_data));
+                        location_datas.push(location_list)
+                        idx++
+                        getLocation(idx)
+
+                    } else {
+                        const flatted_locations = location_datas.flat();
+                        resolve(flatted_locations)
+                    }
+                }
+            } catch (e) {
+                reject(e);
+            }
+        })
+
     }
 
 }

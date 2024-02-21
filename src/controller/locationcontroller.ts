@@ -17,8 +17,11 @@ export default class LocationController {
     async getLocation(req: Request, res: Response) {
         try {
             const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
+            const { limit, offset }: { limit: number, offset: number } = JSON.parse(JSON.stringify(req.query));
             const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : {}
             filter_data.all = (!_.isNil(req.query.all) && req.query.all == 'false') ? false : true
+            filter_data.limit = (limit) ? limit : null;
+            filter_data.offset = (offset) ? offset : null
             const user_data: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user))
             await locationService.getLocationData(user_data, filter_data).then((data: any) => {
                 if (data.error) {

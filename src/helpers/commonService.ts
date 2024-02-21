@@ -17,6 +17,7 @@ export default class CommonService {
     constructor(database: Sequelize) {
         this.db = database;
     }
+
     getData(parameters: sequelizeObj, accessObject: any): Promise<Record<string, unknown>> {
         const promise = new Promise<Record<string, unknown>>((resolve: (value: any) => void, reject: (value: any) => void) => {
             return this.db.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, (t: Transaction) => {
@@ -56,6 +57,17 @@ export default class CommonService {
                     reject(error);
                 });
             })
+        });
+        return promise;
+    }
+
+    getCount(condition: sequelizeObj, accessObject: any) {
+        const promise = new Promise((resolve, reject) => {
+            return accessObject.count(condition).then((entity: any) => {
+                resolve(entity);
+            }).catch((error: any) => {
+                reject(error);
+            });
         });
         return promise;
     }
