@@ -161,6 +161,15 @@ export default class DashboardService {
                     // Initialize weeklyData object to store data by year, month, and week number
                     const weekly_data: any = {};
 
+                    statistic_count.forEach((stat: any) => {
+                        const { year, month, week_number } = stat;
+                        const weekKey = `${year}-${month}-${week_number}`;
+                        if (!weekly_data[weekKey]) {
+                            weekly_data[weekKey] = [];
+                        }
+                        weekly_data[weekKey].push(stat);
+                    });
+
                     for (let d = new Date(sixMonthsAgo); d <= today; d.setMonth(d.getMonth() + 1)) {
                         const year = d.getFullYear();
                         const month = d.getMonth() + 1; // Adding 1 since getMonth() returns 0-based index
@@ -197,18 +206,33 @@ export default class DashboardService {
                         for (let i = 1; i <= weeksInMonth; i++) {
                             const monthName = monthNames[month - 1];
                             const weekKey = `${year}-${monthName}-${i}`;
-                            weekly_data[weekKey] = [];
+                            if (!weekly_data[weekKey]) {
+                                weekly_data[weekKey] = [];
+                            }
+                            // weekly_data[weekKey] = [];
                         }
-                    }
 
-                    statistic_count.forEach((stat: any) => {
-                        const { year, month, week_number } = stat;
-                        const weekKey = `${year}-${month}-${week_number}`;
-                        if (!weekly_data[weekKey]) {
-                            weekly_data[weekKey] = [];
+                        function getWeekNumberInMonth(date: any) {
+                            const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+                            const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+                            const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Offset to align with Monday as the start of the week
+                            const adjustedDate = new Date(date);
+                            adjustedDate.setDate(date.getDate() + offset); // Move the date to the nearest Monday
+
+                            const weekNumber = Math.ceil((adjustedDate.getDate()) / 7);
+                            return weekNumber;
                         }
-                        weekly_data[weekKey].push(stat);
-                    });
+
+                        // If the current month is the current month, remove keys representing weeks beyond today's week
+                        if (year === today.getFullYear() && month === today.getMonth() + 1) {
+                            const todayWeek = getWeekNumberInMonth(today);
+                            for (let i = todayWeek + 1; i <= weeksInMonth; i++) {
+                                const currentWeek = `${year}-${monthNames[month - 1]}-${i}`;
+                                delete weekly_data[currentWeek];
+                            }
+                        }
+
+                    }
 
                     // Iterate through each week to add missing statuses with count 0
                     Object.keys(weekly_data).forEach((weekKey: any) => {
