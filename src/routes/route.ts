@@ -42,7 +42,8 @@ router.get('/payer/history', AuthGuard, payercontroller.getPayerHistory);
 
 //Location routes
 router.get('/location', AuthGuard, locationcontroller.getLocation);
+router.post('/location/status/update', AuthGuard, locationcontroller.updateLocationStatus)
 
 
-router.get('/test',usercontroller.testfunction);
+router.get('/test', usercontroller.testfunction);
 module.exports.route = router;

@@ -70,7 +70,7 @@ export default class LocationService {
                         ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } })
                     },
                     required: true,
-                    attributes: ['IsActive']
+                    attributes: ['IsActive', 'DoctorLocationID']
                 }
             ]
 
@@ -145,7 +145,7 @@ export default class LocationService {
                             ProviderDoctorID: { $eq: provider_id }
                         }
 
-                        location_condition.attributes = ['IsActive']
+                        location_condition.attributes = ['IsActive', 'DoctorLocationID']
 
                         location_condition.include = [
                             {
@@ -197,6 +197,34 @@ export default class LocationService {
             }
         })
 
+    }
+
+    async updateLocationStatus(update_data: { doctor_location_id: string, location_status: boolean }) {
+        try {
+
+            const commonService = new CommonService(db.user);
+            logger.info(appConstant.LOCATION_MESSAGES.LOCATION_STATUS_UPDATE_STARTED);
+
+            if ((_.isNil(update_data.doctor_location_id) || update_data.doctor_location_id == '') || (_.isNil(update_data.location_status) || typeof (update_data.location_status) != 'boolean')) {
+                logger.info(appConstant.LOCATION_MESSAGES.LOCATION_STATUS_UPDATE_FAILED);
+                return { message: 'Please enter valid location id or location status' };
+            }
+
+            let updated_data = await commonService.update({ DoctorLocationID: update_data.doctor_location_id }, { IsActive: update_data.location_status }, db.DoctorLocation)
+            updated_data = JSON.parse(JSON.stringify(updated_data))
+
+            if (update_data && !_.isNil(update_data) && !_.isEmpty(update_data)) {
+                logger.info(appConstant.LOCATION_MESSAGES.LOCATION_STATUS_UPDATE_COMPLETED);
+                return { data: updated_data, message: appConstant.LOCATION_MESSAGES.LOCATION_STATUS_UPDATE_SUCCEFULLY };
+            } else {
+                logger.info(appConstant.LOCATION_MESSAGES.LOCATION_STATUS_UPDATE_COMPLETED);
+                return { data: null, message: appConstant.LOCATION_MESSAGES.LOCATION_STATUS_UPDATE_FAILED };
+            }
+
+        } catch (error: any) {
+            logger.error(appConstant.LOCATION_MESSAGES.LOCATION_STATUS_UPDATE_FAILED, error.message);
+            throw new Error(error.message)
+        }
     }
 
 }

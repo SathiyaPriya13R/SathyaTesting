@@ -136,7 +136,11 @@ export default class AppConstants {
         LOCATION: 'Location list',
         LOCATION_FUNCTION_STARTED: 'Location list function started',
         LOCATION_FUNCTION_COMPLETED: 'Location list fucntion completed',
-        LOCATION_FUNCTION_FAILED: 'Location list funciton failed'
+        LOCATION_FUNCTION_FAILED: 'Location list funciton failed',
+        LOCATION_STATUS_UPDATE_STARTED: 'Location status update funciton started',
+        LOCATION_STATUS_UPDATE_COMPLETED: 'Location status update function completed',
+        LOCATION_STATUS_UPDATE_FAILED: 'Location status update function failed',
+        LOCATION_STATUS_UPDATE_SUCCEFULLY: 'Location status updated successfully'
     }
 
     STATUS_ACTIVE = 'Active';
