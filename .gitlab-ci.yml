@@ -5,20 +5,20 @@ stages:
 
 before_script:
     - export TRIGGERED_BY="$GITLAB_USER_LOGIN"
-    - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Deployment procees started, Pipeline has been triggered by $TRIGGERED_BY!\"}" https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc'
+    - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Deployment procees started, Pipeline has been triggered by $TRIGGERED_BY!\"}" "https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc"'
 
 # unit test stage
 unit_test:
     stage: test
     image: node:20.11.0-alpine
     before_script:
-        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Test job started!\"}" https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc'
+        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Test job started!\"}" "https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc"'
     # - npm install
     script:
         # - npm run test
         - echo "--- test manually completed ---"
     after_script:
-        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Test job completed manaually!\"}" https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc'
+        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Test job completed manaually!\"}" "https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc"'
     tags:
         - qway-api
 
@@ -29,11 +29,11 @@ build_image:
         - docker:dind
     stage: build
     before_script:
-        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Build job started!\"}" https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc'
+        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Build job started!\"}" "https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc"'
     script:
         - echo "--- build manually completed ---"
     after_script:
-        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Test job completed manaually!\"}" https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc'
+        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Test job completed manaually!\"}" "https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc"'
     tags:
         - qway-api
 
@@ -44,11 +44,11 @@ deploy_image:
         - docker:dind
     stage: deploy
     before_script:
-        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Deploy job started!\"}" https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc'
+        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Deploy job started!\"}" "https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc"'
     script:
         - echo "--- deploy manually completed ---"
     after_script:
-        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Deploy job completed! \"}" https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc'
-        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Deployment procees has been completed by $TRIGGERED_BY!\"}" https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc'
+        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Deploy job completed! \"}" "https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc"'
+        - 'curl -X POST -H "Content-Type: application/json" -d "{\"text\":\"Deployment procees has been completed by $TRIGGERED_BY!\"}" "https://chat.googleapis.com/v1/spaces/AAAALpYauMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=dUxGYoEjQqIZxci38aW_SEs2sZW2F7bxpBfZ5yb9Bnc"'
     tags:
         - qway-api
