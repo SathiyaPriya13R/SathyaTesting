@@ -4,7 +4,7 @@ stages:
     - deploy
 
 variables:
-    USER_NAME: $GITLAB_USER_LOGIN
+    USER_NAME: $GITLAB_USER_NAME
 
 # unit test stage
 unit_test:
