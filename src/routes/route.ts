@@ -7,6 +7,7 @@ import DashboardController from "../controller/dashboardcontroller";
 import ProviderController from "../controller/providercontroller";
 import PayerController from "../controller/payercontroller"
 import LocationController from "../controller/locationcontroller";
+import esigncontroller from "../controller/esigncontroller";
 
 const usercontroller = new UserController();
 const dashboardcontroller = new DashboardController();
@@ -46,4 +47,10 @@ router.post('/location/status/update', AuthGuard, locationcontroller.updateLocat
 
 
 router.get('/test', usercontroller.testfunction);
+
+//esign
+// router.get('/esign', esigncontroller.esign_client)
+router.post('/getesignurl', esigncontroller.get_esign_url)
+router.get('/esign/success', esigncontroller.esign_success)
+
 module.exports.route = router;
