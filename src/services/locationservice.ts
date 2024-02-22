@@ -70,7 +70,21 @@ export default class LocationService {
                         ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } })
                     },
                     required: true,
-                    attributes: ['IsActive', 'DoctorLocationID']
+                    attributes: ['IsActive', 'DoctorLocationID'],
+                    include: [
+                        {
+                            model: db.Location,
+                            as: 'location_details',
+                            attributes: ['Name', 'AddressLine1', 'AddressLine2', 'ZipCode', 'City'],
+                            include: [
+                                {
+                                    model: db.lookupValue,
+                                    as: 'state_name',
+                                    attributes: ['Name']
+                                }
+                            ]
+                        },
+                    ]
                 }
             ]
 
