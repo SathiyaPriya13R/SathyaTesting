@@ -32,16 +32,16 @@ router.get('/profileget', AuthGuard, usercontroller.profileGet);
 router.post('/profile/update', AuthGuard, usercontroller.profileUpdate);
 
 //Provider routes
-router.get('/provider', AuthGuard, providercontroller.getProvider);
+router.post('/provider', AuthGuard, providercontroller.getProvider);
 router.post('/provider/spec', AuthGuard, providercontroller.providerSpec);
-router.get('/provider/viewplans', AuthGuard, providercontroller.getViewPlans);
+router.post('/provider/viewplans', AuthGuard, providercontroller.getViewPlans);
 
 //Payer routes
-router.get('/payer', AuthGuard, payercontroller.getPayer);
-router.get('/payer/history', AuthGuard, payercontroller.getPayerHistory);
+router.post('/payer', AuthGuard, payercontroller.getPayer);
+router.post('/payer/history', AuthGuard, payercontroller.getPayerHistory);
 
 //Location routes
-router.get('/location', AuthGuard, locationcontroller.getLocation);
+router.post('/location', AuthGuard, locationcontroller.getLocation);
 router.post('/location/status/update', AuthGuard, locationcontroller.updateLocationStatus)
 
 
