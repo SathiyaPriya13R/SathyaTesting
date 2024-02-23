@@ -151,7 +151,7 @@ export default class CommonService {
         id: userData.ID,
         user_type: userData.user_type,
         email: userData.Email,
-        displayName: userData.DisplayName,
+        displayName: `${Math.random()} ${userData.DisplayName}`,
         type: userData.type,
         providerGroupContactId: userData.ProviderGroupContactId
     },

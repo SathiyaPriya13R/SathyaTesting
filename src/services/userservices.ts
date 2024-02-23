@@ -63,35 +63,102 @@ export default class UserService {
                 const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
                 const id = (user && user.ID) || (providerGroupContact && providerGroupContact.ProviderGroupID) || (provider && provider.ProviderDoctorID) || '';
                 const TokenDetails = tokenDetailsArray.filter((item: any) => item.userid === id);
-                if (TokenDetails && !userData.signin) {
-                    logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
-                    return {
-                        data: encrypt(JSON.stringify({ multiLogin: true }))
-                    }
-                } else if (user && password) {
+                if (user && password) {
                     const data = user;
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId, IsActive: 1 } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                        const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName', 'ProviderClientID', 'ProviderGroupID']);
-                        finalData.UserType = userType.Name;
+                        if (TokenDetails && !userData.signin) {
+                            logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
+                            const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                            // Push the new token details into the array
+                            const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                            await new Promise((resolve, reject) => {
+                                redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                                    if (setError) {
+                                        console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                                        reject(setError)
+                                        throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
+                                    } else {
+                                        console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                                        logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
+                                        resolve(setResult)
+                                    }
+                                });
+                            }).catch((error: any) => { throw new Error(error) });
+                            return {
+                                data: encrypt(JSON.stringify({ multiLogin: true }))
+                            }
+                        } else {
+                            const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName', 'ProviderClientID', 'ProviderGroupID']);
+                            finalData.UserType = userType.Name;
+                            const permissions = await this.getRolePermission(finalData.UserType as any);
+                            finalData.UserPermissions = permissions;
+                            let tokenData: any = {
+                                ID: data.Id,
+                                Email: data.Email,
+                                user_type: userType.Name,
+                                type: `User_${userType.Name}`,
+                                DisplayName: data.DisplayName
+                            };
+                            const authtoken = commonService.generateAuthToken(tokenData);
+                            finalData.token = authtoken;
+                            finalData.multiLogin = false;
+                            const TokenDetailsString = {
+                                userid: data.Id,
+                                authToken: authtoken
+                            }
+                            const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                            // Push the new token details into the array
+                            newTokenDetailsArray.push(TokenDetailsString);
+                            const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                            await new Promise((resolve, reject) => {
+                                redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                                    if (setError) {
+                                        console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                                        reject(setError)
+                                        throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
+                                    } else {
+                                        console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                                        logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
+                                        resolve(setResult)
+                                    }
+                                });
+                            }).catch((error: any) => { throw new Error(error) });
+                            return { data: encrypt(JSON.stringify(finalData)) };
+                        }
+                    } else {
+                        return { error: appConstant.LOGGER_MESSAGE.USER_NOT_FOUND };
+                    }
+                } else if (providerGroupContact && password) {
+                    if (TokenDetails && !userData.signin) {
+                        logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
+                        return {
+                            data: encrypt(JSON.stringify({ multiLogin: true }))
+                        }
+                    } else {
+                        const finalData: any = _.pick(providerGroupContact, ['Email']);
+                        finalData.Id = providerGroupContact.ProviderGroupID;
+                        finalData.DisplayName = providerGroupContact.ContactPerson;
+                        finalData.UserType = appConstant.USER_TYPE[0];
+                        const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== providerGroupContact.ProviderGroupID);
                         const permissions = await this.getRolePermission(finalData.UserType as any);
                         finalData.UserPermissions = permissions;
                         let tokenData: any = {
-                            ID: data.Id,
-                            Email: data.Email,
-                            user_type: userType.Name,
-                            type: `User_${userType.Name}`,
-                            DisplayName: data.DisplayName
+                            ID: providerGroupContact.ProviderGroupID,
+                            Email: providerGroupContact.Email,
+                            user_type: appConstant.USER_TYPE[0],
+                            type: appConstant.USER_TYPE[0],
+                            DisplayName: providerGroupContact.ContactPerson,
+                            ProviderGroupContactId: providerGroupContact.ProviderGroupContactDetailID
                         };
                         const authtoken = commonService.generateAuthToken(tokenData);
                         finalData.token = authtoken;
                         finalData.multiLogin = false;
                         const TokenDetailsString = {
-                            userid: data.Id,
+                            userid: providerGroupContact.ProviderGroupID,
                             authToken: authtoken
                         }
-                        const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
                         // Push the new token details into the array
                         newTokenDetailsArray.push(TokenDetailsString);
                         const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
@@ -109,89 +176,54 @@ export default class UserService {
                             });
                         }).catch((error: any) => { throw new Error(error) });
                         return { data: encrypt(JSON.stringify(finalData)) };
-                    } else {
-                        return { error: appConstant.LOGGER_MESSAGE.USER_NOT_FOUND };
                     }
-                } else if (providerGroupContact && password) {
-                    const finalData: any = _.pick(providerGroupContact, ['Email']);
-                    finalData.Id = providerGroupContact.ProviderGroupID;
-                    finalData.DisplayName = providerGroupContact.ContactPerson;
-                    finalData.UserType = appConstant.USER_TYPE[0];
-                    const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== providerGroupContact.ProviderGroupID);
-                    const permissions = await this.getRolePermission(finalData.UserType as any);
-                    finalData.UserPermissions = permissions;
-                    let tokenData: any = {
-                        ID: providerGroupContact.ProviderGroupID,
-                        Email: providerGroupContact.Email,
-                        user_type: appConstant.USER_TYPE[0],
-                        type: appConstant.USER_TYPE[0],
-                        DisplayName: providerGroupContact.ContactPerson,
-                        ProviderGroupContactId: providerGroupContact.ProviderGroupContactDetailID
-                    };
-                    const authtoken = commonService.generateAuthToken(tokenData);
-                    finalData.token = authtoken;
-                    finalData.multiLogin = false;
-                    const TokenDetailsString = {
-                        userid: providerGroupContact.ProviderGroupID,
-                        authToken: authtoken
-                    }
-                    // Push the new token details into the array
-                    newTokenDetailsArray.push(TokenDetailsString);
-                    const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
-                    await new Promise((resolve, reject) => {
-                        redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
-                            if (setError) {
-                                console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
-                                reject(setError)
-                                throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
-                            } else {
-                                console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
-                                logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
-                                resolve(setResult)
-                            }
-                        });
-                    }).catch((error: any) => { throw new Error(error) });
-                    return { data: encrypt(JSON.stringify(finalData)) };
                 } else if (provider && password) {
-                    const data = provider;
-                    const finalData: any = _.pick(provider, ['Email']);
-                    finalData.Id = provider.ProviderDoctorID;
-                    finalData.DisplayName = `${provider.FirstName} ${provider.LastName}`
-                    let tokenData: any = {
-                        ID: provider.ProviderDoctorID,
-                        Email: data.Email,
-                        user_type: appConstant.USER_TYPE[1],
-                        type: appConstant.USER_TYPE[1],
-                        DisplayName: `${provider.FirstName} ${provider.LastName}`
-                    };
-                    const authtoken = commonService.generateAuthToken(tokenData);
-                    finalData.token = authtoken;
-                    finalData.UserType = appConstant.USER_TYPE[1];
-                    finalData.multiLogin = false;
-                    const TokenDetailsString = {
-                        userid: data.ProviderDoctorID,
-                        authToken: authtoken
+                    if (TokenDetails && !userData.signin) {
+                        logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
+                        return {
+                            data: encrypt(JSON.stringify({ multiLogin: true }))
+                        }
+                    } else {
+                        const data = provider;
+                        const finalData: any = _.pick(provider, ['Email']);
+                        finalData.Id = provider.ProviderDoctorID;
+                        finalData.DisplayName = `${provider.FirstName} ${provider.LastName}`
+                        let tokenData: any = {
+                            ID: provider.ProviderDoctorID,
+                            Email: data.Email,
+                            user_type: appConstant.USER_TYPE[1],
+                            type: appConstant.USER_TYPE[1],
+                            DisplayName: `${provider.FirstName} ${provider.LastName}`
+                        };
+                        const authtoken = commonService.generateAuthToken(tokenData);
+                        finalData.token = authtoken;
+                        finalData.UserType = appConstant.USER_TYPE[1];
+                        finalData.multiLogin = false;
+                        const TokenDetailsString = {
+                            userid: data.ProviderDoctorID,
+                            authToken: authtoken
+                        }
+                        const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
+                        // Push the new token details into the array
+                        newTokenDetailsArray.push(TokenDetailsString);
+                        const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
+                        const permissions = await this.getRolePermission(finalData.UserType as any);
+                        finalData.UserPermissions = permissions;
+                        await new Promise((resolve, reject) => {
+                            redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
+                                if (setError) {
+                                    console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                                    reject(setError)
+                                    throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
+                                } else {
+                                    console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
+                                    logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
+                                    resolve(setResult)
+                                }
+                            });
+                        }).catch((error: any) => { throw new Error(error) });
+                        return { data: encrypt(JSON.stringify(finalData)) };
                     }
-                    const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
-                    // Push the new token details into the array
-                    newTokenDetailsArray.push(TokenDetailsString);
-                    const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
-                    const permissions = await this.getRolePermission(finalData.UserType as any);
-                    finalData.UserPermissions = permissions;
-                    await new Promise((resolve, reject) => {
-                        redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
-                            if (setError) {
-                                console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
-                                reject(setError)
-                                throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
-                            } else {
-                                console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
-                                logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
-                                resolve(setResult)
-                            }
-                        });
-                    }).catch((error: any) => { throw new Error(error) });
-                    return { data: encrypt(JSON.stringify(finalData)) };
                 } else {
                     logger.error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
                     const finres = {
@@ -254,8 +286,8 @@ export default class UserService {
                 const renderedTemplate = ejs.render(templateFile, templateData);
                 // Create a transporter object
                 const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    secure: false,
+                    service: 'smtp.office365.com',
+                    secure: true,
                     auth: {
                         user: process.env.EMAIL_AUTH_USER,
                         pass: process.env.EMAIL_AUTH_PASSWORD
