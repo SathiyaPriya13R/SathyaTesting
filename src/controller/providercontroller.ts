@@ -59,17 +59,13 @@ export default class ProviderController {
      */
     async getViewPlans(req: Request, res: Response) {
         try {
-            const decryptedData = (req.body.data) ? req.body.data : null;
-            // const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
-            const filter_data = !_.isNil(decryptedData) ? decryptedData : {}
-            // const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : {}
+            const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
+            const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : {}
             await providerService.viewPlans(filter_data).then((data: any) => {
                 if (data.error) {
-                    res.status(400).send(data.error);
-                    // res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+                    res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
                 } else {
-                    res.status(200).send(data);
-                    // res.status(200).send({ data: encrypt(JSON.stringify(data)) });
+                    res.status(200).send({ data: encrypt(JSON.stringify(data)) });
                 }
             }).catch((error) => {
                 res.status(400).send({ data: encrypt(JSON.stringify(error)) });

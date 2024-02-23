@@ -260,13 +260,43 @@ export default class ProviderService {
                                     ]
                                 }
                             ]
-                        },
+                        }
                     ]
                 }
             ]
 
+            if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
+                const searchparams: Record<string, unknown> = {};
+
+                searchparams['$insurance_details.grp_insurance.insurance_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
+                searchparams['$insurance_details.grp_insurance.insurance_name.insurance_location.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
+                searchparams['$insurance_details.grp_insurance.insurance_name.plan_details.PlanName$'] = { $like: '%' + filter_data.searchtext + '%' };
+
+                provider_condition.where['$or'] = searchparams;
+                provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
+            }
+
             const provider_plan_data = await commonService.getData(provider_condition, db.ProviderDoctor)
             const provider_data = JSON.parse(JSON.stringify(provider_plan_data));
+
+            if (!_.isNil(provider_data)) {
+                await provider_data.insurance_details.map(async (insurance: any) => {
+                    if (insurance) {
+                        await insurance.grp_insurance.insurance_name.plan_details.map(async (plans: any) => {
+                            if (plans) {
+                                await plans.enrolled_plans.map(async (enrolled_plan: any) => {
+                                    if (!_.isNil(enrolled_plan.EffectiveOn) || !_.isNil(enrolled_plan.ExpiresOn)) {
+                                        const formattedEffectiveOn = !_.isNil(enrolled_plan.EffectiveOn) ? await dateConvert.dateFormat(enrolled_plan.EffectiveOn) : null
+                                        const formattedExpiresOn = !_.isNil(enrolled_plan.ExpiresOn) ? await dateConvert.dateFormat(enrolled_plan.ExpiresOn) : null
+                                        enrolled_plan.EffectiveOn = formattedEffectiveOn
+                                        enrolled_plan.ExpiresOn = formattedExpiresOn
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+            }
 
             const finalResult: Array<Record<string, any>> = provider_data;
 
