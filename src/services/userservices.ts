@@ -412,9 +412,26 @@ export default class UserService {
     async getRolePermission(user_type: string): Promise<void> {
         try {
             const commonService = new CommonService(db.user);
-            const mobile_role_permissions = await commonService.getAllList({ where: { RoleName: user_type, Status: appConstant.STATUS_ACTIVE } }, db.MobileRolePermissions);
+            const mobile_role_permissions = await commonService.getAllList({ where: { RoleName: user_type, Status: appConstant.STATUS_ACTIVE }, attributes: ['RoleName', 'ScreenName', 'SubScreens', 'Permissions'] }, db.MobileRolePermissions);
             const permissions = !_.isNil(mobile_role_permissions) ? JSON.parse(JSON.stringify(mobile_role_permissions)) : null
-            return permissions
+
+            const groupedPermissions: Record<string, any> = {};
+
+            await permissions.forEach((permission: any) => {
+
+                const { RoleName, ScreenName, SubScreens, Permissions } = permission;
+
+                if (!groupedPermissions[ScreenName]) {
+                    groupedPermissions[ScreenName] = { RoleName, ScreenName, SubScreens, Permissions };
+                } else {
+                    groupedPermissions[ScreenName].SubScreens = SubScreens || groupedPermissions[ScreenName].SubScreens;
+                    groupedPermissions[ScreenName].Permissions += `, ${Permissions}`;
+                }
+
+            });
+
+            return !_.isNil(groupedPermissions) ? JSON.parse(JSON.stringify(groupedPermissions)) : null
+
         } catch (e) {
             logger.error(e);
         }
