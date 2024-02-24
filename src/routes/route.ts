@@ -27,6 +27,7 @@ router.get('/pwdexpirationtime', usercontroller.passwordExpirationCheck);
 router.post('/dashboard/summarycount', AuthGuard, dashboardcontroller.dashboardsummary);
 router.post('/dashboard/statisticscount', AuthGuard, dashboardcontroller.getStatistic);
 router.get('/app/filter', AuthGuard, dashboardcontroller.appFilter);
+router.post('/app/applied/filter', AuthGuard, dashboardcontroller.appliedFilter);
 
 // Profile routes
 router.get('/profileget', AuthGuard, usercontroller.profileGet);

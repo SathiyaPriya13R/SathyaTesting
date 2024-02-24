@@ -562,4 +562,40 @@ export default class DashboardService {
         }
     }
 
+    async getAppliedFilterData(filter_data: { providers: Array<string>, payers: Array<string>, locations: Array<string> }): Promise<{ data?: any, message: string }> {
+        try {
+            const commonService = new CommonService(db.user);
+
+            if (_.isNil(filter_data) || _.isEmpty(filter_data) && (_.isEmpty(filter_data.providers) || _.isEmpty(filter_data.payers) || _.isEmpty(filter_data.locations))) {
+                return { message: "Please provide providers, payers or locations ID's" };
+            }
+
+            const filter_datas: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = (!_.isNil(filter_data) && (!_.isEmpty(filter_data.providers) || !_.isEmpty(filter_data.payers) || !_.isEmpty(filter_data.locations)))
+                ? await commonService.getFilterDataIds(filter_data.providers, filter_data.payers, filter_data.locations, {
+                    provider_doctor: db.ProviderDoctor,
+                    insurance_transaction: db.InsuranceTransaction,
+                    group_insurance: db.GroupInsurance,
+                    doctor_location: db.DoctorLocation,
+                })
+                : { providers: [], payers: [], locations: [] };
+
+
+            const finalResult: Record<string, any> = {
+                providers: JSON.parse(JSON.stringify(filter_datas.providers)),
+                payers: JSON.parse(JSON.stringify(filter_datas.payers)),
+                location: JSON.parse(JSON.stringify(filter_datas.locations))
+            };
+
+            if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
+                return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.APP_FILTER) };
+            } else {
+                return { data: finalResult, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.APP_FILTER) };
+            }
+
+        } catch (error: any) {
+            logger.error(error.message);
+            throw new Error(error.message);
+        }
+    }
+
 }

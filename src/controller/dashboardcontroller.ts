@@ -69,4 +69,19 @@ export default class DashboardController {
         }
     }
 
+    /**
+     * This function used to retrive the applied filters data
+     */
+    async appliedFilter(req: Request, res: Response) {
+        try {
+            const decryptedData = (req.body.data) ? decrypt(req.body.data) : null
+            const filter_data = (decryptedData) ? JSON.parse(decryptedData) : null
+            const filtered_data = await dashboardService.getAppliedFilterData(filter_data);
+            res.status(200).send({ data: encrypt(JSON.stringify(filtered_data)) });
+        } catch (error) {
+            logger.error(error);
+            res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        }
+    }
+
 }
