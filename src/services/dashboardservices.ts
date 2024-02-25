@@ -213,13 +213,14 @@ export default class DashboardService {
                         }
 
                         function getWeekNumberInMonth(date: any) {
-                            const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-                            const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
-                            const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Offset to align with Monday as the start of the week
+                            // const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+                            // const firstDayOfWeek = firstDayOfMonth.getDay() - 1; // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+                            // const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Offset to align with Monday as the start of the week
                             const adjustedDate = new Date(date);
-                            adjustedDate.setDate(date.getDate() + offset); // Move the date to the nearest Monday
+                            adjustedDate.setDate(date.getDate()); // Move the date to the nearest Monday
+                            // adjustedDate.setDate(date.getDate() + offset); // Move the date to the nearest Monday
 
-                            const weekNumber = Math.ceil((adjustedDate.getDate()) / 7);
+                            const weekNumber = Math.ceil((adjustedDate.getDate()) / 7) + 1;
                             return weekNumber;
                         }
 
