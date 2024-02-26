@@ -149,9 +149,13 @@ export default class ProviderService {
                             ]
                         }
                     ],
+                };
+                if (!isNaN(new Date (convertedDate).getTime())) {
+                        providerspec_condition.where = {
                     [Op.and]: Sequelize.literal(`CAST(IssueDate AS DATE) = '${convertedDate}'`),
                     [Op.and]: Sequelize.literal(`CAST(ExpireDate AS DATE) = '${convertedDate}'`)
-                };
+                    }
+                }
             }
 
             let providerSpecData: Array<Record<string, any>> = await commonService.getAllList(providerspec_condition, db.ProviderSpec);
