@@ -8,7 +8,7 @@ import ProviderController from "../controller/providercontroller";
 import PayerController from "../controller/payercontroller"
 import LocationController from "../controller/locationcontroller";
 import esigncontroller from "../controller/esigncontroller";
-import DocumentController from "src/controller/documentcontroller";
+import DocumentController from "../controller/documentcontroller";
 
 const usercontroller = new UserController();
 const dashboardcontroller = new DashboardController();
