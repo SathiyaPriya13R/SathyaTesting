@@ -563,9 +563,12 @@ export default class DashboardService {
         }
     }
 
-    async getAppliedFilterData(filter_data: { providers: Array<string>, payers: Array<string>, locations: Array<string> }): Promise<{ data?: any, message: string }> {
+    async getAppliedFilterData(user_data: { id: string, user_type: string }, filter_data: { providers: Array<string>, payers: Array<string>, locations: Array<string> }): Promise<{ data?: any, message: string }> {
         try {
             const commonService = new CommonService(db.user);
+
+            const user_id = await commonService.getUserGroupProviderId(user_data, db.User, db.UserProvider);
+            user_data.id = user_id ?? user_data.id;
 
             if (_.isNil(filter_data) || _.isEmpty(filter_data) && (_.isEmpty(filter_data.providers) || _.isEmpty(filter_data.payers) || _.isEmpty(filter_data.locations))) {
                 return { message: "Please provide providers, payers or locations ID's" };
@@ -580,11 +583,53 @@ export default class DashboardService {
                 })
                 : { providers: [], payers: [], locations: [] };
 
+            // For provider
+            const provider_condition: sequelizeObj = {
+                where: {
+                    [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
+                    IsActive: 1,
+                    ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } })
+                },
+                attributes: ['ProviderDoctorID']
+            };
+            const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
+            const unique_providers_data: Array<string> = _.uniq(provider_data.map(provider_data => provider_data.ProviderDoctorID));
+
+            // For payers
+            const grp_insurance_condition: sequelizeObj = {
+                where: { ProviderDoctorID: { $in: _.uniq(unique_providers_data) }, IsActive: 1 },
+                attributes: ['GroupInsuranceID']
+            };
+            const grp_insurance: Array<Record<string, any>> = await commonService.getAllList(grp_insurance_condition, db.InsuranceTransaction);
+            const grp_insurance_ids: Array<string> = _.uniq(grp_insurance.map(insurance => insurance.GroupInsuranceID));
+
+            const payer_condition: sequelizeObj = {
+                where: {
+                    GroupInsuranceID: { $in: grp_insurance_ids },
+                    IsActive: 1,
+                    ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.payers)) && { InsuranceID: { $in: filter_datas.payers } })
+                },
+                attributes: ['InsuranceID']
+            };
+            const payer_data: Array<Record<string, any>> = await commonService.getAllList(payer_condition, db.GroupInsurance);
+            const unique_payers_data: Array<string> = _.uniq(payer_data.map(payer_data => payer_data.InsuranceID));
+
+            // For locations
+            const location_condition: sequelizeObj = {
+                where: {
+                    ProviderDoctorID: { $in: _.uniq(unique_providers_data) },
+                    IsActive: 1,
+                    ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } })
+                },
+                attributes: ['LocationID'],
+            };
+            const location_data: Array<Record<string, any>> = await commonService.getAllList(location_condition, db.DoctorLocation);
+            const unique_locations_data: Array<string> = _.uniq(location_data.map(location_data => location_data.LocationID));
 
             const finalResult: Record<string, any> = {
-                providers: JSON.parse(JSON.stringify(filter_datas.providers)),
-                payers: JSON.parse(JSON.stringify(filter_datas.payers)),
-                location: JSON.parse(JSON.stringify(filter_datas.locations))
+                providers: unique_providers_data,
+                payers: unique_payers_data,
+                location: unique_locations_data
             };
 
             if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {

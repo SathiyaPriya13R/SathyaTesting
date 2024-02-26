@@ -76,7 +76,8 @@ export default class DashboardController {
         try {
             const decryptedData = (req.body.data) ? decrypt(req.body.data) : null
             const filter_data = (decryptedData) ? JSON.parse(decryptedData) : null
-            const filtered_data = await dashboardService.getAppliedFilterData(filter_data);
+            const user_data: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user));
+            const filtered_data = await dashboardService.getAppliedFilterData(user_data, filter_data);
             res.status(200).send({ data: encrypt(JSON.stringify(filtered_data)) });
         } catch (error) {
             logger.error(error);
