@@ -6,6 +6,7 @@ import AppConstants from "../utils/constants";
 import CommonService from '../helpers/commonService';
 const logger = require('../helpers/logger');
 import eSign from '../helpers/docusign'
+import path from 'path';
 
 const appConstant = new AppConstants();
 
@@ -17,11 +18,15 @@ export class eSignService {
 
         const envelope_api = await eSign.getEnvelopesApi(token_data.access_token)
 
-        const envelope = await eSign.createEnvelope(body_data.name, body_data.email)
+        const filepath = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
+
+        const envelope = await eSign.makeEnvelope(filepath, body_data.email, body_data.name)
 
         const create_envople = await envelope_api.createEnvelope(
             process.env.ACCOUNT_ID, { envelopeDefinition: envelope }
         )
+        
+        console.log("🚀 ~ eSignService ~ getEsignURI ~ create_envople.envelopeId:", create_envople.envelopeId)
 
         const viewRequest = await eSign.getDocusignRedirectUrl(body_data.email, body_data.name)
 

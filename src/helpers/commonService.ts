@@ -32,6 +32,20 @@ export default class CommonService {
         return promise;
     }
 
+    create(data: Record<string, unknown>, accessObject: any): Promise<Record<string, unknown>> {
+        const promise = new Promise<Record<string, unknown>>((resolve: (value: any) => void, reject: (value: any) => void) => {
+            return this.db.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, (t: Transaction) => {
+                return accessObject.create(data, { transaction: t }).then((result: Record<string, unknown>) => {
+                    resolve(result);
+                }).catch((error: Error) => {
+                    t.rollback();
+                    reject(error);
+                });
+            });
+        });
+        return promise;
+    }
+
     update(condition: Record<string, unknown>, data: Record<string, unknown>, accessObject: any): Promise<Record<string, unknown>> {
         const promise = new Promise<Record<string, unknown>>((resolve: (value: any) => void, reject: (value: any) => void) => {
             return this.db.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, (t: Transaction) => {
