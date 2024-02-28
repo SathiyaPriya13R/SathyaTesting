@@ -143,6 +143,14 @@ export default class AppConstants {
         LOCATION_STATUS_UPDATE_SUCCEFULLY: 'Location status updated successfully'
     }
 
+    DOCUMENT_DETAILS_MESSAGE = {
+        DOCUMENT: 'Document details',
+        DOCUMENT_FUNCTION_STARTED: 'Document details function started',
+        DOCUMENT_FUNCTION_COMPLETED: 'Document details fucntion completed',
+        DOCUMENT_FUNCTION_FAILED: 'Document details funciton failed',
+    }
+
+
     STATUS_ACTIVE = 'Active';
     STATUS_INACTIVE = 'Inactive';
     STATUS_DELETED = 'Deleted';

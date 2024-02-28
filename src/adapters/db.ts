@@ -20,6 +20,7 @@ import { ProviderSpecFactory } from '../model/providerspec';
 import { SpecialityFactory } from '../model/speciality';
 import { EnrollmentPlansFactory } from '../model/enrollmentplans';
 import { InsurancePlanFactory } from '../model/insuranceplan';
+import { DocumentAttachmentFactory } from '../model/documentdetails';
 
 require('dotenv').config();
 
@@ -55,6 +56,8 @@ export const ProviderSpec = ProviderSpecFactory(user);
 export const Speciality = SpecialityFactory(user);
 export const EnrollmentPlans = EnrollmentPlansFactory(user);
 export const InsurancePlan = InsurancePlanFactory(user);
+export const DocumentAttachment = DocumentAttachmentFactory(user);
+
 
 
 /**
