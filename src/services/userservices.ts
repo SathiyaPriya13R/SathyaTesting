@@ -286,7 +286,7 @@ export default class UserService {
                 const renderedTemplate = ejs.render(templateFile, templateData);
                 // Create a transporter object
                 const transporter = nodemailer.createTransport({
-                    service: 'smtp.office365.com',
+                    service: 'gmail',
                     secure: true,
                     auth: {
                         user: process.env.EMAIL_AUTH_USER,
