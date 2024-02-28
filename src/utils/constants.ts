@@ -149,4 +149,11 @@ export default class AppConstants {
 
     USER_TYPE = ['Group', 'Provider', 'User_Provider', 'User_Group']
     STATISTICS_TYPE = ['Month', 'Week']
+    
+    ESIGN_MESSAGE = {
+        ESIGN: "Esign List",
+        ESIGN_FUNCTION_STARTED: "Esign list function started",
+        ESIGN_FUNCTION_COMPLETED: 'Esign list fucntion completed',
+        ESIGN_FUNCTION_FAILED: 'Esign list funciton failed',
+    }
 }

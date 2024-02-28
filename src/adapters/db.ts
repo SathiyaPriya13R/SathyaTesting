@@ -109,3 +109,10 @@ ProviderDoctor.hasMany(DoctorLocation, { as: 'provider_location', foreignKey: 'P
 DoctorLocation.belongsTo(ProviderDoctor, { as: 'location_provider', foreignKey: 'ProviderDoctorID' })
 DoctorLocation.belongsTo(Location, { as: 'location_details', foreignKey: 'LocationID' })
 Location.belongsTo(lookupValue, { as: 'state_name', foreignKey: 'StateID' })
+
+/**
+ * For Esign associations
+ */
+InsuranceTransaction.belongsTo(Location, { as: 'location', foreignKey: 'LocationID' })
+InsuranceTransaction.belongsTo(User, { as: 'user', foreignKey: 'ModifiedBy' });
+InsuranceFollowup.belongsTo(lookupValue, { as: 'status', foreignKey:'StatusID'});

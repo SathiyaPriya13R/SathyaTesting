@@ -48,12 +48,10 @@ router.post('/payer/history', AuthGuard, payercontroller.getPayerHistory);
 router.post('/location', AuthGuard, locationcontroller.getLocation);
 router.post('/location/status/update', AuthGuard, locationcontroller.updateLocationStatus)
 
-
-router.get('/test', usercontroller.testfunction);
-
 //esign
 // router.get('/esign', esigncontroller.esign_client)
 router.post('/getesignurl', esigncontroller.get_esign_url)
 router.get('/esign/success', esigncontroller.esign_success)
+router.post('/esign/list', AuthGuard, esigncontroller.getEsignList);
 
 module.exports.route = router;
