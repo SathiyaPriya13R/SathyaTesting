@@ -235,18 +235,6 @@ export default class ProviderService {
                 }
             ]
 
-            if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
-                const searchparams: Record<string, unknown> = {};
-
-                searchparams['$grp_insurance.insurance_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$history_details.status_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$provider_details.FirstName$'] = { $like: '%' + filter_data.searchtext + '%' };
-
-                insurance_transaction_condition.where['$or'] = searchparams;
-                insurance_transaction_condition.where = _.omit(insurance_transaction_condition.where, ['searchtext']);
-            }
-
-
             const insurance_history_data = await commonService.getData(insurance_transaction_condition, db.InsuranceTransaction)
             const payer_data = JSON.parse(JSON.stringify(insurance_history_data));
 
