@@ -20,6 +20,8 @@ import { ProviderSpecFactory } from '../model/providerspec';
 import { SpecialityFactory } from '../model/speciality';
 import { EnrollmentPlansFactory } from '../model/enrollmentplans';
 import { InsurancePlanFactory } from '../model/insuranceplan';
+import { DocumentAttachmentFactory } from '../model/documentdetails';
+import { DocumentCatgegoryFactory } from '../model/documentcategory';
 
 require('dotenv').config();
 
@@ -55,7 +57,8 @@ export const ProviderSpec = ProviderSpecFactory(user);
 export const Speciality = SpecialityFactory(user);
 export const EnrollmentPlans = EnrollmentPlansFactory(user);
 export const InsurancePlan = InsurancePlanFactory(user);
-
+export const DocumentAttachment = DocumentAttachmentFactory(user);
+export const DocumentCategory = DocumentCatgegoryFactory(user);
 
 /**
  * Associations
@@ -111,8 +114,15 @@ DoctorLocation.belongsTo(Location, { as: 'location_details', foreignKey: 'Locati
 Location.belongsTo(lookupValue, { as: 'state_name', foreignKey: 'StateID' })
 
 /**
+ * For Document associations
+ */
+DocumentAttachment.belongsTo(ProviderDoctor, { as: 'provider', foreignKey: 'ItemID' });
+DocumentAttachment.belongsTo(DocumentCategory, { as: 'category', foreignKey: 'DocumentCategoryID' });
+
+
+/**
  * For Esign associations
  */
 InsuranceTransaction.belongsTo(Location, { as: 'location', foreignKey: 'LocationID' })
 InsuranceTransaction.belongsTo(User, { as: 'user', foreignKey: 'ModifiedBy' });
-InsuranceFollowup.belongsTo(lookupValue, { as: 'status', foreignKey:'StatusID'});
+InsuranceFollowup.belongsTo(lookupValue, { as: 'status', foreignKey: 'StatusID' });
