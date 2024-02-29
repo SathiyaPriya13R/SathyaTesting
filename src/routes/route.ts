@@ -54,4 +54,8 @@ router.post('/getesignurl', esigncontroller.get_esign_url)
 router.get('/esign/success', esigncontroller.esign_success)
 router.post('/esign/list', AuthGuard, esigncontroller.getEsignList);
 
+//Document routes
+router.post('/document/upload', AuthGuard, documentcontroller.uploadDocument)
+router.get('/document/download/:id', AuthGuard, documentcontroller.downloadDocument)
+
 module.exports.route = router;
