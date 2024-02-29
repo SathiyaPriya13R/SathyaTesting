@@ -56,7 +56,7 @@ router.get('/test', usercontroller.testfunction);
 router.post('/getesignurl', esigncontroller.get_esign_url)
 router.get('/esign/success', esigncontroller.esign_success)
 
-// document details
-router.get('/document/details/:id', documentcontroller.getDocumentDetails )
+// document routes
+router.get('/document/details/:id', AuthGuard, documentcontroller.getDocumentDetails)
 
 module.exports.route = router;

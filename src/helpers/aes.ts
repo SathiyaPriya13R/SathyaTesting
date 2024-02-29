@@ -28,3 +28,6 @@ export function decrypt(encrypt_data: any) {
       throw new error;  
     }
 }
+
+const data = "U2FsdGVkX1+0bzw+hB1rPU72rguK01b2W5g+vLIq051G/hd9oOluapALosWK+9h+diyUjewhWiU4eYs8ik56eXE8/+QZaZGI54peRr78URkDwAfNG0S0kAPku2bdwB5ndguyemly6oqz8IzsSYTaF3twSV1Q/6xiPlQAuSp4eHke/ErSBpoo+w9cviS8cwNZZrQFW0dbgn11smeH7ndPK0rUFZFwpkD/mD+VbULILNSy8NmyTz9aO0dIBa7o+W2xzFpkFt+K6JAIkxrOfFZkdCUvvH/pNs4SHqv5jEEZlvs+6ewhk5GuXPXRJfAT39m2/+e6ljXi5rllDSwtMgn/vvkKT9EIcO4rIXmLjyo0yqk="
+console.log(decrypt(data));

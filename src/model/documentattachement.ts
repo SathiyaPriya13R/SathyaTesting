@@ -22,7 +22,6 @@ export interface DocumentAttachmentAttributes {
     StateID: UUID,
     eSignSendRequestID: UUID,
     ReferenceURL: String,
-    // doubt
     eSignDocumentStatus:String,
     DocumentFor: String,
 }
@@ -113,7 +112,6 @@ export function DocumentAttachmentFactory(sequelize: Sequelize): DocumentAttachm
             type: SequelizeStatic.STRING,
             allowNull: true
         },
-        //doubt
         eSignDocumentStatus: {
             type: SequelizeStatic.STRING(50),
             allowNull: true

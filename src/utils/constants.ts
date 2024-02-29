@@ -150,6 +150,8 @@ export default class AppConstants {
         DOCUMENT_FUNCTION_FAILED: 'Document details funciton failed',
     }
 
+    SERVICE = "Service"
+
 
     STATUS_ACTIVE = 'Active';
     STATUS_INACTIVE = 'Inactive';

@@ -20,7 +20,7 @@ import { ProviderSpecFactory } from '../model/providerspec';
 import { SpecialityFactory } from '../model/speciality';
 import { EnrollmentPlansFactory } from '../model/enrollmentplans';
 import { InsurancePlanFactory } from '../model/insuranceplan';
-import { DocumentAttachmentFactory } from '../model/documentdetails';
+import { DocumentAttachmentFactory } from '../model/documentattachement';
 
 require('dotenv').config();
 
