@@ -20,7 +20,7 @@ import { ProviderSpecFactory } from '../model/providerspec';
 import { SpecialityFactory } from '../model/speciality';
 import { EnrollmentPlansFactory } from '../model/enrollmentplans';
 import { InsurancePlanFactory } from '../model/insuranceplan';
-import { DocumentAttachmentFactory } from '../model/documentattachement';
+import { DocumentAttachmentFactory } from '../model/documentattachment';
 
 require('dotenv').config();
 
@@ -56,8 +56,7 @@ export const ProviderSpec = ProviderSpecFactory(user);
 export const Speciality = SpecialityFactory(user);
 export const EnrollmentPlans = EnrollmentPlansFactory(user);
 export const InsurancePlan = InsurancePlanFactory(user);
-export const DocumentAttachment = DocumentAttachmentFactory(user);
-
+export const DocumentAttachment = DocumentAttachmentFactory(user)
 
 
 /**
@@ -112,3 +111,10 @@ ProviderDoctor.hasMany(DoctorLocation, { as: 'provider_location', foreignKey: 'P
 DoctorLocation.belongsTo(ProviderDoctor, { as: 'location_provider', foreignKey: 'ProviderDoctorID' })
 DoctorLocation.belongsTo(Location, { as: 'location_details', foreignKey: 'LocationID' })
 Location.belongsTo(lookupValue, { as: 'state_name', foreignKey: 'StateID' })
+
+/**
+ * For Esign associations
+ */
+InsuranceTransaction.belongsTo(Location, { as: 'location', foreignKey: 'LocationID' })
+InsuranceTransaction.belongsTo(User, { as: 'user', foreignKey: 'ModifiedBy' });
+InsuranceFollowup.belongsTo(lookupValue, { as: 'status', foreignKey: 'StatusID' });

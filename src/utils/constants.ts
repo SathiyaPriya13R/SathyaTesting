@@ -143,6 +143,21 @@ export default class AppConstants {
         LOCATION_STATUS_UPDATE_SUCCEFULLY: 'Location status updated successfully'
     }
 
+    DOCUMENT_MESSAGES = {
+        DOCUMENT: 'Document',
+        ENTER_VALID_DOCUMENT_DATA: 'Please add attachment and details',
+        DOCUMENT_UPLOAD_SUCCESS: 'Document uploaded successfully',
+        DOCUMENT_UPLOAD_FUNCTION_STARTED: 'Document upload function started',
+        DOCUMENT_UPLOAD_FUNCTION_FAILED: 'Document upload function failed:',
+        DOCUMENT_UPLOAD_FUNCTION_COMPLETED: 'Document upload function completed',
+        DOCUMENT_UPLOAD_IN_BLOBSTORAGE_STARTED: 'File uploading in azure blobstorage started',
+        DOCUMENT_UPLOAD_IN_BLOBSTORAGE_COMPLETED: 'File uploaded in azure blobstorage',
+        DOCUMENT_UPLOAD_IN_BLOBSTORAGE_FAILED: 'Error uploading file stream to Azure Blob Storage:',
+        DOCUMENT_DOWNLOAD_FUNCTION_SATRTED: 'Document download function started',
+        DOCUMENT_DOWNLOAD_FUNCTION_FAILED: 'Document download function failed',
+        DOCUMENT_DOWNLOAD_FUNCTION_COMPLETED: 'Document download function completed',
+    }
+
     DOCUMENT_DETAILS_MESSAGE = {
         DOCUMENT: 'Document details',
         DOCUMENT_FUNCTION_STARTED: 'Document details function started',
@@ -159,4 +174,11 @@ export default class AppConstants {
 
     USER_TYPE = ['Group', 'Provider', 'User_Provider', 'User_Group']
     STATISTICS_TYPE = ['Month', 'Week']
+    
+    ESIGN_MESSAGE = {
+        ESIGN: "Esign List",
+        ESIGN_FUNCTION_STARTED: "Esign list function started",
+        ESIGN_FUNCTION_COMPLETED: 'Esign list fucntion completed',
+        ESIGN_FUNCTION_FAILED: 'Esign list funciton failed',
+    }
 }
