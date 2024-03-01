@@ -21,6 +21,7 @@ import { SpecialityFactory } from '../model/speciality';
 import { EnrollmentPlansFactory } from '../model/enrollmentplans';
 import { InsurancePlanFactory } from '../model/insuranceplan';
 import { DocumentAttachmentFactory } from '../model/documentattachment';
+import { DocumentCatgegoryFactory } from '../model/documentcategory';
 
 require('dotenv').config();
 
@@ -57,7 +58,7 @@ export const Speciality = SpecialityFactory(user);
 export const EnrollmentPlans = EnrollmentPlansFactory(user);
 export const InsurancePlan = InsurancePlanFactory(user);
 export const DocumentAttachment = DocumentAttachmentFactory(user)
-
+export const DocumentCategory = DocumentCatgegoryFactory(user);
 
 /**
  * Associations
@@ -111,6 +112,13 @@ ProviderDoctor.hasMany(DoctorLocation, { as: 'provider_location', foreignKey: 'P
 DoctorLocation.belongsTo(ProviderDoctor, { as: 'location_provider', foreignKey: 'ProviderDoctorID' })
 DoctorLocation.belongsTo(Location, { as: 'location_details', foreignKey: 'LocationID' })
 Location.belongsTo(lookupValue, { as: 'state_name', foreignKey: 'StateID' })
+
+/**
+ * For Document associations
+ */
+DocumentAttachment.belongsTo(ProviderDoctor, { as: 'provider', foreignKey: 'ItemID' });
+DocumentAttachment.belongsTo(DocumentCategory, { as: 'category', foreignKey: 'DocumentCategoryID' });
+
 
 /**
  * For Esign associations

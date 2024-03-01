@@ -52,4 +52,18 @@ export default class DocumentController {
         }
     }
 
+
+    async getProviderDocument(req: Request, res: Response) {
+        try {
+
+            const filterData = !_.isNil(req.body) ? decrypt(req.body) : null
+            const data = req.user
+            const { limit, offset } = req.query as { limit: string, offset: string };
+            const documentsResult = await documentService.getDocuments(filterData, limit, offset, data);
+            res.status(200).send({ data: encrypt(JSON.stringify(documentsResult)) });
+        } catch (error) {
+            logger.error(appConstant.DOCUMENT_MESSAGES.DOCUMENT_LISTALL_FUNCTION_FAILED, error);
+            res.status(400).send({ data: JSON.stringify(error) });
+        }
+    }
 }
