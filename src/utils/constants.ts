@@ -146,6 +146,11 @@ export default class AppConstants {
     DOCUMENT_MESSAGES = {
         DOCUMENT: 'Document',
         ENTER_VALID_DOCUMENT_DATA: 'Please add attachment and details',
+        DOCUMENT_LISTALL_FUNCTION_STARTED: 'Document list function started',
+        DOCUMENT_LISTALL_FUNCTION_COMPLETED: 'Document list function completed',
+        DOCUMENT_LISTALL_FUNCTION_FAILED: 'Document list function failed',
+        DOCUMENT_NOT_FOUND: 'Document not found',
+        DOCUMENT_FOUND: 'Document found',
         DOCUMENT_UPLOAD_SUCCESS: 'Document uploaded successfully',
         DOCUMENT_UPLOAD_FUNCTION_STARTED: 'Document upload function started',
         DOCUMENT_UPLOAD_FUNCTION_FAILED: 'Document upload function failed:',
@@ -174,7 +179,7 @@ export default class AppConstants {
 
     USER_TYPE = ['Group', 'Provider', 'User_Provider', 'User_Group']
     STATISTICS_TYPE = ['Month', 'Week']
-    
+
     ESIGN_MESSAGE = {
         ESIGN: "Esign List",
         ESIGN_FUNCTION_STARTED: "Esign list function started",

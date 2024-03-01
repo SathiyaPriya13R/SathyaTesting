@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon src/index.ts",
-    "build": "tsc && cp .env src/ddl/qway.sql dist/ && cp src/helpers/private.key dist/helpers/"
+    "build": "tsc && cp .env src/ddl/qway.sql dist/ && cp src/helpers/private.key dist/helpers/ && cp src/services/*.pdf dist/services/"
   },
   "author": "",
   "license": "ISC",
@@ -48,6 +48,7 @@
     "@types/helmet": "^4.0.0",
     "@types/lodash": "^4.14.202",
     "@types/node": "^20.10.7",
-    "@types/pdf-parse": "^1.1.4"
+    "@types/pdf-parse": "^1.1.4",
+    "@types/uuid": "^9.0.8"
   }
 }
