@@ -168,6 +168,10 @@ export default class AppConstants {
         DOCUMENT_FUNCTION_STARTED: 'Document details function started',
         DOCUMENT_FUNCTION_COMPLETED: 'Document details fucntion completed',
         DOCUMENT_FUNCTION_FAILED: 'Document details funciton failed',
+        DOCUMENT_DELETE_FUNCTION_STARTED:'Document delete fucntion started',
+        DOCUMENT_DELETE_FUNCTION_FAILED:'Document delete fucntion failed',
+        DOCUMENT_DELETE_FUNCTION_COMPLETED:'Document delete fucntion completed',
+        DELETE_SUCCESSFULLY: 'Document delete successfully'
     }
 
     SERVICE = "Service"

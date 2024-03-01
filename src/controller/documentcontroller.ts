@@ -82,4 +82,20 @@ export default class DocumentController {
     }
   }
 
+  async documentDelete(req: Request, res: Response){
+    try {
+      const provider_ID = req.params.id ? req.params.id : null;
+      logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_DELETE_FUNCTION_STARTED)
+      await documentService.deletedocumentData(provider_ID).then((data: any) => {
+        const response = JSON.parse(JSON.stringify(data));
+        logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_DELETE_FUNCTION_COMPLETED)
+        res.status(200).send({ data: encrypt(JSON.stringify(response)) });
+      }).catch(error => {
+        res.status(400).send({ data: encrypt(JSON.stringify(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_DELETE_FUNCTION_FAILED)) });
+      })
+    }  catch (error) {
+      
+    }
+  }
+
 }

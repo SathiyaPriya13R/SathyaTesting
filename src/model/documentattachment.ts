@@ -24,6 +24,7 @@ export interface DocumentAttachmentAttributes {
     ReferenceURL: String,
     eSignDocumentStatus: String,
     DocumentFor: String,
+    DocumentSoftDelete: Boolean,
 }
 
 export interface DocumentAttachmentModel extends Model<DocumentAttachmentAttributes>, DocumentAttachmentAttributes { }
@@ -119,7 +120,11 @@ export function DocumentAttachmentFactory(sequelize: Sequelize): DocumentAttachm
         DocumentFor: {
             type: SequelizeStatic.STRING,
             allowNull: true,
-        }
+        },
+        DocumentSoftDelete: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: false
+        },
     },
     {
         indexes: [],
