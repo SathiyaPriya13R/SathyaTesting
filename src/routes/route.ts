@@ -57,9 +57,6 @@ router.post('/esign/list', AuthGuard, esigncontroller.getEsignList);
 //Document routes
 router.post('/document/upload', AuthGuard, documentcontroller.uploadDocument)
 router.get('/document/download/:id', AuthGuard, documentcontroller.downloadDocument)
-
-
-// Document routes
 router.post('/document/all', AuthGuard, documentcontroller.getProviderDocument)
 
 module.exports.route = router;
