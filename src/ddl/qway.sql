@@ -74,3 +74,10 @@ CREATE TABLE sec.LoginCms (
 ALTER TABLE pvdr.InsuranceFollowup
 ALTER COLUMN ModifiedBy NVARCHAR(128);
 -- end --
+
+--01-03-2024 For document soft delete - followed by user start 
+ALTER TABLE pvdr.DocumentAttachment
+    ADD DocumentSoftDelete /*new_column_name*/
+BIT /*new_column_datatype*/
+NULL /*new_column_nullability*/
+--end--

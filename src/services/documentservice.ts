@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { DocumentAttachmentModel } from '../model/documentattachement';
+import { DocumentAttachmentModel } from '../model/documentattachment';
 import { DocumentAttachment } from "../adapters/db";
 import { sequelizeObj } from '../helpers/sequelizeobj';
 import * as db from '../adapters/db';
@@ -151,9 +151,10 @@ export default class DocumentService {
        */
       const documentCondition: sequelizeObj = {};
       documentCondition.where = {
-        ItemID: user_data.id,
+        ItemID: 'DEFEA51E-1A1B-43AE-8D2E-E4C383D19B99',
         ...((filterData.all == true && !_.isNil(filterDatas) && !_.isEmpty(filterDatas.providers)) && { ProviderDoctorID: { $in: filterDatas.providers } }),
         ...((filterData.all == false && !_.isNil(filterData.provider_id) && !_.isEmpty(filterData.provider_id)) && { ProviderDoctorID: { $eq: filterData.provider_id } }),
+        DocumentSoftDelete:0
       };
 
       documentCondition.attributes = [
@@ -235,6 +236,21 @@ export default class DocumentService {
       }
     } catch (error: any) {
       logger.error(appConstant.DOCUMENT_MESSAGES.DOCUMENT_LISTALL_FUNCTION_FAILED, error.message);
+      throw new Error(error.message);
+    }
+  }
+
+  async deletedocumentData(provider_id: any) {
+    try {
+      const commonService = new CommonService(db.user)
+      logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_DELETE_FUNCTION_STARTED);
+      const update_condition = {
+        DocumentSoftDelete: 1
+      }
+      const response = await commonService.update({ AttachmentID: provider_id },update_condition,db.DocumentAttachment)
+      return {message:appConstant.DOCUMENT_DETAILS_MESSAGE.DELETE_SUCCESSFULLY}
+    } catch (error: any) {
+      logger.error(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_DELETE_FUNCTION_FAILED, error.message);
       throw new Error(error.message);
     }
   }

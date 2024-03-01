@@ -62,4 +62,7 @@ router.post('/document/all', AuthGuard, documentcontroller.getProviderDocument)
 // document routes
 router.get('/document/details/:id', AuthGuard, documentcontroller.getDocumentDetails)
 
+// document detele
+router.post('/document/delete/:id',AuthGuard,documentcontroller.documentDelete)
+
 module.exports.route = router;
