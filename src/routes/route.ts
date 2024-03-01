@@ -59,4 +59,7 @@ router.post('/document/upload', AuthGuard, documentcontroller.uploadDocument)
 router.get('/document/download/:id', AuthGuard, documentcontroller.downloadDocument)
 router.post('/document/all', AuthGuard, documentcontroller.getProviderDocument)
 
+// document routes
+router.get('/document/details/:id', AuthGuard, documentcontroller.getDocumentDetails)
+
 module.exports.route = router;

@@ -28,3 +28,4 @@ export function decrypt(encrypt_data: any) {
       throw new error;  
     }
 }
+

@@ -163,6 +163,16 @@ export default class AppConstants {
         DOCUMENT_DOWNLOAD_FUNCTION_COMPLETED: 'Document download function completed',
     }
 
+    DOCUMENT_DETAILS_MESSAGE = {
+        DOCUMENT: 'Document details',
+        DOCUMENT_FUNCTION_STARTED: 'Document details function started',
+        DOCUMENT_FUNCTION_COMPLETED: 'Document details fucntion completed',
+        DOCUMENT_FUNCTION_FAILED: 'Document details funciton failed',
+    }
+
+    SERVICE = "Service"
+
+
     STATUS_ACTIVE = 'Active';
     STATUS_INACTIVE = 'Inactive';
     STATUS_DELETED = 'Deleted';
