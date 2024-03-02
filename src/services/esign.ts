@@ -40,7 +40,7 @@ export class eSignService {
             { recipientViewRequest: viewRequest }
         )
 
-        return { message: 'Successfully retrive Redirect URL', data: final_uri.url }
+        return { message: 'Successfully retrive Redirect URL', data: final_uri.url, envelope_id: create_envople.envelopeId }
     }
 
     async getEsignList(user_data: { id: string, user_type: string }, filter_data?: any) {
@@ -192,6 +192,27 @@ export class eSignService {
             logger.error(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD_FAILED)
             throw new Error(error);
         }
+    }
+
+    async getSignedDocument(envelope_id: any) {
+
+        try {
+
+            logger.info(`signed document download function started`);
+
+            const token_data = await eSign.signClient()
+
+            const signed_doc = await eSign.downloadCompletedDocument(envelope_id, token_data.access_token)
+
+            logger.info(`signed document download function completed`);
+
+            return { message: signed_doc?.message }
+
+        } catch (error: any) {
+            logger.info(`signed document download function failed`);
+            throw new Error(error);
+        }
+
     }
 }
 
