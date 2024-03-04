@@ -23,33 +23,48 @@ const dateConvert = new DateConvertor();
 export default class DocumentService {
   async getdocumentData(attachmentid: any) {
     try {
-      logger.info(appConstant.SERVICE + appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_STARTED)
-      const commonService = new CommonService(db.user)
-      const documentCondition: sequelizeObj = {}
+      logger.info(appConstant.SERVICE + appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_STARTED);
+      const commonService = new CommonService(db.user);
+      const documentCondition: sequelizeObj = {};
       documentCondition.where = {
         AttachmentID: attachmentid,
-      }
-      documentCondition.attributes = ['FileName', 'Name', 'ExpiryDate', 'IssueDate', 'CreatedDate', 'CreatedBy']
-      const documentDetails = await commonService.getData(documentCondition, db.DocumentAttachment)
-      const documentAddress = JSON.parse(JSON.stringify(documentDetails))
-      documentAddress.ExpiryDate = !_.isNil(documentAddress.ExpiryDate) ? await dateConvert.dateFormat(documentAddress.ExpiryDate) : null
-      documentAddress.IssueDate = !_.isNil(documentAddress.IssueDate) ? await dateConvert.dateFormat(documentAddress.IssueDate) : null
-      documentAddress.CreatedDate = !_.isNil(documentAddress.CreatedDate) ? await dateConvert.dateFormat(documentAddress.CreatedDate) : null
+      };
+      documentCondition.attributes = ['FileName', 'Name', 'ExpiryDate', 'IssueDate', 'CreatedDate', 'CreatedBy'];
+      documentCondition.include = [{
+        model: db.ProviderDoctor,
+        as: 'provider',
+        required: true,
+        attributes: ['FirstName', 'MiddleName', 'LastName']
+      }];
+      const documentDetails = await commonService.getData(documentCondition, db.DocumentAttachment);
+      const documentAddress = JSON.parse(JSON.stringify(documentDetails));
+      documentAddress.ExpiryDate = !_.isNil(documentAddress.ExpiryDate) ? await dateConvert.dateFormat(documentAddress.ExpiryDate) : null;
+      documentAddress.IssueDate = !_.isNil(documentAddress.IssueDate) ? await dateConvert.dateFormat(documentAddress.IssueDate) : null;
+      documentAddress.CreatedDate = !_.isNil(documentAddress.CreatedDate) ? await dateConvert.dateFormat(documentAddress.CreatedDate) : null;
+
+      const uploadedBy = {
+        Name: documentAddress.provider ? `${documentAddress.provider.FirstName} ${documentAddress.provider.MiddleName || ''} ${documentAddress.provider.LastName}` : ""
+      };
 
       if (documentAddress && !_.isNil(documentAddress) && !_.isEmpty(documentAddress)) {
-        return { data: documentAddress, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.APP_FILTER) };
+        return {
+          data: { ...documentAddress, uploadedby: uploadedBy },
+          message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.APP_FILTER)
+        };
       } else {
         return { data: null, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.APP_FILTER) };
       }
     } catch (error: any) {
-      logger.info(appConstant.SERVICE + appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_FAILED)
-      throw new Error(error.message)
+      logger.info(appConstant.SERVICE + appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_FAILED);
+      throw new Error(error.message);
     }
   }
+
   async uploadDocument(file: any, attachment_data: Record<string, any>): Promise<any> {
     try {
+      +
 
-      logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_STARTED);
+        logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_STARTED);
       const commonService = new CommonService(db.user);
       const doc_data: Record<string, any> = {}
 
@@ -154,7 +169,7 @@ export default class DocumentService {
         ItemID: 'DEFEA51E-1A1B-43AE-8D2E-E4C383D19B99',
         ...((filterData.all == true && !_.isNil(filterDatas) && !_.isEmpty(filterDatas.providers)) && { ProviderDoctorID: { $in: filterDatas.providers } }),
         ...((filterData.all == false && !_.isNil(filterData.provider_id) && !_.isEmpty(filterData.provider_id)) && { ProviderDoctorID: { $eq: filterData.provider_id } }),
-        DocumentSoftDelete:0
+        DocumentSoftDelete: 0
       };
 
       documentCondition.attributes = [
@@ -247,8 +262,8 @@ export default class DocumentService {
       const update_condition = {
         DocumentSoftDelete: 1
       }
-      const response = await commonService.update({ AttachmentID: provider_id },update_condition,db.DocumentAttachment)
-      return {message:appConstant.DOCUMENT_DETAILS_MESSAGE.DELETE_SUCCESSFULLY}
+      const response = await commonService.update({ AttachmentID: provider_id }, update_condition, db.DocumentAttachment)
+      return { message: appConstant.DOCUMENT_DETAILS_MESSAGE.DELETE_SUCCESSFULLY }
     } catch (error: any) {
       logger.error(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_DELETE_FUNCTION_FAILED, error.message);
       throw new Error(error.message);

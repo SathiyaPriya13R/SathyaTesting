@@ -54,23 +54,23 @@ export default class DocumentController {
   async getDocumentDetails(req: Request, res: Response): Promise<void> {
     try {
       const provider_ID = req.params.id ? req.params.id : null;
-      logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_STARTED)
+      logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_STARTED);
       await documentService.getdocumentData(provider_ID).then((data: any) => {
         const response = JSON.parse(JSON.stringify(data));
-        logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_COMPLETED)
+
+        logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_COMPLETED);
         res.status(200).send({ data: encrypt(JSON.stringify(response)) });
       }).catch(error => {
         res.status(400).send({ data: encrypt(JSON.stringify(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_FAILED)) });
       })
     } catch (error) {
-      logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_FAILED)
+      logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_FAILED);
       res.status(400).send({ data: encrypt(JSON.stringify(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_FAILED)) });
     }
   }
 
   async getProviderDocument(req: Request, res: Response) {
     try {
-
       const filterData = !_.isNil(req.body) ? decrypt(req.body) : null
       const data = req.user
       const { limit, offset } = req.query as { limit: string, offset: string };
@@ -82,7 +82,7 @@ export default class DocumentController {
     }
   }
 
-  async documentDelete(req: Request, res: Response){
+  async documentDelete(req: Request, res: Response) {
     try {
       const provider_ID = req.params.id ? req.params.id : null;
       logger.info(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_DELETE_FUNCTION_STARTED)
@@ -93,8 +93,8 @@ export default class DocumentController {
       }).catch(error => {
         res.status(400).send({ data: encrypt(JSON.stringify(appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_DELETE_FUNCTION_FAILED)) });
       })
-    }  catch (error) {
-      
+    } catch (error) {
+
     }
   }
 
