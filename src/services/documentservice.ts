@@ -34,7 +34,7 @@ export default class DocumentService {
         model: db.ProviderDoctor,
         as: 'provider',
         required: true,
-        attributes: ['FirstName','MiddleName','LastName']
+        attributes: ['FirstName', 'MiddleName', 'LastName']
       }];
       const documentDetails = await commonService.getData(documentCondition, db.DocumentAttachment);
       const documentAddress = JSON.parse(JSON.stringify(documentDetails));
@@ -64,7 +64,7 @@ export default class DocumentService {
     try {
       +
 
-      logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_STARTED);
+        logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_STARTED);
       const commonService = new CommonService(db.user);
       const doc_data: Record<string, any> = {}
 
