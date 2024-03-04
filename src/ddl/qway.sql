@@ -4,6 +4,48 @@
 */
 
 
+-- For Login 
+ALTER TABLE [pvdr].[ProviderDoctor]
+    ADD [PasswordHash] /*new_column_name*/ Char /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [pvdr].[ProviderGroupContactDetail]
+    ADD [PasswordHash] /*new_column_name*/ Char /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [sec].[User]
+    ADD [PwdExpireDate] /*new_column_name*/ DATE /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [sec].[User]
+    ADD [ForgotPwd] /*new_column_name*/ BIT /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [pvdr].[ProviderDoctor]
+    ADD [PwdExpireDate] /*new_column_name*/ Date /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [pvdr].[ProviderDoctor]
+    ADD [ForgotPwd] /*new_column_name*/ BIT /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [pvdr].[ProviderGroupContactDetail]
+    ADD [ProfileImage] /*new_column_name*/ IMAGE /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [pvdr].[ProviderGroupContactDetail]
+    ADD [ForgotPwd] /*new_column_name*/ BIT /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [pvdr].[ProviderGroupContactDetail]
+    ADD [PwdExpireDate] /*new_column_name*/ Date /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+
+ALTER TABLE [pvdr].[ProviderGroupContactDetail]
+    ADD [IsActive] /*new_column_name*/ IMAGE /*new_column_datatype*/ NULL /*new_column_nullability*/
+GO
+-- End
+
 -- For mobile permissions - table
 CREATE TABLE sec.MobilePermissions (
     PermissionId UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID() NOT NULL,
