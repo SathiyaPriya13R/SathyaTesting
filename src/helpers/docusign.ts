@@ -199,51 +199,62 @@ export class eSign {
      */
 
     // Function to periodically check envelope status and download signed document
-    async checkEnvelopeStatusAndDownload(envelopeId: any) {
-        try {
-            const apiClient = new docusign.ApiClient();
-            apiClient.setBasePath('https://demo.docusign.net/restapi'); // Use appropriate base path
-            const accountId = '<your-account-id>';
-            const accessToken = '<your-access-token>'; // Replace with your access token
-            apiClient.addDefaultHeader('Authorization', 'Bearer ' + accessToken);
+    // async checkEnvelopeStatusAndDownload(envelopeId: any) {
+    //     try {
+    //         const apiClient = new docusign.ApiClient();
+    //         apiClient.setBasePath('https://demo.docusign.net/restapi'); // Use appropriate base path
+    //         const accountId = '<your-account-id>';
+    //         const accessToken = '<your-access-token>'; // Replace with your access token
+    //         apiClient.addDefaultHeader('Authorization', 'Bearer ' + accessToken);
 
-            const envelopesApi = new docusign.EnvelopesApi(apiClient);
+    //         const envelopesApi = new docusign.EnvelopesApi(apiClient);
 
-            // Query envelope status
-            const envelopeStatus = await envelopesApi.getEnvelope(accountId, envelopeId);
+    //         // Query envelope status
+    //         const envelopeStatus = await envelopesApi.getEnvelope(accountId, envelopeId);
 
-            // Check if envelope has been signed or completed
-            if (envelopeStatus.status === 'completed' || envelopeStatus.status === 'signed') {
-                // Download signed document
-                await this.downloadCompletedDocument(envelopeId);
-            } else {
-                console.log('Envelope has not been signed yet.');
-            }
-        } catch (error) {
-            console.error('Error checking envelope status and downloading document:', error);
-        }
-    }
+    //         // Check if envelope has been signed or completed
+    //         if (envelopeStatus.status === 'completed' || envelopeStatus.status === 'signed') {
+    //             // Download signed document
+    //             await this.downloadCompletedDocument(envelopeId);
+    //         } else {
+    //             console.log('Envelope has not been signed yet.');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error checking envelope status and downloading document:', error);
+    //     }
+    // }
 
     // Function to download completed PDF document
-    async downloadCompletedDocument(envelopeId: any) {
-        try {
-            const apiClient = new docusign.ApiClient();
-            apiClient.setBasePath('https://demo.docusign.net/restapi'); // Use appropriate base path
-            const accountId = '<your-account-id>';
-            const accessToken = '<your-access-token>'; // Replace with your access token
-            apiClient.addDefaultHeader('Authorization', 'Bearer ' + accessToken);
+    async downloadCompletedDocument(envelopeId: any, access_token: any) {
 
-            const envelopesApi = new docusign.EnvelopesApi(apiClient);
+        try {
+            const docusign_api_client = new docusign.ApiClient();
+            const accountId = `${process.env.ACCOUNT_ID}`;
+            docusign_api_client.setBasePath(`${process.env.BASE_API}`);
+            docusign_api_client.addDefaultHeader('Authorization', 'Bearer ' + access_token);
+
+            const envelopesApi = new docusign.EnvelopesApi(docusign_api_client);
 
             // Retrieve envelope documents
-            const results = await envelopesApi.getDocument(accountId, envelopeId, 'combined');
+            const results = await envelopesApi.getDocument(accountId, String(envelopeId), 'combined');
             const pdfBytes = Buffer.from(results, 'binary');
 
             // Save PDF to local file
-            const directoryPath = path.join(__dirname, 'eSigned');
+            const directoryPath = path.join(__dirname, '..', 'signed_documents');
+
+            // Check if the directory exists, if not create it
+            if (!fs.existsSync(directoryPath)) {
+                fs.mkdirSync(directoryPath, { recursive: true });
+            }
+
             fs.writeFileSync(path.join(directoryPath, `signed_document_${envelopeId}.pdf`), pdfBytes);
 
+            const file_path = path.resolve(__dirname, '..', 'signed_documents', `signed_document_${envelopeId}.pdf`);
+
             console.log('PDF document downloaded and saved successfully.');
+
+            return { message: `file stored in path: ${file_path}` }
+
         } catch (error) {
             console.error('Error downloading and saving PDF document:', error);
         }

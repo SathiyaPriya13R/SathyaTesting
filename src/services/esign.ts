@@ -40,7 +40,7 @@ export class eSignService {
             { recipientViewRequest: viewRequest }
         )
 
-        return { message: 'Successfully retrive Redirect URL', data: final_uri.url }
+        return { message: 'Successfully retrive Redirect URL', data: final_uri.url, envelope_id: create_envople.envelopeId }
     }
 
     async getEsignList(user_data: { id: string, user_type: string }, filter_data?: any) {
@@ -70,7 +70,7 @@ export class eSignService {
              */
             const esign_condition: sequelizeObj = {};
             esign_condition.where = {
-                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
+                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: 'B75E4250-53F3-432E-93F8-D5FDBC63EBFE',
                 ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
                 ...((filter_data.all == false && !_.isNil(filter_data.provider_id) && !_.isEmpty(filter_data.provider_id)) && { ProviderDoctorID: { $eq: filter_data.provider_id } }),
             };
@@ -112,7 +112,22 @@ export class eSignService {
                     model: db.ProviderDoctor,
                     as: 'details_insurance',
                     required: true,
-                    attributes: ['ProviderDoctorID']
+                    attributes: ['FirstName', 'LastName', 'MiddleName', 'ProviderDoctorID'],
+                    include: [
+                        {
+                            model: db.lookupValue,
+                            as: 'suffix_name',
+                            required: true,
+                            where: { IsActive: 1 },
+                            attributes: ['Name']
+                        },
+                        {
+                            model: db.lookupValue,
+                            as: 'certification_name',
+                            where: { IsActive: 1 },
+                            attributes: ['Name']
+                        }
+                    ]
                 },
                 {
                     model: db.GroupInsurance,
@@ -151,6 +166,7 @@ export class eSignService {
             let esignFinallist: any = [];
             const data: any = [];
             const promises = esign_list.map(async (esigndata: any) => {
+                esigndata.Name = esigndata.FirstName + esigndata.MiddleName + esigndata.LastName
                 esigndata.history_details.map(async (historydata: any) => {
                     if (historydata.status.Name === 'E-SIGN') {
                         if (historydata.NextFollowupDate) {
@@ -175,8 +191,14 @@ export class eSignService {
                 })
             });
             await Promise.all(promises)
-            const groupedByDisplayName = esignFinallist.reduce((acc: { Name: any; data: any[]; }[], curr: { user: { DisplayName: any; }; }) => {
-                const displayName = curr.user.DisplayName;
+            const groupedByDisplayName = esignFinallist.reduce((acc: { Name: any; data: any[]; }[], curr: any) => {
+                let prefix: any;
+                if (curr.details_insurance.certification_name.Name === 'MD') {
+                    prefix = 'Dr.'
+                } else {
+                    prefix = ''
+                }
+                const displayName = `${prefix} ${curr.details_insurance.FirstName} ${curr.details_insurance.MiddleName || ''} ${curr.details_insurance.LastName} ${curr.details_insurance.certification_name.Name}`;
                 const existingEntry = acc.find((entry: { Name: any; }) => entry.Name === displayName);
 
                 if (!existingEntry) {
@@ -189,9 +211,30 @@ export class eSignService {
             }, []);
             return groupedByDisplayName;
         } catch (error: any) {
-            logger.error(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD_FAILED)
+            logger.error(appConstant.ESIGN_MESSAGE.ESIGN_FUNCTION_FAILED);
             throw new Error(error);
         }
+    }
+
+    async getSignedDocument(envelope_id: any) {
+
+        try {
+
+            logger.info(`signed document download function started`);
+
+            const token_data = await eSign.signClient()
+
+            const signed_doc = await eSign.downloadCompletedDocument(envelope_id, token_data.access_token)
+
+            logger.info(`signed document download function completed`);
+
+            return { message: signed_doc?.message }
+
+        } catch (error: any) {
+            logger.info(`signed document download function failed`);
+            throw new Error(error);
+        }
+
     }
 }
 

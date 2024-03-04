@@ -74,6 +74,24 @@ export class esignController {
         }
     }
 
+    async getSignedDocument(request: Request, response: Response) {
+        try {
+            const { envelope_id } = !_.isNil(request.body) ? (request.body) : null
+            await eSignService.getSignedDocument(envelope_id).then((data: any) => {
+                if (data.error) {
+                    response.status(400).send((data.error));
+                } else {
+                    response.status(200).send((data));
+                }
+            }).catch((error: any) => {
+                response.status(400).send((error));
+            });
+        } catch (error) {
+            logger.error('Get signed document function failed', error);
+            response.status(400).send((error));
+        }
+    }
+
 }
 
 export default new esignController();

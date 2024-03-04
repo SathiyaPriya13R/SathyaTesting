@@ -6,6 +6,7 @@ import _ from 'lodash';
 import AppConstants from "../utils/constants";
 import CommonService from '../helpers/commonService';
 import DateConvertor from '../helpers/date';
+import moment from 'moment-timezone';
 const logger = require('../helpers/logger');
 
 const appConstant = new AppConstants();
@@ -235,16 +236,36 @@ export default class ProviderService {
                 }
             ]
 
+            if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
+                const searchparams: Record<string, unknown> = {};
+
+                searchparams['$history_details.status_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
+                searchparams['$history_details.followedby_user.DisplayName$'] = { $like: '%' + filter_data.searchtext + '%' };
+
+                if (filter_data.searchtext && !_.isNil(filter_data.searchtext) && Date.parse(filter_data.searchtext) != null && filter_data.searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(filter_data.searchtext))) {
+                    const start_date = moment(filter_data.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
+                    const end_date = moment(filter_data.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
+                    const date_range = [start_date, end_date]
+                    searchparams['$history_details.ModifiedDate$'] = { $between: date_range };
+                    searchparams['$history_details.NextFollowupDate$'] = { $between: date_range };
+                }
+                
+                insurance_transaction_condition.where['$or'] = searchparams;
+                insurance_transaction_condition.where = _.omit(insurance_transaction_condition.where, ['searchtext']);
+            }
+
             const insurance_history_data = await commonService.getData(insurance_transaction_condition, db.InsuranceTransaction)
             const payer_data = JSON.parse(JSON.stringify(insurance_history_data));
 
-            await payer_data.history_details.map(async (history: any) => {
-                const formattedModifiedDate = !_.isNil(history.ModifiedDate) ? await dateConvert.dateFormat(history.ModifiedDate) : null
-                const formattedNextFollowupDate = !_.isNil(history.NextFollowupDate) ? await dateConvert.dateFormat(history.NextFollowupDate) : null
-                history.NextFollowupDate = formattedNextFollowupDate
-                history.LastFollowedDate = formattedModifiedDate
-                delete history.ModifiedDate
-            })
+            if (payer_data && !_.isNil(payer_data) && !_.isNil(payer_data.history_details) && payer_data.history_details.length > 0) {
+                await payer_data.history_details.map(async (history: any) => {
+                    const formattedModifiedDate = !_.isNil(history.ModifiedDate) ? await dateConvert.dateFormat(history.ModifiedDate) : null
+                    const formattedNextFollowupDate = !_.isNil(history.NextFollowupDate) ? await dateConvert.dateFormat(history.NextFollowupDate) : null
+                    history.NextFollowupDate = formattedNextFollowupDate
+                    history.LastFollowedDate = formattedModifiedDate
+                    delete history.ModifiedDate
+                })
+            }
 
             const finalResult: Array<Record<string, any>> = payer_data;
 
