@@ -123,3 +123,14 @@ ALTER TABLE pvdr.DocumentAttachment
 BIT /*new_column_datatype*/
 NULL /*new_column_nullability*/
 --end--
+
+
+-- 04-03-2024 For Provider Cron password generation
+ALTER TABLE pvdr.ProviderDoctor ADD GenerateCronPassword BIT DEFAULT 0
+
+ALTER TABLE pvdr.ProviderDoctor ADD ForgetPwdCron BIT DEFAULT 0
+
+ALTER TABLE pvdr.ProviderGroupContactDetail ADD GenerateCronPassword BIT DEFAULT 0
+
+ALTER TABLE pvdr.ProviderGroupContactDetail ADD ForgetPwdCron BIT DEFAULT 0
+-- End

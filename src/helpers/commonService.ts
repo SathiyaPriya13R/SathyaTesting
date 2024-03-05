@@ -301,4 +301,35 @@ export default class CommonService {
         }
     }
 
+    async randomPassword() {
+        const randomString = (length: any, lowerCase = false) => {
+            let result = '';
+            const characters = lowerCase ? 'abcdefghijklmnopqrstuvwxyz' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            const charactersLength = characters.length;
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        };
+
+        const randomNumber = (min: number, max: number) => {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        };
+
+        let passwordBuilder = '';
+
+        // 4-Letters lower case   
+        passwordBuilder += randomString(4, true);
+
+        // 4-Digits between 1000 and 9999  
+        passwordBuilder += randomNumber(1000, 9999);
+
+        // 2-Letters upper case  
+        passwordBuilder += randomString(2);
+
+        return passwordBuilder;
+    }
+
+    // Example usage  
+
 }

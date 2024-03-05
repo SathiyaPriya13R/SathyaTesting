@@ -190,4 +190,10 @@ export default class AppConstants {
         ESIGN_FUNCTION_COMPLETED: 'Esign list fucntion completed',
         ESIGN_FUNCTION_FAILED: 'Esign list funciton failed',
     }
+
+    CRON_MESSAGE = {
+        GENERATE_PASSWORD_FUNCTION_STARTED: 'Generate password function started',
+        GENERATE_PASSWORD_FUNCTION_COMPLETED: 'Generate password function completed',
+        GENERATE_PASSWORD_FUNCTION_FAILED: 'Generate password function failed',
+    }
 }

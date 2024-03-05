@@ -265,7 +265,8 @@ export default class UserService {
             const expireDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
             const updateExpireDate = {
                 PwdExpireDate: Sequelize.literal('CURRENT_TIMESTAMP'),
-                ForgotPwd: 1
+                ForgotPwd: 1,
+                ForgetPwdCron: 1
             }
             if (!_.isNil(user) || !_.isNil(providerGroupContact) || !_.isNil(provider)) {
                 const type = user ? 'User' : providerGroupContact ? 'Group' : provider ? 'Provider' : null;
@@ -710,6 +711,80 @@ export default class UserService {
                 default:
                     return appConstant.MESSAGES.INVALID_USERTYPE;
             }
+        } catch (error: any) {
+            logger.error(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED, error.message);
+            throw new Error(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);
+        }
+    }
+
+    /**
+     * Password Genration using cron
+     */
+    async generatePasswordCron() {
+        try {
+            const commonService = new CommonService(db.user);
+            const provider_condition: sequelizeObj = {};
+            const templateFile = templates.newpasswordtemplate
+            provider_condition.where = {
+                GenerateCronPassword: 0,
+                ForgetPwdCron: 0
+            }
+            const provider = await commonService.getAllList(provider_condition, db.ProviderDoctor);
+            const group_provider = await commonService.getAllList(provider_condition, db.ProviderGroupContact);
+            const provider_list = JSON.parse(JSON.stringify(provider));
+            const group_provider_list = JSON.parse(JSON.stringify(group_provider));
+            const final_array = provider_list.concat(group_provider_list);
+            final_array.map(async (user: any) => {
+                const password = await commonService.randomPassword();
+                const templateData: any = {
+                    redirecturl: process.env.LOGIN_LINK,
+                    password: password
+                };
+                const hashedPassword = await commonService.hashPassword(password);
+                if (user.ProviderDoctorID) {
+                    templateData.username = `${user.FirstName} ${user.MiddleName} ${user.LastName}`;
+                } else {
+                    templateData.username = user.ContactPerson
+                }
+                // Render the template with the updated data
+                const renderedTemplate = ejs.render(templateFile, templateData);
+                // Create a transporter object
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    secure: true,
+                    auth: {
+                        user: process.env.EMAIL_AUTH_USER,
+                        pass: process.env.EMAIL_AUTH_PASSWORD
+                    }
+                });
+                // Prepare the email options
+                const mailOptions = {
+                    from: process.env.FROM_EMAIL,
+                    to: user.Email,
+                    subject: appConstant.MESSAGES.RESET_PASSWORD_SUB,
+                    html: renderedTemplate
+                };
+                // Send the email
+                transporter.sendMail(mailOptions, async function (error: any, info: { response: string; }) {
+                    if (error) {
+                        logger.error(appConstant.LOGGER_MESSAGE.EMAIL_SEND_FAILED)
+                        throw new Error(appConstant.LOGGER_MESSAGE.EMAIL_SEND_FAILED)
+                    } else {
+                        const update_condition = {
+                            GenerateCronPassword: 1,
+                            ForgetPwdCron: 1,
+                            PasswordHash: hashedPassword
+                        }
+                        logger.info(appConstant.LOGGER_MESSAGE.EMAIL_SEND);
+                        if (user.ProviderDoctorID) {
+                            await commonService.update({providerDoctorID: user.ProviderDoctorID}, update_condition, db.ProviderDoctor);
+                        } else {
+                            await commonService.update({ProviderGroupContactDetailID: user.ProviderGroupContactDetailID}, update_condition, db.ProviderGroupContact);
+                        }
+                        return appConstant.LOGGER_MESSAGE.EMAIL_SEND
+                    }
+                });
+            })
         } catch (error: any) {
             logger.error(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED, error.message);
             throw new Error(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);

@@ -45,10 +45,12 @@ export interface ProviderDoctorAttributes {
     PasswordHash: string,
     PwdExpireDate: Date,
     ForgotPwd: boolean,
+    GenerateCronPassword: boolean,
+    ForgetPwdCron: boolean
 }
 
 export interface ProviderDoctorModel extends Model<ProviderDoctorAttributes>, ProviderDoctorAttributes { }
-export class ProviderDoctor extends Model<ProviderDoctorModel, ProviderDoctorAttributes>{ }
+export class ProviderDoctor extends Model<ProviderDoctorModel, ProviderDoctorAttributes> { }
 
 export type ProviderDoctorStatic = typeof Model & {
     new(values?: Record<string, unknown>, options?: BuildOptions): ProviderDoctorModel;
@@ -73,15 +75,15 @@ export function ProviderDoctorFactory(sequelize: Sequelize): ProviderDoctorStati
             type: SequelizeStatic.STRING(500),
             allowNull: true
         },
-       CAQHPassword: {
+        CAQHPassword: {
             type: SequelizeStatic.STRING(500),
             allowNull: true
         },
-        PECOSUserName:{
+        PECOSUserName: {
             type: SequelizeStatic.STRING(500),
             allowNull: true
         },
-        PECOSPassword:{
+        PECOSPassword: {
             type: SequelizeStatic.STRING(500),
             allowNull: true
         },
@@ -225,8 +227,16 @@ export function ProviderDoctorFactory(sequelize: Sequelize): ProviderDoctorStati
             type: SequelizeStatic.BOOLEAN,
             allowNull: true
         },
+        GenerateCronPassword: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        },
+        ForgetPwdCron: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        }
     },
-    {
+        {
 
             indexes: [],
             timestamps: false,
@@ -235,4 +245,4 @@ export function ProviderDoctorFactory(sequelize: Sequelize): ProviderDoctorStati
             tableName: 'ProviderDoctor'
         });
 
-    }
+}

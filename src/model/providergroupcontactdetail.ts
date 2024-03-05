@@ -18,7 +18,9 @@ export interface ProviderGroupContactDetailAttributes {
     ProfileImage: Blob,
     PwdExpireDate: Date,
     ForgotPwd: boolean,
-    IsActive: boolean
+    IsActive: boolean,
+    GenerateCronPassword: boolean,
+    ForgetPwdCron: boolean
 }
 
 export interface ProviderGroupContactDetailModel extends Model<ProviderGroupContactDetailAttributes>, ProviderGroupContactDetailAttributes { }
@@ -95,6 +97,14 @@ export function ProviderGroupContactDetailFactory(sequelize: Sequelize): Provide
             type: SequelizeStatic.BOOLEAN,
             allowNull: false
         },
+        GenerateCronPassword: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        },
+        ForgetPwdCron: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        }
     },
     {
 
