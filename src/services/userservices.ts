@@ -312,8 +312,8 @@ export default class UserService {
                     }
                 });
             } else {
-                logger.info(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND)
-                throw new Error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
+                logger.info(appConstant.LOGGER_MESSAGE.EMAIL_NOT_FOUND)
+                throw new Error(appConstant.LOGGER_MESSAGE.EMAIL_NOT_FOUND);
             }
         } catch (error: any) {
             logger.error(appConstant.LOGGER_MESSAGE.FORGET_PASSWORD_FAILED)

@@ -22,7 +22,8 @@ import { EnrollmentPlansFactory } from '../model/enrollmentplans';
 import { InsurancePlanFactory } from '../model/insuranceplan';
 import { DocumentAttachmentFactory } from '../model/documentattachment';
 import { DocumentCatgegoryFactory } from '../model/documentcategory';
-import { AppNotificationRecipientsFactory } from '../model/appnotificationrecipients';
+import { AppNotificationRecipientsFactory } from '../model/appnotificationrecipients'
+
 
 require('dotenv').config();
 
@@ -60,7 +61,7 @@ export const EnrollmentPlans = EnrollmentPlansFactory(user);
 export const InsurancePlan = InsurancePlanFactory(user);
 export const DocumentAttachment = DocumentAttachmentFactory(user)
 export const DocumentCategory = DocumentCatgegoryFactory(user);
-export const AppNotificationRecipients =AppNotificationRecipientsFactory(user)
+export const AppNotificationReceipts = AppNotificationRecipientsFactory(user);
 
 /**
  * Associations
