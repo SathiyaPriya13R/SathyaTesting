@@ -9,6 +9,7 @@ import PayerController from "../controller/payercontroller"
 import LocationController from "../controller/locationcontroller";
 import esigncontroller from "../controller/esigncontroller";
 import DocumentController from "../controller/documentcontroller";
+import NotificationController from "../controller/notifictioncontroller"
 
 const usercontroller = new UserController();
 const dashboardcontroller = new DashboardController();
@@ -16,6 +17,7 @@ const providercontroller = new ProviderController();
 const payercontroller = new PayerController()
 const locationcontroller = new LocationController();
 const documentcontroller = new DocumentController();
+const notificationcontroller = new NotificationController();
 
 // login routes
 router.post('/signin', usercontroller.signinUser);
@@ -64,6 +66,7 @@ router.post('/document/all', AuthGuard, documentcontroller.getProviderDocument)
 router.get('/document/details/:id', AuthGuard, documentcontroller.getDocumentDetails)
 
 // document detele
-router.post('/document/delete/:id',AuthGuard,documentcontroller.documentDelete)
+router.post('/document/delete/:id', AuthGuard, documentcontroller.documentDelete)
+
 
 module.exports.route = router;
