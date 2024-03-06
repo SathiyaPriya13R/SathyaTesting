@@ -196,4 +196,11 @@ export default class AppConstants {
         GENERATE_PASSWORD_FUNCTION_COMPLETED: 'Generate password function completed',
         GENERATE_PASSWORD_FUNCTION_FAILED: 'Generate password function failed',
     }
+
+    COUNT_MESSAGE = {
+        COUNT_FUNCTION_STARTED:'Count function is started',
+        COUNT_FUNCTION_COMPLETED:'Count function is completed',
+        COUNT_FUNCTION_FAILED:'Count function is failed',
+
+    }
 }
