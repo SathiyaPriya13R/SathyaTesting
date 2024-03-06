@@ -24,7 +24,7 @@ export class esignController {
     async get_esign_url(request: Request, response: Response) {
 
         try {
-            const data: { name: string, email: string } = request.body
+            const data: { name: string, email: string } = { name: 'selva', email: 'selvadhoni640@gmail.com' }
             await eSignService.getEsignURI(data).then((data: any) => {
                 if (data.error) {
                     response.status(400).send(data.error);
@@ -78,6 +78,23 @@ export class esignController {
         try {
             const { envelope_id } = !_.isNil(request.body) ? (request.body) : null
             await eSignService.getSignedDocument(envelope_id).then((data: any) => {
+                if (data.error) {
+                    response.status(400).send((data.error));
+                } else {
+                    response.status(200).send((data));
+                }
+            }).catch((error: any) => {
+                response.status(400).send((error));
+            });
+        } catch (error) {
+            logger.error('Get signed document function failed', error);
+            response.status(400).send((error));
+        }
+    }
+
+    async consoleView(request: Request, response: Response) {
+        try {
+            await eSignService.consoleView().then((data: any) => {
                 if (data.error) {
                     response.status(400).send((data.error));
                 } else {

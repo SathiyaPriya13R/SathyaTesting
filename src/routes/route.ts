@@ -56,6 +56,7 @@ router.post('/getesignurl', esigncontroller.get_esign_url)
 router.get('/esign/success', esigncontroller.esign_success)
 router.post('/esign/list', AuthGuard, esigncontroller.getEsignList);
 router.post('/esign/signeddoc', esigncontroller.getSignedDocument)
+router.post('/esign/consoleview', esigncontroller.consoleView)
 
 //Document routes
 router.post('/document/upload', AuthGuard, documentcontroller.uploadDocument)

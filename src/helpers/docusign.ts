@@ -12,12 +12,15 @@ export class eSign {
     private access_token: any
 
     async signClient() {
+        console.log("🚀 ~ eSign ~ signClient ~ signClient:", 'signClient')
 
         try {
             const expiresInDays = 5;
             const expiresInSeconds = expiresInDays * 24 * 60 * 60;
+            console.log("🚀 ~ eSign ~ signClient ~ expiresInSeconds:", expiresInSeconds)
 
             const docusign_api_client = new docusign.ApiClient();
+            console.log("🚀 ~ eSign ~ signClient ~ docusign_api_client:", docusign_api_client)
 
             docusign_api_client.setBasePath(`${process.env.BASE_API}`)
 
@@ -28,9 +31,13 @@ export class eSign {
                 fs.readFileSync(path.join(__dirname, "private.key")),
                 expiresInSeconds);
 
+            console.log("🚀 ~ eSign ~ signClient ~ results:", results)
+
             const token_datas = results.body
 
             this.access_token = token_datas.access_token
+
+            console.log("🚀 ~ eSign ~ signClient ~ this.access_token:", this.access_token)
 
             return token_datas
 
@@ -86,6 +93,10 @@ export class eSign {
             viewRequest.email = email
             viewRequest.userName = name
             viewRequest.clientUserId = process.env.CLIENT_USER_ID
+            // viewRequest.display = 'embedded'
+
+            // viewRequest.frameAncestors = ["http://localhost:3000/", "https://apps-d.docusign.com/send/"];
+            // viewRequest.messageOrigins = ["https://apps-d.docusign.com/send/"]
 
             return viewRequest
 
@@ -192,6 +203,193 @@ export class eSign {
         }
     }
 
+    async makeEnvelopeWithMultipleDoc(filepath1: any, filepath3: any, email: any, name: any) {
+        try {
+            // Read the content of the additional documents
+            let doc1PdfBytes = fs.readFileSync(filepath1);
+            // let doc2PdfBytes = fs.readFileSync(filepath2);
+            let doc3PdfBytes = fs.readFileSync(filepath3);
+
+            // Create envelope definition
+            let env = new docusign.EnvelopeDefinition();
+            env.emailSubject = 'Please sign these documents';
+
+            env.documents = [];
+
+            // Add the documents
+            let doc1 = new docusign.Document();
+            doc1.documentBase64 = Buffer.from(doc1PdfBytes).toString('base64');
+            doc1.name = 'document1.pdf';
+            doc1.fileExtension = 'pdf';
+            doc1.documentId = '1'; // Ensure unique documentId
+            env.documents.push(doc1);
+
+            // let doc2 = new docusign.Document();
+            // doc2.documentBase64 = Buffer.from(doc2PdfBytes).toString('base64');
+            // doc2.name = 'document2.pdf';
+            // doc2.fileExtension = 'pdf';
+            // doc2.documentId = '2'; // Ensure unique documentId
+            // env.documents.push(doc2);
+
+            let doc3 = new docusign.Document();
+            doc3.documentBase64 = Buffer.from(doc3PdfBytes).toString('base64');
+            doc3.name = 'document3.pdf';
+            doc3.fileExtension = 'pdf';
+            doc3.documentId = '3'; // Ensure unique documentId
+            env.documents.push(doc3);
+
+            // Create signer recipient dynamically
+            let signer = docusign.Signer.constructFromObject({
+                email: email,
+                name: name,
+                recipientId: '8',
+                clientUserId: process.env.CLIENT_USER_ID,
+                roleName: 'provider'
+            });
+
+            // Create signeHre tabs for each document
+            let signHere1 = docusign.SignHere.constructFromObject({
+                anchorString: 'Provider Signature', // Adjust as needed for each document
+                anchorYOffset: '20',
+                anchorUnits: 'pixels',
+                anchorXOffset: '100',
+                // pageNumber: '1'
+            });
+            let signHere2 = docusign.SignHere.constructFromObject({
+                anchorString: 'Sign Here', // Adjust as needed for each document
+                anchorYOffset: '20',
+                anchorUnits: 'pixels',
+                anchorXOffset: '100',
+                // pageNumber: '1'
+            });
+            // let signHere3 = docusign.SignHere.constructFromObject({
+            //     anchorString: 'Provider Signature', // Adjust as needed for each document
+            //     anchorYOffset: '20',
+            //     anchorUnits: 'pixels',
+            //     anchorXOffset: '100',
+            //     pageNumber: '1'
+            // });
+
+            // Create tabs for each document
+            let tabs = docusign.Tabs.constructFromObject({
+                signHereTabs: [signHere1, signHere2] // signHere2, signHere3
+            });
+            signer.tabs = tabs;
+
+            // Add the recipient to the envelope
+            // env.recipients = docusign.Recipients.constructFromObject({
+            //     signers: [signer]
+            // });
+
+            // Add the recipient to the envelope object
+            let recipients = docusign.Recipients.constructFromObject({
+                signers: [signer],
+            });
+            env.recipients = recipients;
+
+
+            // Set envelope status to "sent"
+            env.status = 'sent';
+            // console.log("🚀 ~ eSign ~ makeEnvelopeWithMultipleDoc ~ env:", env)
+
+            return env;
+        } catch (error: any) {
+            throw new Error(error);
+        }
+    }
+
+    async makeEnvelopeWithMultipleSignerAndDoc(filepath1: any, filepath2: any, filepath3: any, signers: any) {
+        try {
+            // Read the content of the additional documents
+            let doc1PdfBytes = fs.readFileSync(filepath1);
+            let doc2PdfBytes = fs.readFileSync(filepath2);
+            let doc3PdfBytes = fs.readFileSync(filepath3);
+
+            // Create envelope definition
+            let env = new docusign.EnvelopeDefinition();
+            env.emailSubject = 'Please sign these documents';
+
+            // Add the documents
+            let doc1 = new docusign.Document();
+            doc1.documentBase64 = Buffer.from(doc1PdfBytes).toString('base64');
+            doc1.name = 'document1.pdf';
+            doc1.fileExtension = 'pdf';
+            doc1.documentId = '1'; // Ensure unique documentId
+            env.documents.push(doc1);
+
+            let doc2 = new docusign.Document();
+            doc2.documentBase64 = Buffer.from(doc2PdfBytes).toString('base64');
+            doc2.name = 'document2.pdf';
+            doc2.fileExtension = 'pdf';
+            doc2.documentId = '2'; // Ensure unique documentId
+            env.documents.push(doc2);
+
+            let doc3 = new docusign.Document();
+            doc3.documentBase64 = Buffer.from(doc3PdfBytes).toString('base64');
+            doc3.name = 'document3.pdf';
+            doc3.fileExtension = 'pdf';
+            doc3.documentId = '3'; // Ensure unique documentId
+            env.documents.push(doc3);
+
+            // Create recipients dynamically
+            let docusignSigners = [];
+            for (let i = 0; i < signers.length; i++) {
+                let signer = docusign.Signer.constructFromObject({
+                    email: signers[i].email,
+                    name: signers[i].name,
+                    recipientId: (i + 1).toString(), // Recipient IDs must be unique
+                    clientUserId: process.env.CLIENT_USER_ID,
+                    roleName: signers[i].roleName
+                });
+
+                // Create signHere tabs for each document for the current signer
+                let signHere1 = docusign.SignHere.constructFromObject({
+                    anchorString: 'Provider Signature', // Adjust as needed for each document
+                    anchorYOffset: '20',
+                    anchorUnits: 'pixels',
+                    anchorXOffset: '100',
+                    pageNumber: '1'
+                });
+                let signHere2 = docusign.SignHere.constructFromObject({
+                    anchorString: 'Provider Signature', // Adjust as needed for each document
+                    anchorYOffset: '20',
+                    anchorUnits: 'pixels',
+                    anchorXOffset: '100',
+                    pageNumber: '1'
+                });
+                let signHere3 = docusign.SignHere.constructFromObject({
+                    anchorString: 'Provider Signature', // Adjust as needed for each document
+                    anchorYOffset: '20',
+                    anchorUnits: 'pixels',
+                    anchorXOffset: '100',
+                    pageNumber: '1'
+                });
+
+                // Create tabs for each document for the current signer
+                let tabs = docusign.Tabs.constructFromObject({
+                    signHereTabs: [signHere1, signHere2, signHere3]
+                });
+                signer.tabs = tabs;
+
+                docusignSigners.push(signer);
+            }
+
+            // Add the recipients to the envelope
+            env.recipients = docusign.Recipients.constructFromObject({
+                signers: docusignSigners
+            });
+
+            // Set envelope status to "sent"
+            env.status = 'sent';
+
+            return env;
+        } catch (error: any) {
+            throw new Error(error);
+        }
+    }
+
+
+
     /**
      * Below two funcion currently not using -- this functions uses for
      * one check the status of the envelop 
@@ -258,6 +456,54 @@ export class eSign {
         } catch (error) {
             console.error('Error downloading and saving PDF document:', error);
         }
+    }
+
+    async EmbeddedConsoleView(envelopeId: any) {
+        console.log("🚀 ~ eSign ~ EmbeddedConsoleView ~ envelopeId:", envelopeId)
+
+        try {
+            const token = await new eSign().signClient()
+            console.log("🚀 ~ eSign ~ EmbeddedConsoleView ~ token:", token.access_token)
+
+            let dsApiClient = new docusign.ApiClient();
+            dsApiClient.setBasePath(`${process.env.BASE_API}`);
+
+            dsApiClient.addDefaultHeader('Authorization', 'Bearer ' + token.access_token);
+            let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
+
+            // Create the NDSE view
+            let viewRequest = await this.makeConsoleViewRequest(envelopeId, 'envelope');
+            // Call the CreateSenderView API
+            // Exceptions will be caught by the calling function
+            let results = await envelopesApi.createConsoleView(
+                process.env.ACCOUNT_ID, { consoleViewRequest: viewRequest });
+            let url = results.url;
+            console.log(`NDSE view URL: ${url}`);
+            return ({ redirectUrl: url })
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
+
+
+    async makeConsoleViewRequest(envelopeId: any, startingView: any) {
+
+        try {
+            let viewRequest = new docusign.ConsoleViewRequest();
+            // Set the url where you want the recipient to go once they are done 
+            // with the NDSE. It is usually the case that the 
+            // user will never "finish" with the NDSE.
+            // Assume that control will not be passed back to your app.
+            viewRequest.returnUrl = process.env.ESIGN_RETURN_URL
+            if (startingView == "envelope" && envelopeId) {
+                viewRequest.envelopeId = envelopeId
+            }
+            return viewRequest
+        } catch (error) {
+            console.log(error)
+        }
+
     }
 
 }
