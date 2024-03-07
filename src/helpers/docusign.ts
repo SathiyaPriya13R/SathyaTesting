@@ -12,15 +12,12 @@ export class eSign {
     private access_token: any
 
     async signClient() {
-        console.log("🚀 ~ eSign ~ signClient ~ signClient:", 'signClient')
 
         try {
             const expiresInDays = 5;
             const expiresInSeconds = expiresInDays * 24 * 60 * 60;
-            console.log("🚀 ~ eSign ~ signClient ~ expiresInSeconds:", expiresInSeconds)
 
             const docusign_api_client = new docusign.ApiClient();
-            console.log("🚀 ~ eSign ~ signClient ~ docusign_api_client:", docusign_api_client)
 
             docusign_api_client.setBasePath(`${process.env.BASE_API}`)
 
@@ -31,7 +28,6 @@ export class eSign {
                 fs.readFileSync(path.join(__dirname, "private.key")),
                 expiresInSeconds);
 
-            console.log("🚀 ~ eSign ~ signClient ~ results:", results)
 
             const token_datas = results.body
 
@@ -93,6 +89,7 @@ export class eSign {
             viewRequest.email = email
             viewRequest.userName = name
             viewRequest.clientUserId = process.env.CLIENT_USER_ID
+
             // viewRequest.display = 'embedded'
 
             // viewRequest.frameAncestors = ["http://localhost:3000/", "https://apps-d.docusign.com/send/"];
@@ -203,12 +200,12 @@ export class eSign {
         }
     }
 
-    async makeEnvelopeWithMultipleDoc(filepath1: any, filepath3: any, email: any, name: any) {
+    async makeEnvelopeWithMultipleDoc(filepath1: any, filepath2: any, email: any, name: any) {
         try {
             // Read the content of the additional documents
             let doc1PdfBytes = fs.readFileSync(filepath1);
-            // let doc2PdfBytes = fs.readFileSync(filepath2);
-            let doc3PdfBytes = fs.readFileSync(filepath3);
+            let doc2PdfBytes = fs.readFileSync(filepath2);
+            // let doc3PdfBytes = fs.readFileSync(filepath3);
 
             // Create envelope definition
             let env = new docusign.EnvelopeDefinition();
@@ -224,19 +221,19 @@ export class eSign {
             doc1.documentId = '1'; // Ensure unique documentId
             env.documents.push(doc1);
 
-            // let doc2 = new docusign.Document();
-            // doc2.documentBase64 = Buffer.from(doc2PdfBytes).toString('base64');
-            // doc2.name = 'document2.pdf';
-            // doc2.fileExtension = 'pdf';
-            // doc2.documentId = '2'; // Ensure unique documentId
-            // env.documents.push(doc2);
+            let doc2 = new docusign.Document();
+            doc2.documentBase64 = Buffer.from(doc2PdfBytes).toString('base64');
+            doc2.name = 'document2.pdf';
+            doc2.fileExtension = 'pdf';
+            doc2.documentId = '2'; // Ensure unique documentId
+            env.documents.push(doc2);
 
-            let doc3 = new docusign.Document();
-            doc3.documentBase64 = Buffer.from(doc3PdfBytes).toString('base64');
-            doc3.name = 'document3.pdf';
-            doc3.fileExtension = 'pdf';
-            doc3.documentId = '3'; // Ensure unique documentId
-            env.documents.push(doc3);
+            // let doc3 = new docusign.Document();
+            // doc3.documentBase64 = Buffer.from(doc3PdfBytes).toString('base64');
+            // doc3.name = 'document3.pdf';
+            // doc3.fileExtension = 'pdf';
+            // doc3.documentId = '3'; // Ensure unique documentId
+            // env.documents.push(doc3);
 
             // Create signer recipient dynamically
             let signer = docusign.Signer.constructFromObject({
@@ -255,13 +252,13 @@ export class eSign {
                 anchorXOffset: '100',
                 // pageNumber: '1'
             });
-            let signHere2 = docusign.SignHere.constructFromObject({
-                anchorString: 'Sign Here', // Adjust as needed for each document
-                anchorYOffset: '20',
-                anchorUnits: 'pixels',
-                anchorXOffset: '100',
-                // pageNumber: '1'
-            });
+            // let signHere2 = docusign.SignHere.constructFromObject({
+            //     anchorString: 'Provider Signature', // Adjust as needed for each document
+            //     anchorYOffset: '20',
+            //     anchorUnits: 'pixels',
+            //     anchorXOffset: '100',
+            //     // pageNumber: '1'
+            // });
             // let signHere3 = docusign.SignHere.constructFromObject({
             //     anchorString: 'Provider Signature', // Adjust as needed for each document
             //     anchorYOffset: '20',
@@ -272,7 +269,7 @@ export class eSign {
 
             // Create tabs for each document
             let tabs = docusign.Tabs.constructFromObject({
-                signHereTabs: [signHere1, signHere2] // signHere2, signHere3
+                signHereTabs: [signHere1] // signHere2, signHere3
             });
             signer.tabs = tabs;
 

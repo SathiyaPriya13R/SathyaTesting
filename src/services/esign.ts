@@ -19,29 +19,23 @@ export class eSignService {
     async getEsignURI(body_data: { name: string, email: string }) {
 
         try {
-
-            console.log("🚀 ~ eSignService ~ getEsignURI ~ token_data:", 'token_data')
             const token_data = await eSign.signClient()
-            console.log("🚀 ~ eSignService ~ getEsignURI ~ token_data:", 'token_data')
 
             const envelope_api = await eSign.getEnvelopesApi(token_data.access_token)
-            console.log("🚀 ~ eSignService ~ getEsignURI ~ envelope_api:", 'envelope_api')
 
             // const filepath = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
             const filepath1 = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
-            // const filepath2 = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
-            const filepath3 = path.join(__dirname, "1709052355542-Degree.pdf")
+            const filepath2 = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
+            // const filepath3 = path.join(__dirname, "1709052355542-Degree.pdf")
 
-            const envelope = await eSign.makeEnvelopeWithMultipleDoc(filepath1, filepath3, body_data.email, body_data.name)
-
-            // console.log("🚀 ~ eSignService ~ getEsignURI ~ envelope:", envelope)
             // const envelope = await eSign.makeEnvelope(filepath, body_data.email, body_data.name)
+            const envelope = await eSign.makeEnvelopeWithMultipleDoc(filepath1, filepath2, body_data.email, body_data.name)
+
 
             const create_envople = await envelope_api.createEnvelope(
                 process.env.ACCOUNT_ID, { envelopeDefinition: envelope }
             )
 
-            console.log("🚀 ~ eSignService ~ getEsignURI ~ create_envople:", create_envople)
             console.log("🚀 ~ eSignService ~ getEsignURI ~ create_envople.envelopeId:", create_envople.envelopeId)
 
             const viewRequest = await eSign.getDocusignRedirectUrl(body_data.email, body_data.name)
@@ -257,14 +251,12 @@ export class eSignService {
         try {
 
             const token_data = await eSign.signClient()
-            console.log("🚀 ~ eSignService ~ getEsignURI ~ token_data:", 'token_data')
 
             const envelope_api = await eSign.getEnvelopesApi(token_data.access_token)
-            console.log("🚀 ~ eSignService ~ getEsignURI ~ envelope_api:", 'envelope_api')
 
             const filepath = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
 
-            const envelope = await eSign.makeEnvelope(filepath, `srk@gmail.com`, `srk`)
+            const envelope = await eSign.makeEnvelope(filepath, `selvadhoni640@gmail.com`, `selva`)
 
             const create_envople = await envelope_api.createEnvelope(
                 process.env.ACCOUNT_ID, { envelopeDefinition: envelope }
@@ -273,8 +265,6 @@ export class eSignService {
             console.log("🚀 ~ eSignService ~ getEsignURI ~ create_envople.envelopeId:", create_envople.envelopeId)
 
             const console_view = await eSign.EmbeddedConsoleView(create_envople.envelopeId);
-
-            console.log("🚀 ~ eSignService ~ consoleView ~ console_view:", console_view)
 
             return { message: 'success', data: console_view }
 

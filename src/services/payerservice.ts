@@ -249,7 +249,7 @@ export default class ProviderService {
                     searchparams['$history_details.ModifiedDate$'] = { $between: date_range };
                     searchparams['$history_details.NextFollowupDate$'] = { $between: date_range };
                 }
-                
+
                 insurance_transaction_condition.where['$or'] = searchparams;
                 insurance_transaction_condition.where = _.omit(insurance_transaction_condition.where, ['searchtext']);
             }
@@ -288,6 +288,7 @@ export default class ProviderService {
         return new Promise((resolve: (value: Array<any>) => void, reject: (value: any) => void): void => {
             const commonService = new CommonService(db.user);
             try {
+                const task_status = (!_.isNil(filter_data) && !_.isNil(filter_data.task_status)) ? filter_data.task_status : null;
                 const payer_datas: Array<any> = []
                 const payer_condition: sequelizeObj = {}
                 const idx: number = 0;
@@ -332,7 +333,11 @@ export default class ProviderService {
                             {
                                 model: db.InsuranceFollowup,
                                 as: 'insurance_status',
-                                where: { IsActive: 1, IsLast: 1 },
+                                where: {
+                                    IsActive: 1,
+                                    IsLast: 1,
+                                    ...(!_.isNil(task_status) && { StatusID: { $eq: filter_data.task_status } })
+                                },
                                 attributes: ['StatusID'],
                                 include: [
                                     {
