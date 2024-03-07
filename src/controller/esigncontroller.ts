@@ -24,7 +24,7 @@ export class esignController {
     async get_esign_url(request: Request, response: Response) {
 
         try {
-            const data: { name: string, email: string } = { name: 'selva', email: 'selvadhoni640@gmail.com' }
+            const data: { name: string, email: string } = request.body
             await eSignService.getEsignURI(data).then((data: any) => {
                 if (data.error) {
                     response.status(400).send(data.error);

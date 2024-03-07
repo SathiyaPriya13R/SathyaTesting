@@ -166,7 +166,7 @@ export class eSign {
             //     anchorUnits: 'pixels',
             //     anchorXOffset: xOffset.toString(),
             //     pageNumber: pageNumber.toString(),
-            //     value: 'Date'
+            //     value: '06/03/2024'
             // });
 
             // let provider_name = docusign.FullName.constructFromObject({
@@ -178,11 +178,25 @@ export class eSign {
             //     value: name
             // });
 
+            // const signed_date = docusign.DateSigned.constructFromObject({
+            //     anchorString: '/Date/',
+            //     anchorYOffset: yOffset.toString(),
+            //     anchorUnits: 'pixels',
+            //     anchorXOffset: xOffset.toString(),
+            //     pageNumber: pageNumber.toString(),
+            //     value: '06/03/2024'
+            //   });
+              
+            //   const tabs = docusign.Tabs.constructFromObject({
+            //     dateSignedTabs: [dateSignedTab]
+            //   });
+              
+            //   signer.tabs = tabs;
             // Tabs are set per recipient / signer
             let provider_sign_tab = docusign.Tabs.constructFromObject({
                 signHereTabs: [provider_sign] // signed_date, provider_name
-            });
-            singer_provider.tabs = provider_sign_tab;
+                // dateSignedTabs: [signed_date] 
+            });            singer_provider.tabs = provider_sign_tab;
 
             // Add the recipient to the envelope object
             let recipients = docusign.Recipients.constructFromObject({
