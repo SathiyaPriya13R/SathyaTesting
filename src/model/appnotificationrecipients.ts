@@ -3,7 +3,7 @@ import { BuildOptions, Model, Sequelize } from "sequelize";
 import * as SequelizeStatic from 'sequelize';
 
 export interface AppNotificationRecipientsAttributes {
-    AppNotificatonID: UUID,
+    AppNotificationID: UUID,
     NotificationDate: Date,
     NotificationContent: string,
     Entity: string,
@@ -35,7 +35,7 @@ export type AppNotificationRecipientsStatic = typeof Model & {
 
 export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotificationRecipientsStatic {
     return <AppNotificationRecipientsStatic>sequelize.define("AppNotificationRecipients", {
-        AppNotificatonID: {
+        AppNotificationID: {
             type: SequelizeStatic.UUID,
             allowNull: false,
             primaryKey: true,

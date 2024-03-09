@@ -8,12 +8,12 @@ const iv = CryptoJS.enc.Hex.parse('yourInitializationVector');
 export function encrypt(text: any) {
     try {
         const encryptedData = CryptoJS.AES.encrypt(text, secretKey, {
-            iv,        
+            iv,
             mode: CryptoJS.mode.CBC,
         }).toString();
         return encryptedData
     } catch (error: any) {
-      throw new error;  
+        throw new error;
     }
 }
 
@@ -25,7 +25,8 @@ export function decrypt(encrypt_data: any) {
         }).toString(CryptoJS.enc.Utf8);
         return decryptedData;
     } catch (error: any) {
-      throw new error;  
+        throw new error;
     }
 }
+
 
