@@ -16,6 +16,10 @@ export default class NotificationService {
         try {
 
             logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_STARTED);
+
+            if (_.isNil(user_data.entity) || user_data.entity == "") {
+                return { message: "Entity is required" }
+            }
             const commonService = new CommonService(db.user);
             let entityCount: any;
             let entity
@@ -56,8 +60,6 @@ export default class NotificationService {
                         entityCount[entity] = (entityCount[entity] || 0) + 1;
                     }
                 });
-
-
             }
 
             const final_result: Array<Record<string, any>> = await entityCount;
