@@ -18,29 +18,38 @@ export class eSignService {
 
     async getEsignURI(body_data: { name: string, email: string }) {
 
-        const token_data = await eSign.signClient()
+        try {
+            const token_data = await eSign.signClient()
 
-        const envelope_api = await eSign.getEnvelopesApi(token_data.access_token)
+            const envelope_api = await eSign.getEnvelopesApi(token_data.access_token)
 
-        const filepath = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
+            const filepath = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
+            // const filepath1 = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
+            // const filepath2 = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
+            // const filepath3 = path.join(__dirname, "1709052355542-Degree.pdf")
 
-        const envelope = await eSign.makeEnvelope(filepath, body_data.email, body_data.name)
+            const envelope = await eSign.makeEnvelope(filepath, body_data.email, body_data.name)
+            // const envelope = await eSign.makeEnvelopeWithMultipleDoc(filepath1, filepath2, body_data.email, body_data.name)
 
-        const create_envople = await envelope_api.createEnvelope(
-            process.env.ACCOUNT_ID, { envelopeDefinition: envelope }
-        )
 
-        console.log("🚀 ~ eSignService ~ getEsignURI ~ create_envople.envelopeId:", create_envople.envelopeId)
+            const create_envople = await envelope_api.createEnvelope(
+                process.env.ACCOUNT_ID, { envelopeDefinition: envelope }
+            )
 
-        const viewRequest = await eSign.getDocusignRedirectUrl(body_data.email, body_data.name)
+            console.log("🚀 ~ eSignService ~ getEsignURI ~ create_envople.envelopeId:", create_envople.envelopeId)
 
-        const final_uri = await envelope_api.createRecipientView(
-            process.env.ACCOUNT_ID,
-            create_envople.envelopeId,
-            { recipientViewRequest: viewRequest }
-        )
+            const viewRequest = await eSign.getDocusignRedirectUrl(body_data.email, body_data.name)
 
-        return { message: 'Successfully retrive Redirect URL', data: final_uri.url, envelope_id: create_envople.envelopeId }
+            const final_uri = await envelope_api.createRecipientView(
+                process.env.ACCOUNT_ID,
+                create_envople.envelopeId,
+                { recipientViewRequest: viewRequest }
+            )
+
+            return { message: 'Successfully retrive Redirect URL', data: final_uri.url, envelope_id: create_envople.envelopeId }
+        } catch (error: any) {
+            console.log(error)
+        }
     }
 
     async getEsignList(user_data: { id: string, user_type: string }, filter_data?: any) {
@@ -150,11 +159,11 @@ export class eSignService {
 
             if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
                 const searchparams: Record<string, unknown> = {};
-
-                searchparams.TaskID = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$history_details.status.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$insurance_location.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$grp_insurance.insurance_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
+                const searchtext = _.trim(filter_data.searchtext)
+                searchparams.TaskID = { $like: '%' + searchtext + '%' };
+                searchparams['$history_details.status.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$insurance_location.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$grp_insurance.insurance_name.Name$'] = { $like: '%' + searchtext + '%' };
 
                 esign_condition.where['$or'] = searchparams;
                 esign_condition.where = _.omit(esign_condition.where, ['searchtext']);
@@ -235,6 +244,33 @@ export class eSignService {
             throw new Error(error);
         }
 
+    }
+
+    async consoleView() {
+
+        try {
+
+            const token_data = await eSign.signClient()
+
+            const envelope_api = await eSign.getEnvelopesApi(token_data.access_token)
+
+            const filepath = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
+
+            const envelope = await eSign.makeEnvelope(filepath, `selvadhoni640@gmail.com`, `selva`)
+
+            const create_envople = await envelope_api.createEnvelope(
+                process.env.ACCOUNT_ID, { envelopeDefinition: envelope }
+            )
+
+            console.log("🚀 ~ eSignService ~ getEsignURI ~ create_envople.envelopeId:", create_envople.envelopeId)
+
+            const console_view = await eSign.EmbeddedConsoleView(create_envople.envelopeId);
+
+            return { message: 'success', data: console_view }
+
+        } catch (e: any) {
+            throw new Error(e.message)
+        }
     }
 }
 

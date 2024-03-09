@@ -93,9 +93,9 @@ export default class ProviderService {
 
             if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
                 const searchparams: Record<string, unknown> = {};
-
-                searchparams['$insurance_details.grp_insurance.insurance_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$insurance_details.TaskID$'] = { $like: '%' + filter_data.searchtext + '%' };
+                const searchtext = _.trim(filter_data);
+                searchparams['$insurance_details.grp_insurance.insurance_name.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$insurance_details.TaskID$'] = { $like: '%' + searchtext + '%' };
 
                 provider_condition.where['$or'] = searchparams;
                 provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
@@ -238,18 +238,18 @@ export default class ProviderService {
 
             if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
                 const searchparams: Record<string, unknown> = {};
+                const searchtext = _.trim(filter_data.searchtext);
+                searchparams['$history_details.status_name.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$history_details.followedby_user.DisplayName$'] = { $like: '%' + searchtext + '%' };
 
-                searchparams['$history_details.status_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$history_details.followedby_user.DisplayName$'] = { $like: '%' + filter_data.searchtext + '%' };
-
-                if (filter_data.searchtext && !_.isNil(filter_data.searchtext) && Date.parse(filter_data.searchtext) != null && filter_data.searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(filter_data.searchtext))) {
-                    const start_date = moment(filter_data.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
-                    const end_date = moment(filter_data.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
+                if (searchtext && !_.isNil(searchtext) && Date.parse(searchtext) != null && searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(searchtext))) {
+                    const start_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
+                    const end_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
                     const date_range = [start_date, end_date]
                     searchparams['$history_details.ModifiedDate$'] = { $between: date_range };
                     searchparams['$history_details.NextFollowupDate$'] = { $between: date_range };
                 }
-                
+
                 insurance_transaction_condition.where['$or'] = searchparams;
                 insurance_transaction_condition.where = _.omit(insurance_transaction_condition.where, ['searchtext']);
             }
@@ -288,6 +288,7 @@ export default class ProviderService {
         return new Promise((resolve: (value: Array<any>) => void, reject: (value: any) => void): void => {
             const commonService = new CommonService(db.user);
             try {
+                const task_status = (!_.isNil(filter_data) && !_.isNil(filter_data.task_status)) ? filter_data.task_status : null;
                 const payer_datas: Array<any> = []
                 const payer_condition: sequelizeObj = {}
                 const idx: number = 0;
@@ -332,7 +333,11 @@ export default class ProviderService {
                             {
                                 model: db.InsuranceFollowup,
                                 as: 'insurance_status',
-                                where: { IsActive: 1, IsLast: 1 },
+                                where: {
+                                    IsActive: 1,
+                                    IsLast: 1,
+                                    ...(!_.isNil(task_status) && { StatusID: { $eq: filter_data.task_status } })
+                                },
                                 attributes: ['StatusID'],
                                 include: [
                                     {
@@ -347,9 +352,9 @@ export default class ProviderService {
 
                         if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
                             const searchparams: Record<string, unknown> = {};
-
-                            searchparams['$grp_insurance.insurance_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                            searchparams.TaskID = { $like: '%' + filter_data.searchtext + '%' };
+                            const searchtext = _.trim(filter_data.searchtext)
+                            searchparams['$grp_insurance.insurance_name.Name$'] = { $like: '%' + searchtext + '%' };
+                            searchparams.TaskID = { $like: '%' + searchtext + '%' };
 
                             payer_condition.where['$or'] = searchparams;
                             payer_condition.where = _.omit(payer_condition.where, ['searchtext']);
