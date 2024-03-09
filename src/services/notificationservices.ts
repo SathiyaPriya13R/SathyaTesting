@@ -56,9 +56,19 @@ export default class NotificationService {
                         entityCount[entity] = (entityCount[entity] || 0) + 1;
                     }
                 });
+
+
             }
 
-            return { data: entityCount, message: "success" }
+            const final_result: Array<Record<string, any>> = await entityCount;
+
+            if (final_result && !_.isNil(final_result) && !_.isEmpty(final_result)) {
+                logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_COMPLETED)
+                return { data: final_result, message: appConstant.COUNT_MESSAGE.COUNT_FUNCTION_COMPLETED }
+            } else {
+                logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_FAILED)
+                return { data: null, message: appConstant.COUNT_MESSAGE.COUNT_FUNCTION_FAILED }
+            }
 
         } catch (error) {
             logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_FAILED, error);

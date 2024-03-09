@@ -200,9 +200,9 @@ export default class AppConstants {
     }
 
     COUNT_MESSAGE = {
-        COUNT_FUNCTION_STARTED:'Count function is started',
-        COUNT_FUNCTION_COMPLETED:'Count function is completed',
-        COUNT_FUNCTION_FAILED:'Count function is failed',
+        COUNT_FUNCTION_STARTED: 'Notification count function is started',
+        COUNT_FUNCTION_COMPLETED: 'Notification count function is completed',
+        COUNT_FUNCTION_FAILED: 'Notification count is not found',
 
     }
 }
