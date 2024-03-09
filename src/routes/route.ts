@@ -67,7 +67,9 @@ router.post('/document/all', AuthGuard, documentcontroller.getProviderDocument)
 router.get('/document/details/:id', AuthGuard, documentcontroller.getDocumentDetails)
 
 // document detele
-router.post('/document/delete/:id', AuthGuard, documentcontroller.documentDelete)
+router.post('/document/delete/:id',  AuthGuard,  documentcontroller.documentDelete)
 
+// notification count
+router.get('/notification/count',AuthGuard,notificationcontroller.getCountData)
 
 module.exports.route = router;
