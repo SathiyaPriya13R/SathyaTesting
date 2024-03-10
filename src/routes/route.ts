@@ -62,14 +62,12 @@ router.post('/esign/consoleview', esigncontroller.consoleView)
 router.post('/document/upload', AuthGuard, documentcontroller.uploadDocument)
 router.get('/document/download/:id', AuthGuard, documentcontroller.downloadDocument)
 router.post('/document/all', AuthGuard, documentcontroller.getProviderDocument)
-
-// document routes
 router.get('/document/details/:id', AuthGuard, documentcontroller.getDocumentDetails)
+router.post('/document/delete/:id', AuthGuard, documentcontroller.documentDelete)
 
-// document detele
-router.post('/document/delete/:id',  AuthGuard,  documentcontroller.documentDelete)
-
-// notification count
-router.get('/notification/count',AuthGuard,notificationcontroller.getCountData)
+//Notification routes
+router.get('/notification/count', AuthGuard, notificationcontroller.getCountData)
+router.post('/notification/list', AuthGuard, notificationcontroller.getNotificationList);
+router.get('/notification/:id', AuthGuard, notificationcontroller.getNotificationByid);
 
 module.exports.route = router;

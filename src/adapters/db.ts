@@ -129,3 +129,8 @@ DocumentAttachment.belongsTo(DocumentCategory, { as: 'category', foreignKey: 'Do
 InsuranceTransaction.belongsTo(Location, { as: 'location', foreignKey: 'LocationID' })
 InsuranceTransaction.belongsTo(User, { as: 'user', foreignKey: 'ModifiedBy' });
 InsuranceFollowup.belongsTo(lookupValue, { as: 'status', foreignKey: 'StatusID' });
+
+/**
+ * For Notification associations
+ */
+AppNotificationReceipts.belongsTo(ProviderDoctor, { as: 'provider', foreignKey: 'ProviderDoctorID' })

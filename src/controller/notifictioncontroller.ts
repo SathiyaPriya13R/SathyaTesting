@@ -23,4 +23,45 @@ export default class NotificationController {
             res.status(400).send(JSON.parse(JSON.stringify(error)));
         }
     }
+
+    async getNotificationList(request: Request, response: Response) {
+        try {
+            const decryptedData = (request.body.data) ? decrypt(request.body.data) : null;
+            const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : {}
+            const { limit, offset }: { limit: number, offset: number } = JSON.parse(JSON.stringify(request.query));
+            filter_data.limit = (limit) ? limit : null;
+            filter_data.offset = (offset) ? offset : null;
+            const user_data: { id: string, user_type: string } = JSON.parse(JSON.stringify(request.user))
+            await notificationService.getNotificationList(user_data, filter_data).then((data: any) => {
+                if (data.error) {
+                    response.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+                } else {
+                    response.status(200).send({ data: encrypt(JSON.stringify(data)) });
+                }
+            }).catch((error) => {
+                response.status(400).send({ data: encrypt(JSON.stringify(error)) });
+            });
+        } catch (error) {
+            logger.error(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_LIST_FUNCTION_FAILED, error);
+            response.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        }
+    }
+
+    async getNotificationByid(request: Request, response: Response) {
+        try {
+            const notification_id: any = (request.params.id) ? request.params.id : null
+            await notificationService.getNotificationByid(notification_id).then((data: any) => {
+                if (data.error) {
+                    response.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+                } else {
+                    response.status(200).send({ data: encrypt(JSON.stringify(data)) });
+                }
+            }).catch((error) => {
+                response.status(400).send({ data: encrypt(JSON.stringify(error)) });
+            });
+        } catch (error) {
+            logger.error(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_BYID_FUNCTION_FAILED, error);
+            response.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        }
+    }
 }

@@ -205,4 +205,13 @@ export default class AppConstants {
         COUNT_FUNCTION_FAILED: 'Notification count is not found',
 
     }
+
+    NOTIFICATION_MESSAGES = {
+        NOTIFICATION_LIST_FUNCTION_STARTED: 'Notification list function started',
+        NOTIFICATION_LIST_FUNCTION_FAILED: 'Notification list function failed',
+        NOTIFICATION_LIST_FUNCTION_COMPLETED: 'Notification list function completed',
+        NOTIFICATION_BYID_FUNCTION_STARTED: 'Notification byid function started',
+        NOTIFICATION_BYID_FUNCTION_FAILED: 'Notification byid function failed',
+        NOTIFICATION_BYID_FUNCTION_COMPLETED: 'Notification byid function completed'
+    }
 }
