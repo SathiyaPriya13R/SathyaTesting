@@ -28,6 +28,7 @@ app.use(async function (req: Request, res: Response, next) {
     const token = req.headers.authorization as string;
     try {
         if (token) {
+            console.log('token 0000000',token);
             const currentData: any = await new Promise((resolve, reject) => {
                 redisClient.get(appConstant.REDIS_AUTH_TOKEN_KEYNAME, (getError: any, data: string) => {
                     if (getError) {
@@ -50,6 +51,7 @@ app.use(async function (req: Request, res: Response, next) {
                 try {
                     const secrectkey = `${process.env.JWT_SECREAT_KEK}`;
                     const decodedToken: any = jwt.verify(token, secrectkey);
+                    console.log('docodedToken -----',decodedToken);
                     const allToken = currentData ? JSON.parse(currentData) : [];
                     const tokenValid = allToken.filter((item: any) => item.userid == decodedToken.id);
                     if (tokenValid && !_.isEmpty(tokenValid)) {
