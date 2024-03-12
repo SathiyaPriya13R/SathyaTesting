@@ -61,11 +61,12 @@ app.use(async function (req: Request, res: Response, next) {
                                 redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
                                     if (setError) {
                                         console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
+                                        logger.info(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS);
                                         reject(setError)
-                                        throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
+                                        throw new Error(appConstant.LOGGER_MESSAGE.AUTHGUARD_FUNCTION_FAILED);
                                     } else {
                                         console.log(appConstant.MESSAGES.TOKEN_DELETED_SUCCESSFULLY, setResult);
-                                        logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
+                                        logger.info(appConstant.LOGGER_MESSAGE.AUTHGUARD_FUNCTION_COMPLETED);
                                         resolve(setResult)
                                     }
                                 });
