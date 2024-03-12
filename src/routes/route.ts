@@ -66,7 +66,7 @@ router.get('/document/details/:id', AuthGuard, documentcontroller.getDocumentDet
 router.post('/document/delete/:id', AuthGuard, documentcontroller.documentDelete)
 
 //Notification routes
-router.get('/notification/count', AuthGuard, notificationcontroller.getCountData)
+router.post('/notification/count', AuthGuard, notificationcontroller.getCountData)
 router.post('/notification/list', AuthGuard, notificationcontroller.getNotificationList);
 router.get('/notification/:id', AuthGuard, notificationcontroller.getNotificationByid);
 router.post('/notification/status/update', AuthGuard, notificationcontroller.updateNotificationStatus)

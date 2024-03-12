@@ -4,6 +4,7 @@ import * as db from '../adapters/db';
 import AppConstants from "../utils/constants";
 import CommonService from '../helpers/commonService';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = require('../helpers/logger');
 const { Op } = require('sequelize');
@@ -12,50 +13,63 @@ const appConstant = new AppConstants();
 
 export default class NotificationService {
 
-    async getCount(login_data: any, user_data: any, filter_data?: any) {
+    async getCount(user_data: any, filter_data: any) {
 
         try {
-
+            const commonService = new CommonService(db.user);
             logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_STARTED);
 
-            if (_.isNil(user_data.entity) || user_data.entity == "") {
-                return { message: "Entity is required" }
+            if (_.isNil(filter_data.notification_type) || filter_data.notification_type == "") {
+                return { message: "Notification type is required" }
             }
-            const commonService = new CommonService(db.user);
-            let entityCount: any;
-            let entity
 
-            const user_id = await commonService.getUserGroupProviderId(login_data, db.User, db.UserProvider);
-            login_data.id = user_id ?? login_data.id;
+            let entityCount: any;
+            let NotificationType: any = 'Alert';
+
+            const user_id = await commonService.getUserGroupProviderId(user_data, db.User, db.UserProvider);
+            user_data.id = user_id ?? user_data.id;
+
+            const filter_datas: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = (!_.isNil(filter_data) && !_.isNil(filter_data.filter) && (!_.isEmpty(filter_data.filter.providers) || !_.isEmpty(filter_data.filter.payers) || !_.isEmpty(filter_data.filter.locations)))
+                ? await commonService.getFilterDataIds(filter_data.filter.providers, filter_data.filter.payers, filter_data.filter.locations, {
+                    provider_doctor: db.ProviderDoctor,
+                    insurance_transaction: db.InsuranceTransaction,
+                    group_insurance: db.GroupInsurance,
+                    doctor_location: db.DoctorLocation,
+                })
+                : { providers: [], payers: [], locations: [] };
+
+            if (filter_data.notification_type == 'alert') {
+                NotificationType = 'Alert'
+            }
+
+            if (filter_data.notification_type == 'notification') {
+                NotificationType = 'Notification'
+            }
 
             const appnotificationcondition: sequelizeObj = {}
 
-            if (user_data.entity && user_data.entity == 'all') {
-                entity = ['Esign', 'Provider Enrollment', 'Document']
-            }
-            else {
-                entity = user_data.entity
-            }
-
             appnotificationcondition.where = {
-                [login_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: login_data.id,
-                ...((user_data.entity && (user_data.entity == 'alert' || user_data.entity == 'all')) && { Entity: { $in: [entity] } }),
+                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
+                ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
+                IsNotificationfRead: false,
+                NotificationType: NotificationType,
             }
 
-            if (!user_data.entity && (user_data.entity != 'alert' || user_data.entity != 'all')) {
+            if (filter_data.detail_count && filter_data.detail_count == true && filter_data.notification_type == 'notification') {
                 appnotificationcondition.attributes = ['Entity']
             }
 
             let result: any;
 
-            if (user_data.entity && (user_data.entity == 'alert' || user_data.entity == 'all')) {
+            if (filter_data.detail_count == false && filter_data.notification_type && (filter_data.notification_type == 'alert' || filter_data.notification_type == 'notification')) {
                 result = await commonService.getCount(appnotificationcondition, db.AppNotificationReceipts);
                 entityCount = result
             }
-            else if (user_data.entity && user_data.entity == 'detail_count') {
+
+            if (filter_data.detail_count && filter_data.detail_count == true && filter_data.notification_type == 'notification') {
                 result = await commonService.getAllList(appnotificationcondition, db.AppNotificationReceipts);
                 entityCount = {}
-                await result.forEach((item: any) => {
+                await JSON.parse(JSON.stringify(result)).forEach((item: any) => {
                     if (!_.isNil(item) && !_.isNil(item.Entity)) {
                         const entity: any = item.Entity;
                         entityCount[entity] = (entityCount[entity] || 0) + 1;
@@ -63,9 +77,9 @@ export default class NotificationService {
                 });
             }
 
-            const final_result: Array<Record<string, any>> = await entityCount;
+            const final_result: any = await entityCount;
 
-            if (final_result && !_.isNil(final_result) && !_.isEmpty(final_result)) {
+            if (final_result && !_.isNil(final_result)) {
                 logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_COMPLETED)
                 return { data: final_result, message: appConstant.COUNT_MESSAGE.COUNT_FUNCTION_COMPLETED }
             } else {
@@ -304,4 +318,88 @@ export default class NotificationService {
             throw new Error(error.message)
         }
     }
+
+    async pushDocumentNotification() {
+        try {
+            const commonService = new CommonService(db.user);
+            logger.info('Push notification function started');
+
+            const current_date = new Date();
+            const expiry_threshold = new Date(current_date);
+            expiry_threshold.setDate(current_date.getDate() + 30);
+            const formatted_after_30_days = moment(expiry_threshold).format('YYYY-MM-DD')
+
+            const document_condition: sequelizeObj = {
+                where: {
+                    IsActive: 1,
+                    ExpiryDate: new Date(formatted_after_30_days),
+                    FileName: { $like: 'Provider%' }
+                },
+                attributes: ['AttachmentID', 'ExpiryDate', 'Name', 'ModifiedDate', 'ModifiedDate'],
+                include: [
+                    {
+                        model: db.ProviderDoctor,
+                        as: 'provider',
+                        required: true,
+                        attributes: ['ProviderDoctorID', 'ProviderGroupID']
+                    }
+                ]
+            }
+
+            const documents_datas = await commonService.getAllList(document_condition, db.DocumentAttachment)
+            const documents_list = JSON.parse(JSON.stringify(documents_datas))
+
+            if (documents_list && !_.isNil(documents_list) && documents_list.length > 0) {
+
+                const notification_create_data_array: Array<Record<string, any>> = []
+
+                await documents_list.map((document: any) => {
+                    const notification_content = `The ${document.Name} document expires on ${moment(document.ExpiryDate).format('DD MMM YYYY')}`
+                    const form_notification_data = {
+                        AppNotificationID: uuidv4(),
+                        NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
+                        NotificationContent: notification_content,
+                        Entity: 'Document',
+                        ItemID: `${document.AttachmentID}`.toUpperCase(),
+                        SendingUserType: 'Provider User',
+                        AssigneeID: `${document.provider.ProviderDoctorID}`.toUpperCase(),
+                        AssignedTo: `${document.provider.ProviderDoctorID}`.toUpperCase(),
+                        ProviderClientID: null,
+                        ProviderGroupID: `${document.provider.ProviderGroupID}`,
+                        ProviderDoctorID: `${document.provider.ProviderDoctorID}`,
+                        IsActive: true,
+                        Status: `b758e70d-3acc-4e55-902b-6644451e671c`.toUpperCase(),
+                        CreatedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        CreatedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+                        ModifiedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        ModifiedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+                        RedirectLink: null,
+                        PracticeManagerID: null,
+                        ProviderUserID: null,
+                        IsActionTaken: false,
+                        IsNotificationfRead: false,
+                        NotificationType: 'Notification',
+                        AttachmentID: `${document.AttachmentID}`.toUpperCase(),
+                    }
+                    notification_create_data_array.push(form_notification_data)
+                })
+
+                await commonService.bulkCreate(notification_create_data_array, db.AppNotificationReceipts).then((saved_data) => {
+                    logger.info('Notification record inserted');
+                    logger.info('Push notification function completed');
+                }).catch((err: any) => {
+                    logger.error('Push notification function failed', err.message);
+                })
+            }
+            else {
+                logger.info('No notification record inserted');
+                logger.info('Push notification function completed');
+            }
+
+        } catch (error: any) {
+            logger.error('Push notification function failed', error.message);
+            throw new Error(error.message)
+        }
+    }
+
 }

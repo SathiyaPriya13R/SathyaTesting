@@ -337,4 +337,19 @@ export default class CommonService {
         return /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(uuid);
     }
 
+    bulkCreate(array: Array<unknown>, accessObject: any): Promise<Record<string, unknown>> {
+        const promise = new Promise<Record<string, unknown>>((resolve: (value: any) => void, reject: (value: any) => void) => {
+            return this.db.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, (t: Transaction) => {
+                return accessObject.bulkCreate(array)
+                    .then((result: Record<string, unknown>) => {
+                        resolve(result);
+                    }).catch((error: Error) => {
+                        t.rollback();
+                        reject(error);
+                    });
+            });
+        });
+        return promise;
+    }
+
 }
