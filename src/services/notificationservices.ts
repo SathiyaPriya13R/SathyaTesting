@@ -276,4 +276,32 @@ export default class NotificationService {
         }
     }
 
+    async updateNotificationStatus(update_data: { Notification_id: string, is_Read: boolean }) {
+
+        try {
+            const commonService = new CommonService(db.user);
+            logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_STATUS_UPDATE_STARTED);
+
+            if ((_.isNil(update_data.Notification_id) || update_data.Notification_id == '') || (_.isNil(update_data.is_Read) || typeof (update_data.is_Read) != 'boolean')) {
+                logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_STATUS_UPDATE_FAILED);
+                return { message: 'Please enter valid notification id or notification status' };
+            }
+
+            let updated_data = await commonService.update({ AppNotificationID: update_data.Notification_id }, { IsNotificationfRead: update_data.is_Read }, db.AppNotificationReceipts)
+            updated_data = JSON.parse(JSON.stringify(updated_data))
+
+
+            if (update_data && !_.isNil(update_data) && !_.isEmpty(update_data)) {
+                logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_STATUS_UPDATE_COMPLETED);
+                return { data: updated_data, message: appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_STATUS_UPDATE_SUCCEFULLY };
+            } else {
+                logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_STATUS_UPDATE_COMPLETED);
+                return { data: null, message: appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_STATUS_UPDATE_FAILED };
+            }
+
+        } catch (error: any) {
+            logger.error(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_STATUS_UPDATE_FAILED, error.message);
+            throw new Error(error.message)
+        }
+    }
 }

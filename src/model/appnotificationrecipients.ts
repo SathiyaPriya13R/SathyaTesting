@@ -11,19 +11,21 @@ export interface AppNotificationRecipientsAttributes {
     SendUserType: string,
     AssigneeID: UUID,
     AssignedTo: UUID,
-    ProviderClientID:UUID,
-    ProviderGroupID:UUID,
-    ProviderDoctorID:UUID,
+    ProviderClientID: UUID,
+    ProviderGroupID: UUID,
+    ProviderDoctorID: UUID,
     IsActive: Boolean,
-    Status:UUID,
+    Status: UUID,
     CreatedDate: Date,
     CreatedBy: UUID,
     ModifiedBy: UUID,
     ModifiedDate: Date,
-    RedirectLink:string,
-    PracticeManagerID:UUID,
-    ProviderUserID:UUID,
-    IsActionToken:Boolean,
+    RedirectLink: string,
+    PracticeManagerID: UUID,
+    ProviderUserID: UUID,
+    IsActionTaken: Boolean,
+    IsNotificationfRead: Boolean,
+    NotificationType: string
 }
 
 export interface AppNotificationRecipientsModel extends Model<AppNotificationRecipientsAttributes>, AppNotificationRecipientsAttributes { }
@@ -104,9 +106,9 @@ export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotif
             type: SequelizeStatic.DATE,
             allowNull: false
         },
-        RedirectLink:{
+        RedirectLink: {
             type: SequelizeStatic.STRING,
-            allowNull:true,
+            allowNull: true,
         },
         PracticeManagerID: {
             type: SequelizeStatic.UUID,
@@ -116,17 +118,25 @@ export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotif
             type: SequelizeStatic.UUID,
             allowNull: true
         },
-        IsActionTaken:{
+        IsActionTaken: {
             type: SequelizeStatic.BOOLEAN,
-            allowNull:true
+            allowNull: true
+        },
+        IsNotificationfRead: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        },
+        NotificationType: {
+            type: SequelizeStatic.STRING,
+            allowNull: true
         }
 
     },
-    {
-        indexes: [],
-        timestamps: false,
-        freezeTableName: true,
-        schema: "ntf",
-        tableName: 'AppNotificationRecipients'
-    });
+        {
+            indexes: [],
+            timestamps: false,
+            freezeTableName: true,
+            schema: "ntf",
+            tableName: 'AppNotificationRecipients'
+        });
 }

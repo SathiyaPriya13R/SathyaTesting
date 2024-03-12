@@ -64,4 +64,23 @@ export default class NotificationController {
             response.status(400).send({ data: encrypt(JSON.stringify(error)) });
         }
     }
+
+    async updateNotificationStatus(req: Request, res: Response) {
+        try {
+            const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
+            const update_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : {}
+            await notificationService.updateNotificationStatus(update_data).then((data: any) => {
+                if (data.error) {
+                    res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+                } else {
+                    res.status(200).send({ data: encrypt(JSON.stringify(data)) });
+                }
+            }).catch((error) => {
+                res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+            });
+        } catch (error) {
+            logger.error(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_STATUS_UPDATE_FAILED, error);
+            res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        }
+    }
 }
