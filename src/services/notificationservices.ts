@@ -18,8 +18,8 @@ export default class NotificationService {
 
             logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_STARTED);
 
-            if (_.isNil(user_data.entity) || user_data.entity == "") {
-                return { message: "Entity is required" }
+            if (_.isNil(user_data.NotificationType) || user_data.NotificationType == "") {
+                return { message: "Notification Type is required" }
             }
             const commonService = new CommonService(db.user);
             let entityCount: any;
@@ -30,27 +30,41 @@ export default class NotificationService {
 
             const appnotificationcondition: sequelizeObj = {}
 
-            if (user_data.entity && user_data.entity == 'all') {
+            const filter_datas: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = (!_.isNil(filter_data) && !_.isNil(filter_data.filter) && (!_.isEmpty(filter_data.filter.providers) || !_.isEmpty(filter_data.filter.payers) || !_.isEmpty(filter_data.filter.locations)))
+                ? await commonService.getFilterDataIds(filter_data.filter.providers, filter_data.filter.payers, filter_data.filter.locations, {
+                    provider_doctor: db.ProviderDoctor,
+                    insurance_transaction: db.InsuranceTransaction,
+                    group_insurance: db.GroupInsurance,
+                    doctor_location: db.DoctorLocation,
+                })
+                : { providers: [], payers: [], locations: [] };
+
+            if (user_data.Entity && user_data.Entity == 'all') {
                 entity = ['Esign', 'Provider Enrollment', 'Document']
-            }
-            else {
-                entity = user_data.entity
             }
 
             appnotificationcondition.where = {
                 [login_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: login_data.id,
-                ...((user_data.entity && (user_data.entity == 'alert' || user_data.entity == 'all')) && { Entity: { $in: [entity] } }),
+                ...((user_data.Entity && user_data.Entity == 'all') && { Entity: { $in: [entity] } }),
+                ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
+
+                NotificationType: user_data.NotificationType
             }
 
-            if (!user_data.entity && (user_data.entity != 'alert' || user_data.entity != 'all')) {
+            if (!user_data.Entity && user_data.Entity != 'all') {
                 appnotificationcondition.attributes = ['Entity']
             }
 
+            if (!appnotificationcondition.group) {
+                appnotificationcondition.group = ['Entity'];
+            }
             let result: any;
 
-            if (user_data.entity && (user_data.entity == 'alert' || user_data.entity == 'all')) {
+            if (user_data.NotificationType || user_data.Entity == 'all') {
                 result = await commonService.getCount(appnotificationcondition, db.AppNotificationReceipts);
-                entityCount = result
+                entityCount = {
+                    count: result
+                }
             }
             else if (user_data.entity && user_data.entity == 'detail_count') {
                 result = await commonService.getAllList(appnotificationcondition, db.AppNotificationReceipts);
@@ -65,7 +79,7 @@ export default class NotificationService {
 
             const final_result: Array<Record<string, any>> = await entityCount;
 
-            if (final_result && !_.isNil(final_result) && !_.isEmpty(final_result)) {
+            if (final_result && !_.isNil(final_result)) {
                 logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_COMPLETED)
                 return { data: final_result, message: appConstant.COUNT_MESSAGE.COUNT_FUNCTION_COMPLETED }
             } else {
@@ -77,7 +91,6 @@ export default class NotificationService {
             logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_FAILED, error);
             throw error;
         }
-
     }
 
     async getNotificationList(user_data: { id: string, user_type: string }, filter_data: any) {
