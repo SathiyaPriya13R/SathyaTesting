@@ -86,6 +86,8 @@ export default class ProviderService {
             provider_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
             provider_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
 
+            provider_condition.order = [['FirstName','ASC']]
+
             const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
             const provider_list = JSON.parse(JSON.stringify(provider_data));
 

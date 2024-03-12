@@ -101,6 +101,8 @@ export default class ProviderService {
                 provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
             }
 
+            provider_condition.order = [['FirstName','ASC']]
+
             const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
             const provider_list = JSON.parse(JSON.stringify(provider_data));
             const provider_ids: Array<string> = provider_list.map((provider: any) => provider.ProviderDoctorID)
