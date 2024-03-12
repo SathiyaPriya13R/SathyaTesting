@@ -88,6 +88,7 @@ export default class DocumentService {
         doc_data.ModifiedBy = `${attachment_data.ProviderDoctorID}`.toUpperCase()
         doc_data.ModifiedDate = moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS')
         doc_data.IsActive = true
+        doc_data.DocumentSoftDelete = 0
 
         const saved_data = await commonService.create(doc_data, db.DocumentAttachment)
 
@@ -166,7 +167,7 @@ export default class DocumentService {
        */
       const documentCondition: sequelizeObj = {};
       documentCondition.where = {
-        ItemID: 'DEFEA51E-1A1B-43AE-8D2E-E4C383D19B99',
+        ItemID: user_data.id,
         ...((filterData.all == true && !_.isNil(filterDatas) && !_.isEmpty(filterDatas.providers)) && { ProviderDoctorID: { $in: filterDatas.providers } }),
         ...((filterData.all == false && !_.isNil(filterData.provider_id) && !_.isEmpty(filterData.provider_id)) && { ProviderDoctorID: { $eq: filterData.provider_id } }),
         DocumentSoftDelete: 0
@@ -178,7 +179,9 @@ export default class DocumentService {
         'IsActive',
         'Name',
         'ItemID',
-        'FileName'
+        'FileName',
+        'StateID',
+        'DocumentCategoryID'
       ]
 
       if (limit) {

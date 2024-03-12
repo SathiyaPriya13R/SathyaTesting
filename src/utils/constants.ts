@@ -215,6 +215,10 @@ export default class AppConstants {
         NOTIFICATION_LIST_FUNCTION_COMPLETED: 'Notification list function completed',
         NOTIFICATION_BYID_FUNCTION_STARTED: 'Notification byid function started',
         NOTIFICATION_BYID_FUNCTION_FAILED: 'Notification byid function failed',
-        NOTIFICATION_BYID_FUNCTION_COMPLETED: 'Notification byid function completed'
+        NOTIFICATION_BYID_FUNCTION_COMPLETED: 'Notification byid function completed',
+        NOTIFICATION_STATUS_UPDATE_STARTED: 'Notification status update funciton started',
+        NOTIFICATION_STATUS_UPDATE_COMPLETED: 'Notification status update function completed',
+        NOTIFICATION_STATUS_UPDATE_FAILED: 'Notification status update function failed',
+        NOTIFICATION_STATUS_UPDATE_SUCCEFULLY: 'Notification status updated successfully'
     }
 }

@@ -24,7 +24,8 @@ export interface AppNotificationRecipientsAttributes {
     PracticeManagerID: UUID,
     ProviderUserID: UUID,
     IsActionTaken: Boolean,
-    NotificationType: String
+    IsNotificationfRead: Boolean,
+    NotificationType: string
 }
 
 export interface AppNotificationRecipientsModel extends Model<AppNotificationRecipientsAttributes>, AppNotificationRecipientsAttributes { }
@@ -121,10 +122,14 @@ export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotif
             type: SequelizeStatic.BOOLEAN,
             allowNull: true
         },
-        NotificationType: {
-            type: SequelizeStatic.STRING(50),
-            allowNull: false
+        IsNotificationfRead: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
         },
+        NotificationType: {
+            type: SequelizeStatic.STRING,
+            allowNull: true
+        }
 
     },
         {
