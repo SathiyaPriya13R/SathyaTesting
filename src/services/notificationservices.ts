@@ -71,7 +71,16 @@ export default class NotificationService {
                 entityCount = {}
                 await JSON.parse(JSON.stringify(result)).forEach((item: any) => {
                     if (!_.isNil(item) && !_.isNil(item.Entity)) {
-                        const entity: any = item.Entity;
+                        let entity: any;
+                        if (item.Entity == 'Payer Enrollment') {
+                            entity = 'payer_enrollment';
+                        }
+                        if (item.Entity == 'Esign') {
+                            entity = 'esign';
+                        }
+                        if (item.Entity == 'Document') {
+                            entity = 'document';
+                        }
                         entityCount[entity] = (entityCount[entity] || 0) + 1;
                     }
                 });
@@ -174,7 +183,7 @@ export default class NotificationService {
                 }
             ]
 
-            notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead']
+            notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead', 'ItemID', 'AttachmentID']
 
             notification_condition.order = [['NotificationDate', 'DESC']]
 
