@@ -14,11 +14,8 @@ export default class NotificationController {
             logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_STARTED)
             const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
             const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : {}
-
-            const userData = { NotificationType: filter_data.notificationtype, Entity: filter_data.entity };
             const user_data: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user))
-            const count = await notificationService.getCount(user_data, userData);
-
+            const count = await notificationService.getCount(user_data, filter_data);
             res.status(200).send({ data: encrypt(JSON.stringify(count)) });
         } catch (error) {
             logger.error(error);

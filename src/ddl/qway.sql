@@ -134,3 +134,8 @@ ALTER TABLE pvdr.ProviderGroupContactDetail ADD GenerateCronPassword BIT DEFAULT
 
 ALTER TABLE pvdr.ProviderGroupContactDetail ADD ForgetPwdCron BIT DEFAULT 0
 -- End
+
+-- START For notification document ID column
+ALTER TABLE ntf.AppNotificationRecipients 
+ADD AttachmentID UNIQUEIDENTIFIER DEFAULT NULL;
+-- END

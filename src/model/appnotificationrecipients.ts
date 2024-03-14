@@ -91,7 +91,7 @@ export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotif
             allowNull: false,
         },
         CreatedDate: {
-            type: SequelizeStatic.DATE,
+            type: SequelizeStatic.STRING,
             allowNull: false
         },
         CreatedBy: {
@@ -103,7 +103,7 @@ export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotif
             allowNull: false
         },
         ModifiedDate: {
-            type: SequelizeStatic.DATE,
+            type: SequelizeStatic.STRING,
             allowNull: false
         },
         RedirectLink: {
@@ -132,11 +132,12 @@ export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotif
         }
 
     },
-        {
-            indexes: [],
-            timestamps: false,
-            freezeTableName: true,
-            schema: "ntf",
-            tableName: 'AppNotificationRecipients'
-        });
+    {
+        indexes: [],
+        timestamps: false,
+        freezeTableName: true,
+        schema: "ntf",
+        tableName: 'AppNotificationRecipients'
+    }
+    );
 }
