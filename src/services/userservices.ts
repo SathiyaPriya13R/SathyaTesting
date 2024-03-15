@@ -129,8 +129,7 @@ export default class UserService {
                                 MobileDeviceID: userData.mobileDeviceID
                             }
                             await commonService.update({ id: data.Id }, userUpdateCondition, db.User)
-                            // return { data: encrypt(JSON.stringify(finalData)) };
-                            return finalData;
+                            return { data: encrypt(JSON.stringify(finalData)) };
                         }
                     } else {
                         return { error: appConstant.LOGGER_MESSAGE.USER_NOT_FOUND };
@@ -184,8 +183,7 @@ export default class UserService {
                             MobileDeviceID: userData.mobileDeviceID
                         }
                         await commonService.update({ ProviderGroupContactDetailID: providerGroupContact.ProviderGroupContactDetailID }, userUpdateCondition, db.ProviderGroupContact);
-                        // return { data: encrypt(JSON.stringify(finalData)) };
-                        return finalData;
+                        return { data: encrypt(JSON.stringify(finalData)) };
                     }
                 } else if (provider && password) {
                     if (TokenDetails && !userData.signin) {
@@ -236,8 +234,7 @@ export default class UserService {
                             MobileDeviceID: userData.mobileDeviceID
                         }
                         await commonService.update({ ProviderDoctorID: data.ProviderDoctorID }, userUpdateCondition, db.ProviderDoctor);
-                        // return { data: encrypt(JSON.stringify(finalData)) };
-                        return finalData;
+                        return { data: encrypt(JSON.stringify(finalData)) };
                     }
                 } else {
                     logger.error(appConstant.LOGGER_MESSAGE.USER_NOT_FOUND);
@@ -365,11 +362,11 @@ export default class UserService {
                 }
             } else if (type == 'Group') {
                 const groupCondition: sequelizeObj = {};
-                groupCondition.where = {
-                    ProviderGroupContactDetailID: id,
-                    IsActive: 1
-                };
-                const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
+                                    groupCondition.where = {
+                        ProviderGroupContactDetailID: id,
+                        IsActive: 1
+                    };
+                                const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
                 if (!_.isNil(groupData.PasswordHash)) {
                     const previousPasswordCheck = commonService.passwordHash(password, groupData);
                     if (previousPasswordCheck) {
