@@ -161,7 +161,7 @@ export default class NotificationService {
             }
 
             let message_filter: Array<boolean> = []
-            if (filter_data.notification_for && filter_data.notification_for == 'mymessage') {
+            if (filter_data.notification_for && (filter_data.notification_for == 'mymessage' || filter_data.notification_for == 'alert' || filter_data.notification_for == 'notification') ) {
                 message_filter = (filter_data.message_filter) ? filter_data.message_filter : [];
             }
 
