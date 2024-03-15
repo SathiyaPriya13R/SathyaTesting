@@ -33,7 +33,7 @@ export default class UserController {
                         if (data && data.error) {
                             res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
                         } else {
-                            res.status(200).send(data);
+                            res.status(200).send(encrypt(JSON.stringify(data)));
                         }
                     }).catch((error) => {
                         res.status(400).send({ data: encrypt(JSON.stringify(error)) });
@@ -83,9 +83,13 @@ export default class UserController {
             const decryptedData = decrypt(req.body.data);
             if (decryptedData) {
                 const data = JSON.parse(decryptedData)
+                // const data = req.body;
                 const userid = data.id;
                 const password = data.password;
                 const type = data.type;
+                // const token = data.token ? data.token : '';
+                // console.log('toke -----',token);
+                // const finalResponse: any = await userService.updatePassword(userid, password, type, req, res, token);
                 const finalResponse: any = await userService.updatePassword(userid, password, type, req, res);
                 logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_CHANGE);
                 if (finalResponse == appConstant.MESSAGES.FAILED) {
