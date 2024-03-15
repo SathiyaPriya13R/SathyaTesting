@@ -25,15 +25,14 @@ export default class UserController {
                     const userData = {
                         Email: email,
                         PasswordHash: password,
-                        mobileDeviceID: mobiledeviceid ? mobiledeviceid: '',
+                        mobileDeviceID: mobiledeviceid ? mobiledeviceid : '',
                         signin: query ? query.signin : ''
                     }
-                    console.log('mobileDeviceID',userData);
                     await userService.signinUser(userData).then((data: any) => {
                         if (data && data.error) {
                             res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
                         } else {
-                            res.status(200).send(encrypt(JSON.stringify(data)));
+                            res.status(200).send({ data: encrypt(JSON.stringify(data)) });
                         }
                     }).catch((error) => {
                         res.status(400).send({ data: encrypt(JSON.stringify(error)) });
