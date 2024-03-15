@@ -20,7 +20,8 @@ export interface ProviderGroupContactDetailAttributes {
     ForgotPwd: boolean,
     IsActive: boolean,
     GenerateCronPassword: boolean,
-    ForgetPwdCron: boolean
+    ForgetPwdCron: boolean,
+    MobileDeviceId: string,
 }
 
 export interface ProviderGroupContactDetailModel extends Model<ProviderGroupContactDetailAttributes>, ProviderGroupContactDetailAttributes { }
@@ -104,7 +105,11 @@ export function ProviderGroupContactDetailFactory(sequelize: Sequelize): Provide
         ForgetPwdCron: {
             type: SequelizeStatic.BOOLEAN,
             allowNull: true
-        }
+        },
+        MobileDeviceID: {
+            type: SequelizeStatic.STRING(256),
+            allowNull: false
+        },
     },
     {
 

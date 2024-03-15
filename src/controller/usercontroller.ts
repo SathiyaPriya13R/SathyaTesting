@@ -18,15 +18,17 @@ export default class UserController {
 
             if (decryptedData) {
                 const data = JSON.parse(decryptedData)
-                let { email, password } = data;
+                let { email, password, mobiledeviceid } = req.body;
                 const query = req.query;
                 if (email) {
                     // email = (email as string).toLowerCase();
                     const userData = {
                         Email: email,
                         PasswordHash: password,
+                        mobileDeviceID: mobiledeviceid ? mobiledeviceid: '',
                         signin: query ? query.signin : ''
                     }
+                    console.log('mobileDeviceID',userData);
                     await userService.signinUser(userData).then((data: any) => {
                         if (data && data.error) {
                             res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });

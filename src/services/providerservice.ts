@@ -70,14 +70,14 @@ export default class ProviderService {
 
             if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext)) {
                 const searchparams: Record<string, unknown> = {};
-
-                searchparams.FirstName = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams.MiddleName = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams.LastName = { $like: '%' + filter_data.searchtext + '%' };
-                // searchparams.IsActive = { $like: '%' + filter_data.searchtext + '%' };
-                // searchparams['$provider_group_detail.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$suffix_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$certification_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
+                const searchtext = _.trim(filter_data.searchtext)
+                searchparams.FirstName = { $like: '%' + searchtext + '%' };
+                searchparams.MiddleName = { $like: '%' + searchtext + '%' };
+                searchparams.LastName = { $like: '%' + searchtext + '%' };
+                // searchparams.IsActive = { $like: '%' + searchtext + '%' };
+                // searchparams['$provider_group_detail.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$suffix_name.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$certification_name.Name$'] = { $like: '%' + searchtext + '%' };
 
                 provider_condition.where['$or'] = searchparams;
                 provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
@@ -139,15 +139,16 @@ export default class ProviderService {
             };
 
             if (body.searchtext && body.searchtext != '' && !_.isNil(body.searchtext)) {
-                const searchTextLike = `%${body.searchtext}%`;
-                const convertedDate = moment(body.searchtext, 'DD MMM YYYY').format('YYYY-MM-DD'); // Convert to SQL-friendly format
+                const searchtext = _.trim(body.searchtext);
+                const searchTextLike = `%${searchtext}%`;
+                const convertedDate = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD'); // Convert to SQL-friendly format
                 providerspec_condition.where = {
                     [Op.and]: [
                         { ProviderDoctorID: body.id },
                         {
                             [Op.or]: [
-                                Sequelize.literal(`ProviderSpec.Name LIKE '${searchTextLike}'`),
-                                Sequelize.literal(`BoardStatus.Name LIKE '${searchTextLike}'`)
+                                Sequelize.literal(`ProviderSpec.Name LIKE '${searchtext}'`),
+                                Sequelize.literal(`BoardStatus.Name LIKE '${searchtext}'`)
                             ]
                         }
                     ],
@@ -273,10 +274,10 @@ export default class ProviderService {
 
             if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
                 const searchparams: Record<string, unknown> = {};
-
-                searchparams['$insurance_details.grp_insurance.insurance_name.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$insurance_details.grp_insurance.insurance_name.insurance_location.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$insurance_details.grp_insurance.insurance_name.plan_details.PlanName$'] = { $like: '%' + filter_data.searchtext + '%' };
+                const searchtext = _.trim(filter_data.searchtext)
+                searchparams['$insurance_details.grp_insurance.insurance_name.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$insurance_details.grp_insurance.insurance_name.insurance_location.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$insurance_details.grp_insurance.insurance_name.plan_details.PlanName$'] = { $like: '%' + searchtext + '%' };
 
                 provider_condition.where['$or'] = searchparams;
                 provider_condition.where = _.omit(provider_condition.where, ['searchtext']);

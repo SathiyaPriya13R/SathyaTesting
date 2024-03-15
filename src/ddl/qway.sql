@@ -139,3 +139,9 @@ ALTER TABLE pvdr.ProviderGroupContactDetail ADD ForgetPwdCron BIT DEFAULT 0
 ALTER TABLE ntf.AppNotificationRecipients 
 ADD AttachmentID UNIQUEIDENTIFIER DEFAULT NULL;
 -- END
+
+-- 12-03-2024 For Saving the mobile device id
+ALTER TABLE sec.[User] ADD mobileDeviceID nvarchar(256) DEFAULT null
+ALTER TABLE pvdr.ProviderDoctor  ADD mobileDeviceID nvarchar(256) DEFAULT null
+ALTER TABLE pvdr.ProviderGroupContactDetail  ADD mobileDeviceID nvarchar(256) DEFAULT null
+-- End
