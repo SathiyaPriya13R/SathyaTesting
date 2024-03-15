@@ -54,6 +54,7 @@ export interface UserAttributes {
     IsSystem: boolean,
     PwdExpireDate: Date,
     ForgotPwd: boolean,
+    mobileDeviceID: string
 }
 
 export interface UserModel extends Model<UserAttributes>, UserAttributes { }
@@ -266,6 +267,10 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
         ForgotPwd: {
             type: SequelizeStatic.BOOLEAN,
             allowNull: true
+        },
+        MobileDeviceID: {
+            type: SequelizeStatic.STRING(256),
+            allowNull: false
         },
     },
     {

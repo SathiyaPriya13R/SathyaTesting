@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { sequelizeObj } from '../helpers/sequelizeobj';
 import { encrypt, decrypt } from '../helpers/aes';
 import * as db from '../adapters/db';
-import _ from 'lodash';
+import _, { remove } from 'lodash';
 import AppConstants from "../utils/constants";
 import CommonService from '../helpers/commonService';
 import DateConvertor from '../helpers/date';
@@ -17,6 +17,7 @@ export default class ProviderService {
     async getPayerData(user_data: { id: string, user_type: string }, filter_data?: any): Promise<any> {
         try {
             const commonService = new CommonService(db.user);
+            const task_status = (!_.isNil(filter_data) && !_.isNil(filter_data.task_status)) ? filter_data.task_status : null;
             logger.info(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_STARTED);
             if ((filter_data.all == false) && (_.isNil(filter_data.provider_id) || filter_data.provider_id == '')) {
                 logger.info(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_FAILED);
@@ -132,9 +133,9 @@ export default class ProviderService {
             await provider_list.map((provider: any) => {
                 if (!_.isNil(provider.insurance_details)) {
                     provider.insurance_details.map(async (insurance: any) => {
-                        if (!_.isNil(insurance.EffectiveDate) && !_.isNil(insurance.RecredentialingDate)) {
-                            const formattedEffectiveDate = await dateConvert.dateFormat(insurance.EffectiveDate)
-                            const formattedRecredentialingDate = await dateConvert.dateFormat(insurance.RecredentialingDate)
+                        if (!_.isNil(insurance.EffectiveDate) || !_.isNil(insurance.RecredentialingDate)) {
+                            const formattedEffectiveDate = !_.isNil(insurance.EffectiveDate) ? await dateConvert.dateFormat(insurance.EffectiveDate) : null
+                            const formattedRecredentialingDate = !_.isNil(insurance.RecredentialingDate) ? await dateConvert.dateFormat(insurance.RecredentialingDate) : null
                             insurance.EffectiveDate = formattedEffectiveDate
                             insurance.RecredentialingDate = formattedRecredentialingDate
                         }

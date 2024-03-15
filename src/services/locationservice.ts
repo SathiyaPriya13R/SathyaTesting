@@ -90,9 +90,9 @@ export default class LocationService {
 
             if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
                 const searchparams: Record<string, unknown> = {};
-
-                searchparams['$provider_location.location_details.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                searchparams['$provider_location.location_details.City$'] = { $like: '%' + filter_data.searchtext + '%' };
+                const searchtext = _.trim(filter_data.searchtext);
+                searchparams['$provider_location.location_details.Name$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$provider_location.location_details.City$'] = { $like: '%' + searchtext + '%' };
 
                 provider_condition.where['$or'] = searchparams;
                 provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
@@ -186,9 +186,10 @@ export default class LocationService {
 
                         if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
                             const searchparams: Record<string, unknown> = {};
-
-                            searchparams['$location_details.Name$'] = { $like: '%' + filter_data.searchtext + '%' };
-                            searchparams['$location_details.City$'] = { $like: '%' + filter_data.searchtext + '%' };
+                            const searchtext = _.trim(filter_data.searchtext);
+                            searchparams['$location_details.Name$'] = { $like: '%' + searchtext + '%' };
+                            searchparams['$location_details.City$'] = { $like: '%' + searchtext + '%' };
+                            searchparams['$location_details.state_name.Name$'] = { $like: '%' + searchtext + '%' };
 
                             location_condition.where['$or'] = searchparams;
                             location_condition.where = _.omit(location_condition.where, ['searchtext']);

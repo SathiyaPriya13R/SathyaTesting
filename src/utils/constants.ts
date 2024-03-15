@@ -219,6 +219,15 @@ export default class AppConstants {
         NOTIFICATION_STATUS_UPDATE_STARTED: 'Notification status update funciton started',
         NOTIFICATION_STATUS_UPDATE_COMPLETED: 'Notification status update function completed',
         NOTIFICATION_STATUS_UPDATE_FAILED: 'Notification status update function failed',
-        NOTIFICATION_STATUS_UPDATE_SUCCEFULLY: 'Notification status updated successfully'
+        NOTIFICATION_STATUS_UPDATE_SUCCEFULLY: 'Notification status updated successfully',
+        PUSH_NOTIFICATION_STARTED: 'Push notification function started',
+        PUSH_NOTIFICATION_COMPLETED: 'Push notification function completed',
+        PUSH_NOTIFICATION_FAILED: 'Push notification function failed',
+        PUSH_ALERT_NOTIFICATION_STARTED: 'Push alert notification function started',
+        PUSH_ALERT_NOTIFICATION_COMPLETED: 'Push alert notification function completed',
+        PUSH_ALERT_NOTIFICATION_FAILED: 'Push alert notification function failed',
+        NOTIFICATION_RECORD_INSERTED: '{{}} record inserted'
     }
+
+    NOTIFICATION_TYPE = ['Notification', 'Alert']
 }

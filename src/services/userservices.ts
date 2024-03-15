@@ -125,6 +125,10 @@ export default class UserService {
                                     }
                                 });
                             }).catch((error: any) => { throw new Error(error) });
+                            const userUpdateCondition = {
+                                MobileDeviceID: userData.mobileDeviceID
+                            }
+                            await commonService.update({ id: data.Id }, userUpdateCondition, db.User)
                             return { data: encrypt(JSON.stringify(finalData)) };
                         }
                     } else {
@@ -175,6 +179,10 @@ export default class UserService {
                                 }
                             });
                         }).catch((error: any) => { throw new Error(error) });
+                        const userUpdateCondition = {
+                            MobileDeviceID: userData.mobileDeviceID
+                        }
+                        await commonService.update({ ProviderGroupContactDetailID: providerGroupContact.ProviderGroupContactDetailID }, userUpdateCondition, db.ProviderGroupContact);
                         return { data: encrypt(JSON.stringify(finalData)) };
                     }
                 } else if (provider && password) {
@@ -222,6 +230,10 @@ export default class UserService {
                                 }
                             });
                         }).catch((error: any) => { throw new Error(error) });
+                        const userUpdateCondition = {
+                            MobileDeviceID: userData.mobileDeviceID
+                        }
+                        await commonService.update({ ProviderDoctorID: data.ProviderDoctorID }, userUpdateCondition, db.ProviderDoctor);
                         return { data: encrypt(JSON.stringify(finalData)) };
                     }
                 } else {
@@ -270,13 +282,6 @@ export default class UserService {
             }
             if (!_.isNil(user) || !_.isNil(providerGroupContact) || !_.isNil(provider)) {
                 const type = user ? 'User' : providerGroupContact ? 'Group' : provider ? 'Provider' : null;
-                if (user) {
-                    commonService.update({ Email: email }, updateExpireDate, db.User);
-                } else if (providerGroupContact) {
-                    commonService.update({ Email: email }, updateExpireDate, db.ProviderGroupContact);
-                } else if (provider) {
-                    commonService.update({ Email: email }, updateExpireDate, db.ProviderDoctor);
-                }
                 const templateData = {
                     username: user.DisplayName,
                     userid: user ? user.Id : providerGroupContact ? providerGroupContact.ProviderGroupContactDetailID : provider.ProviderDoctorID,
@@ -287,7 +292,8 @@ export default class UserService {
                 const renderedTemplate = ejs.render(templateFile, templateData);
                 // Create a transporter object
                 const transporter = nodemailer.createTransport({
-                    service: 'gmail',
+                    host: process.env.EMAIL_HOST,
+                    port: process.env.EMAIL_PORT,
                     secure: true,
                     auth: {
                         user: process.env.EMAIL_AUTH_USER,
@@ -307,6 +313,13 @@ export default class UserService {
                         logger.error(appConstant.LOGGER_MESSAGE.EMAIL_SEND_FAILED)
                         throw new Error(appConstant.LOGGER_MESSAGE.EMAIL_SEND_FAILED)
                     } else {
+                        if (user) {
+                            commonService.update({ Email: email }, updateExpireDate, db.User);
+                        } else if (providerGroupContact) {
+                            commonService.update({ Email: email }, updateExpireDate, db.ProviderGroupContact);
+                        } else if (provider) {
+                            commonService.update({ Email: email }, updateExpireDate, db.ProviderDoctor);
+                        }
                         logger.info(appConstant.LOGGER_MESSAGE.EMAIL_SEND)
                         return appConstant.LOGGER_MESSAGE.EMAIL_SEND
                     }
@@ -349,11 +362,11 @@ export default class UserService {
                 }
             } else if (type == 'Group') {
                 const groupCondition: sequelizeObj = {};
-                groupCondition.where = {
-                    ProviderGroupContactDetailID: id,
-                    IsActive: 1
-                };
-                const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
+                                    groupCondition.where = {
+                        ProviderGroupContactDetailID: id,
+                        IsActive: 1
+                    };
+                                const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
                 if (!_.isNil(groupData.PasswordHash)) {
                     const previousPasswordCheck = commonService.passwordHash(password, groupData);
                     if (previousPasswordCheck) {
@@ -750,7 +763,8 @@ export default class UserService {
                 const renderedTemplate = ejs.render(templateFile, templateData);
                 // Create a transporter object
                 const transporter = nodemailer.createTransport({
-                    service: 'gmail',
+                    host: process.env.EMAIL_HOST,
+                    port: process.env.EMAIL_PORT,
                     secure: true,
                     auth: {
                         user: process.env.EMAIL_AUTH_USER,
@@ -777,9 +791,9 @@ export default class UserService {
                         }
                         logger.info(appConstant.LOGGER_MESSAGE.EMAIL_SEND);
                         if (user.ProviderDoctorID) {
-                            await commonService.update({providerDoctorID: user.ProviderDoctorID}, update_condition, db.ProviderDoctor);
+                            await commonService.update({ providerDoctorID: user.ProviderDoctorID }, update_condition, db.ProviderDoctor);
                         } else {
-                            await commonService.update({ProviderGroupContactDetailID: user.ProviderGroupContactDetailID}, update_condition, db.ProviderGroupContact);
+                            await commonService.update({ ProviderGroupContactDetailID: user.ProviderGroupContactDetailID }, update_condition, db.ProviderGroupContact);
                         }
                         return appConstant.LOGGER_MESSAGE.EMAIL_SEND
                     }

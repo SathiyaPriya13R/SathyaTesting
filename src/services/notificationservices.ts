@@ -152,20 +152,20 @@ export default class NotificationService {
 
             let entity_type: Array<string> = []
             if ((filter_data.entity_type && filter_data.entity_type == 'all') || filter_data.notification_for == 'alert') {
-                entity_type = ['Esign', 'Provider Enrollment', 'Document']
+                entity_type = ['Esign', ' ', 'Document']
             }
             else if (filter_data.entity_type && filter_data.entity_type == 'esign') {
                 entity_type = ['Esign']
             }
             else if (filter_data.entity_type && filter_data.entity_type == 'enrollment') {
-                entity_type = ['Provider Enrollment']
+                entity_type = ['Payer Enrollment']
             }
             else if (filter_data.entity_type && filter_data.entity_type == 'document') {
                 entity_type = ['Document']
             }
 
             let message_filter: Array<boolean> = []
-            if (filter_data.notification_for && filter_data.notification_for == 'mymessage') {
+            if (filter_data.notification_for && (filter_data.notification_for == 'mymessage' || filter_data.notification_for == 'alert' || filter_data.notification_for == 'notification') ) {
                 message_filter = (filter_data.message_filter) ? filter_data.message_filter : [];
             }
 
@@ -332,10 +332,13 @@ export default class NotificationService {
         }
     }
 
+    /**
+     * This function used to push notification againts documents exprires in 30 days.
+     */
     async pushDocumentNotification() {
         try {
             const commonService = new CommonService(db.user);
-            logger.info('Push notification function started');
+            logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_STARTED);
 
             const current_date = new Date();
             const expiry_threshold = new Date(current_date);
@@ -391,26 +394,127 @@ export default class NotificationService {
                         ProviderUserID: null,
                         IsActionTaken: false,
                         IsNotificationfRead: false,
-                        NotificationType: 'Notification',
-                        AttachmentID: `${document.AttachmentID}`.toUpperCase(),
+                        NotificationType: appConstant.NOTIFICATION_TYPE[0],
+                        // AttachmentID: `${document.AttachmentID}`.toUpperCase(),
                     }
                     notification_create_data_array.push(form_notification_data)
                 })
 
                 await commonService.bulkCreate(notification_create_data_array, db.AppNotificationReceipts).then((saved_data) => {
-                    logger.info('Notification record inserted');
-                    logger.info('Push notification function completed');
+                    logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'Notification'));
+                    logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_COMPLETED);
                 }).catch((err: any) => {
-                    logger.error('Push notification function failed', err.message);
+                    logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_FAILED, err.message);
                 })
             }
             else {
-                logger.info('No notification record inserted');
-                logger.info('Push notification function completed');
+                logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'No notification'));
+                logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_COMPLETED);
             }
 
         } catch (error: any) {
-            logger.error('Push notification function failed', error.message);
+            logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_FAILED, error.message);
+            throw new Error(error.message)
+        }
+    }
+
+    /**
+     * This function used to push alert againts document exprires within 15 days notification.
+     */
+    async pushDocumentAlert() {
+        try {
+            const commonService = new CommonService(db.user);
+            logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_STARTED);
+
+            const current_date = new Date();
+            const expiry_threshold = new Date(current_date);
+            expiry_threshold.setDate(current_date.getDate() + 15);
+            const formatted_after_15_days = moment(expiry_threshold).format('YYYY-MM-DD')
+            const formatted_current_date = moment(current_date).format('YYYY-MM-DD')
+
+            const document_condition: sequelizeObj = {
+                where: {
+                    IsActive: 1,
+                    ExpiryDate: { $between: [new Date(formatted_current_date), new Date(formatted_after_15_days)] },
+                    FileName: { $like: 'Provider%' }
+                },
+                attributes: ['AttachmentID', 'ExpiryDate', 'Name'],
+                include: [
+                    {
+                        model: db.ProviderDoctor,
+                        as: 'provider',
+                        required: true,
+                        attributes: ['ProviderDoctorID', 'ProviderGroupID']
+                    }
+                ]
+            }
+
+            const documents_datas = await commonService.getAllList(document_condition, db.DocumentAttachment)
+            const documents_list = JSON.parse(JSON.stringify(documents_datas))
+
+            const notification_create_data_array: Array<Record<string, any>> = []
+
+            if (documents_list && !_.isNil(documents_list) && documents_list.length > 0) {
+
+                await documents_list.forEach((document: any) => {
+                    const daysUntilExpiration = moment(document.ExpiryDate).startOf('day').diff(moment().startOf('day'), 'days');
+
+                    if (daysUntilExpiration <= 15 && daysUntilExpiration >= 0) {
+
+                        let notification_content;
+
+                        if (daysUntilExpiration == 0) {
+                            notification_content = `The document expires today.`
+                        } else {
+                            notification_content = `The document expires in ${daysUntilExpiration} days.`
+                        }
+
+                        const form_notification_data = {
+                            AppNotificationID: uuidv4(),
+                            NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
+                            NotificationContent: notification_content,
+                            Entity: 'Document',
+                            ItemID: `${document.AttachmentID}`.toUpperCase(),
+                            SendingUserType: 'Induvidual',
+                            AssigneeID: `${document.provider.ProviderDoctorID}`.toUpperCase(),
+                            AssignedTo: `${document.provider.ProviderDoctorID}`.toUpperCase(),
+                            ProviderClientID: null,
+                            ProviderGroupID: `${document.provider.ProviderGroupID}`,
+                            ProviderDoctorID: `${document.provider.ProviderDoctorID}`,
+                            IsActive: true,
+                            Status: `b758e70d-3acc-4e55-902b-6644451e671c`.toUpperCase(),
+                            CreatedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                            CreatedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+                            ModifiedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                            ModifiedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+                            RedirectLink: null,
+                            PracticeManagerID: null,
+                            ProviderUserID: null,
+                            IsActionTaken: false,
+                            IsNotificationfRead: false,
+                            NotificationType: appConstant.NOTIFICATION_TYPE[1],
+                            // AttachmentID: `${document.AttachmentID}`.toUpperCase(),
+                        }
+                        notification_create_data_array.push(form_notification_data)
+                    }
+                })
+
+                if (notification_create_data_array && notification_create_data_array.length > 0) {
+                    await commonService.bulkCreate(notification_create_data_array, db.AppNotificationReceipts).then((saved_data) => {
+                        logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'Alert notification'));
+                        logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_COMPLETED);
+                    }).catch((err: any) => {
+                        logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_FAILED, err.message);
+                    })
+                }
+
+            } else {
+                logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'No alert notification'));
+                logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_COMPLETED);
+            }
+
+        } catch (error: any) {
+            logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_FAILED, error.message);
             throw new Error(error.message)
         }
     }
