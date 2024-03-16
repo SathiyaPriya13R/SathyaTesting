@@ -52,10 +52,13 @@ app.use(async function (req: Request, res: Response, next) {
                     const decodedToken: any = jwt.verify(token, secrectkey);
                     const allToken = currentData ? JSON.parse(currentData) : [];
                     const tokenValid = allToken.filter((item: any) => item.userid == decodedToken.id);
-                    console.log('tokenValid.authToken ----',tokenValid.authToken);
-                    console.log('Token --------',token);
-                    console.log('tokenValid.authToken == token ---',tokenValid.authToken == token);
-                    if (tokenValid && !_.isEmpty(tokenValid)) {
+                    let validToken: any;
+                    allToken.map((data: any)=> {
+                        if (data.userid == decodedToken.id) {
+                            validToken = data;
+                        }
+                    })
+                    if (tokenValid && !_.isEmpty(tokenValid) && validToken && validToken.authToken == token) {
                         // Check expiration time
                         const currentTimestamp = Math.floor(Date.now() / 1000);
                         if (decodedToken.exp && decodedToken.exp < currentTimestamp) {
