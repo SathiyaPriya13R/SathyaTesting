@@ -121,6 +121,7 @@ Location.belongsTo(lookupValue, { as: 'state_name', foreignKey: 'StateID' })
  */
 DocumentAttachment.belongsTo(ProviderDoctor, { as: 'provider', foreignKey: 'ItemID' });
 DocumentAttachment.belongsTo(DocumentCategory, { as: 'category', foreignKey: 'DocumentCategoryID' });
+ProviderDoctor.hasMany(DocumentAttachment, { as: 'provider_document', foreignKey: 'ItemID' })
 
 
 /**

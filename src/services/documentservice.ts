@@ -62,9 +62,7 @@ export default class DocumentService {
 
   async uploadDocument(file: any, attachment_data: Record<string, any>): Promise<any> {
     try {
-      +
-
-        logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_STARTED);
+      logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_STARTED);
       const commonService = new CommonService(db.user);
       const doc_data: Record<string, any> = {}
 
@@ -139,22 +137,17 @@ export default class DocumentService {
   }
 
 
-  async getDocuments(filterData: any, limit: string, offset: string, user_data: any) {
+  async getDocuments(user_data: { id: string, user_type: string }, filter_data?: any): Promise<any> {
     try {
 
       const commonService = new CommonService(db.user);
       logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_LISTALL_FUNCTION_STARTED)
-      if ((filterData.all == false) && (_.isNil(filterData.provider_id) || filterData.provider_id == '')) {
-        logger.info(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_FAILED);
-        return { message: 'Please enter provder id' };
-      }
-      /**
-       * Checking logged in as a user or not.
-       */
+
       const user_id = await commonService.getUserGroupProviderId(user_data, db.User, db.UserProvider);
       user_data.id = user_id ?? user_data.id;
-      const filterDatas: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = (!_.isNil(filterData) && !_.isNil(filterData.filter) && (!_.isEmpty(filterData.filter.providers) || !_.isEmpty(filterData.filter.payers) || !_.isEmpty(filterData.filter.locations)))
-        ? await commonService.getFilterDataIds(filterData.filter.providers, filterData.filter.payers, filterData.filter.locations, {
+
+      const filter_datas: { providers: Array<string>, payers: Array<string>, locations: Array<string> } = (!_.isNil(filter_data) && !_.isNil(filter_data.filter) && (!_.isEmpty(filter_data.filter.providers) || !_.isEmpty(filter_data.filter.payers) || !_.isEmpty(filter_data.filter.locations)))
+        ? await commonService.getFilterDataIds(filter_data.filter.providers, filter_data.filter.payers, filter_data.filter.locations, {
           provider_doctor: db.ProviderDoctor,
           insurance_transaction: db.InsuranceTransaction,
           group_insurance: db.GroupInsurance,
@@ -162,96 +155,132 @@ export default class DocumentService {
         })
         : { providers: [], payers: [], locations: [] };
 
-      /**
-       * get providers based payer details start
-       */
-      const documentCondition: sequelizeObj = {};
-      documentCondition.where = {
-        ItemID: user_data.id,
-        ...((filterData.all == true && !_.isNil(filterDatas) && !_.isEmpty(filterDatas.providers)) && { ProviderDoctorID: { $in: filterDatas.providers } }),
-        ...((filterData.all == false && !_.isNil(filterData.provider_id) && !_.isEmpty(filterData.provider_id)) && { ProviderDoctorID: { $eq: filterData.provider_id } }),
-        DocumentSoftDelete: 0
+      const provider_condition: sequelizeObj = {};
+      provider_condition.where = {
+        [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
+        ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
       };
 
-      documentCondition.attributes = [
-        'AttachmentID',
-        'ExpiryDate',
-        'IsActive',
-        'Name',
-        'ItemID',
-        'FileName',
-        'StateID',
-        'DocumentCategoryID'
-      ]
+      provider_condition.attributes = ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName']
 
-      if (limit) {
-        documentCondition.limit = +limit;
-      }
-      if (offset) {
-        documentCondition.offset = +offset;
-      }
-
-      // Add associations
-      documentCondition.include = [
+      provider_condition.include = [
         {
-          model: db.ProviderDoctor,
-          as: 'provider',
+          model: db.lookupValue,
+          as: 'suffix_name',
           required: true,
-          attributes: ['ProviderDoctorID', 'FirstName', 'LastName']
+          where: { IsActive: 1 },
+          attributes: ['Name']
         },
         {
-          model: db.DocumentCategory,
-          as: 'category',
-          required: true,
-          attributes: ['DocumentCategoryID', 'Name']
+          model: db.lookupValue,
+          as: 'certification_name',
+          where: { IsActive: 1 },
+          attributes: ['Name']
+        },
+        {
+          model: db.DocumentAttachment,
+          as: 'provider_document',
+          where: {
+            DocumentSoftDelete: 0,
+            FileName: { $like: 'Provider%' },
+          },
+          attributes: ['AttachmentID', 'FileName', 'Name', 'ExpiryDate', 'DocumentCategoryID', 'ItemID', 'StateID'],
+          include: [
+            {
+              model: db.DocumentCategory,
+              as: 'category',
+              required: true,
+              attributes: ['DocumentCategoryID', 'Name']
+            }
+          ]
         }
+      ]
 
-      ];
-
-      if (!_.isNil(filterData) && !_.isNil(filterData.searchtext) && filterData.searchtext != '') {
+      if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
         const searchparams: Record<string, unknown> = {};
+        const searchtext = _.trim(filter_data.searchtext);
 
-        searchparams.Name = { $like: '%' + filterData.searchtext + '%' };
-        documentCondition.where['$or'] = searchparams;
-        documentCondition.where = _.omit(documentCondition.where, ['searchtext']);
+        // searchparams['$provider_document.FileName$'] = { $like: '%' + searchtext + '%' };
+        searchparams['$provider_document.Name$'] = { $like: '%' + searchtext + '%' };
+        searchparams['$provider_document.category.Name$'] = { $like: '%' + searchtext + '%' };
+
+        if (searchtext && !_.isNil(searchtext) && Date.parse(searchtext) != null && searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(searchtext))) {
+          const start_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
+          const end_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
+          const date_range = [start_date, end_date]
+          searchparams['$provider_document.ExpiryDate$'] = { $between: date_range };
+        }
+
+        provider_condition.where['$or'] = searchparams;
+        provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
       }
 
-      const documents: Array<Record<string, any>> = await commonService.getAllList(documentCondition, db.DocumentAttachment);
-      const documents_list = JSON.parse(JSON.stringify(documents));
+      provider_condition.order = [['FirstName', 'ASC']]
 
-      const groupedByUserName: any = {};
-      documents_list.forEach((item: any) => {
-        const providerName = `${item.provider.FirstName} ${item.provider.LastName}`;
-        if (!groupedByUserName[providerName]) {
-          groupedByUserName[providerName] = {};
-        }
-        const categoryName = item.category.Name;
-        if (!groupedByUserName[providerName][categoryName]) {
-          groupedByUserName[providerName][categoryName] = [];
-        }
-        groupedByUserName[providerName][categoryName].push(item);
-      });
+      const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
+      const provider_list = JSON.parse(JSON.stringify(provider_data));
+      const provider_ids: Array<string> = provider_list.map((provider: any) => provider.ProviderDoctorID)
 
-      // Convert to the desired output format
-      const outputData = [];
-      for (const userName in groupedByUserName) {
-        const userData: any = { Name: userName, Categories: [] };
-        for (const category in groupedByUserName[userName]) {
-          userData.Categories.push({
-            Category: category,
-            Data: groupedByUserName[userName][category]
-          });
+      const document_array: Array<any> = await this.getAllDocuments(provider_ids, filter_data)
+
+      await provider_list.map((provider: any) => {
+        delete provider.provider_document
+      })
+
+      const final_data: Array<Record<string, any>> = []
+
+      await provider_list.map((provider: any) => {
+        document_array.map(async (document: any) => {
+          if (provider.ProviderDoctorID == document.ItemID) {
+            const formattedExpiryDate = !_.isNil(document.ExpiryDate) ? await dateConvert.dateFormat(document.ExpiryDate) : null
+            document.ExpiryDate = formattedExpiryDate
+            if (!provider.provider_document) {
+              provider.provider_document = [];
+            }
+            provider.provider_document.push(document);
+          }
+        })
+        if (!_.isNil(document_array) && !_.isEmpty(document_array)) {
+          final_data.push(provider)
         }
-        outputData.push(userData);
+      })
+
+      async function transformProvidersToCategoryObject(providers_data: any) {
+
+        for (let i = 0; i < providers_data.length; i++) {
+          const provider_datas = providers_data[i];
+          const category_object: any = {};
+
+          for (let j = 0; j < provider_datas.provider_document.length; j++) {
+            const document_data = provider_datas.provider_document[j];
+            const category_name = document_data.category.Name;
+
+            if (!category_object[category_name]) {
+              category_object[category_name] = [];
+            }
+
+            category_object[category_name].push(document_data);
+          }
+
+          provider_datas.provider_document = Object.keys(category_object).map(category_name => ({
+            category_name,
+            documents: category_object[category_name]
+          }));
+        }
+
+        return providers_data;
       }
 
-      if (outputData && outputData.length > 0) {
+      const transformedData = await transformProvidersToCategoryObject(final_data);
+
+      if (transformedData && transformedData.length > 0) {
         logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_LISTALL_FUNCTION_COMPLETED);
-        return { data: outputData, message: appConstant.DOCUMENT_MESSAGES.DOCUMENT_FOUND };
+        return { data: transformedData, message: appConstant.DOCUMENT_MESSAGES.DOCUMENT_FOUND };
       } else {
         logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_LISTALL_FUNCTION_COMPLETED);
         return { data: null, message: appConstant.DOCUMENT_MESSAGES.DOCUMENT_NOT_FOUND };
       }
+
     } catch (error: any) {
       logger.error(appConstant.DOCUMENT_MESSAGES.DOCUMENT_LISTALL_FUNCTION_FAILED, error.message);
       throw new Error(error.message);
@@ -272,4 +301,75 @@ export default class DocumentService {
       throw new Error(error.message);
     }
   }
+
+  async getAllDocuments(provider_ids: Array<any>, filter_data: any) {
+
+    return new Promise((resolve: (value: Array<any>) => void, reject: (value: any) => void): void => {
+      const commonService = new CommonService(db.user);
+      try {
+        const document_datas: Array<any> = []
+        const document_condition: sequelizeObj = {}
+        const idx: number = 0;
+        getDocument(idx);
+        async function getDocument(idx: number) {
+          const provider_id = provider_ids[idx];
+          if (idx != provider_ids.length) {
+
+            document_condition.where = {
+              DocumentSoftDelete: 0,
+              FileName: { $like: 'Provider%' },
+              ItemID: { $eq: provider_id }
+            }
+
+            document_condition.attributes = ['AttachmentID', 'FileName', 'Name', 'ExpiryDate', 'DocumentCategoryID', 'ItemID', 'StateID']
+
+            document_condition.include = [
+              {
+                model: db.DocumentCategory,
+                as: 'category',
+                required: true,
+                attributes: ['DocumentCategoryID', 'Name']
+              }
+            ]
+
+            if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
+              const searchparams: Record<string, unknown> = {};
+              const searchtext = _.trim(filter_data.searchtext);
+
+              // searchparams.FileName = { $like: '%' + searchtext + '%' };
+              searchparams.Name = { $like: '%' + searchtext + '%' };
+              searchparams['$category.Name$'] = { $like: '%' + searchtext + '%' };
+
+              if (searchtext && !_.isNil(searchtext) && Date.parse(searchtext) != null && searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(searchtext))) {
+                const start_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
+                const end_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
+                const date_range = [start_date, end_date]
+                searchparams.ExpiryDate = { $between: date_range };
+              }
+
+              document_condition.where['$or'] = searchparams;
+              document_condition.where = _.omit(document_condition.where, ['searchtext']);
+            }
+
+            document_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
+            document_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
+
+            const document_data: Array<Record<string, any>> = await commonService.getAllList(document_condition, db.DocumentAttachment);
+            const document_list = JSON.parse(JSON.stringify(document_data));
+            document_datas.push(document_list)
+            idx++
+            getDocument(idx)
+
+          } else {
+            const flatted_locations = document_datas.flat();
+            resolve(flatted_locations)
+          }
+        }
+      } catch (e) {
+        reject(e);
+      }
+    })
+
+  }
+
 }
