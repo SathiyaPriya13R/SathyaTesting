@@ -129,6 +129,10 @@ export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotif
         NotificationType: {
             type: SequelizeStatic.STRING,
             allowNull: true
+        },
+        NotificationDetailedContent: {
+            type: SequelizeStatic.STRING,
+            allowNull: false
         }
 
     },

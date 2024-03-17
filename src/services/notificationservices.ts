@@ -161,7 +161,7 @@ export default class NotificationService {
             }
 
             let message_filter: Array<boolean> = []
-            if (filter_data.notification_for && (filter_data.notification_for == 'mymessage' || filter_data.notification_for == 'alert' || filter_data.notification_for == 'notification') ) {
+            if (filter_data.notification_for && (filter_data.notification_for == 'mymessage' || filter_data.notification_for == 'alert' || filter_data.notification_for == 'notification')) {
                 message_filter = (filter_data.message_filter) ? filter_data.message_filter : [];
             }
 
@@ -276,7 +276,7 @@ export default class NotificationService {
                 }
             ]
 
-            notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead', 'Entity']
+            notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead', 'Entity', 'NotificationDetailedContent']
 
             const notification_data = await commonService.getData(notification_condition, db.AppNotificationReceipts)
             const notifi_data = JSON.parse(JSON.stringify(notification_data))
@@ -345,7 +345,8 @@ export default class NotificationService {
                 where: {
                     IsActive: 1,
                     ExpiryDate: new Date(formatted_after_30_days),
-                    FileName: { $like: 'Provider%' }
+                    FileName: { $like: 'Provider%' },
+                    IsRenewed: false
                 },
                 attributes: ['AttachmentID', 'ExpiryDate', 'Name', 'ModifiedDate', 'ModifiedDate'],
                 include: [
@@ -371,6 +372,7 @@ export default class NotificationService {
                         AppNotificationID: uuidv4(),
                         NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
                         NotificationContent: notification_content,
+                        NotificationDetailedContent: notification_content,
                         Entity: 'Document',
                         ItemID: `${document.AttachmentID}`.toUpperCase(),
                         SendingUserType: 'Provider User',
@@ -432,7 +434,8 @@ export default class NotificationService {
                 where: {
                     IsActive: 1,
                     ExpiryDate: { $between: [new Date(formatted_current_date), new Date(formatted_after_15_days)] },
-                    FileName: { $like: 'Provider%' }
+                    FileName: { $like: 'Provider%' },
+                    IsRenewed: false
                 },
                 attributes: ['AttachmentID', 'ExpiryDate', 'Name'],
                 include: [
@@ -469,6 +472,7 @@ export default class NotificationService {
                             AppNotificationID: uuidv4(),
                             NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
                             NotificationContent: notification_content,
+                            NotificationDetailedContent: notification_content,
                             Entity: 'Document',
                             ItemID: `${document.AttachmentID}`.toUpperCase(),
                             SendingUserType: 'Induvidual',

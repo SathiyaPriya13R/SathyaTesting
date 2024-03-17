@@ -145,3 +145,11 @@ ALTER TABLE sec.[User] ADD mobileDeviceID nvarchar(256) DEFAULT null
 ALTER TABLE pvdr.ProviderDoctor  ADD mobileDeviceID nvarchar(256) DEFAULT null
 ALTER TABLE pvdr.ProviderGroupContactDetail  ADD mobileDeviceID nvarchar(256) DEFAULT null
 -- End
+
+-- 17-03-2024 - Start
+-- For document
+ALTER TABLE pvdr.DocumentAttachment ADD RefAttachmentID UNIQUEIDENTIFIER DEFAULT NULL;
+ALTER TABLE pvdr.DocumentAttachment ADD IsRenewed BIT DEFAULT 0;
+-- For notification
+ALTER TABLE ntf.AppNotificationRecipients ADD NotificationDetailedContent NVARCHAR(2000) DEFAULT NULL;
+-- End

@@ -21,6 +21,7 @@ const blobservice = new BlobService();
 const dateConvert = new DateConvertor();
 
 export default class DocumentService {
+
   async getdocumentData(attachmentid: any) {
     try {
       logger.info(appConstant.SERVICE + appConstant.DOCUMENT_DETAILS_MESSAGE.DOCUMENT_FUNCTION_STARTED);
@@ -87,8 +88,12 @@ export default class DocumentService {
         doc_data.ModifiedDate = moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS')
         doc_data.IsActive = true
         doc_data.DocumentSoftDelete = 0
+        doc_data.IsRenewed = 0
+        doc_data.RefAttachmentID = attachment_data.RefAttachmentID
 
-        const saved_data = await commonService.create(doc_data, db.DocumentAttachment)
+        const saved_data: any = await commonService.create(doc_data, db.DocumentAttachment)
+
+        await this.updateDocumentAndTriggerNotification(attachment_data.RefAttachmentID, doc_data);
 
         if (saved_data && !_.isNil(saved_data)) {
           logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_COMPLETED);
@@ -98,6 +103,7 @@ export default class DocumentService {
           logger.info(appConstant.LOCATION_MESSAGES.LOCATION_STATUS_UPDATE_FAILED);
           return { data: null, message: appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_FAILED };
         }
+
       }
       else {
         logger.info(appConstant.DOCUMENT_MESSAGES.DOCUMENT_UPLOAD_FUNCTION_FAILED);
@@ -135,7 +141,6 @@ export default class DocumentService {
       throw new Error(error.message);
     }
   }
-
 
   async getDocuments(user_data: { id: string, user_type: string }, filter_data?: any): Promise<any> {
     try {
@@ -370,6 +375,57 @@ export default class DocumentService {
       }
     })
 
+  }
+
+  async updateDocumentAndTriggerNotification(RefAttachmentID: any, document: any) {
+
+    return new Promise(async (resolve: (value: any) => void, reject: (value: any) => void): Promise<void> => {
+      const commonService = new CommonService(db.user);
+      try {
+
+        await commonService.update({ AttachmentID: RefAttachmentID }, { IsRenewed: true }, db.DocumentAttachment).then(async saved_data => {
+
+          const provider_data = await commonService.getData({ where: { ProviderDoctorID: document.ItemID }, attributes: ['ProviderDoctorID', 'ProviderGroupID'] }, db.ProviderDoctor)
+          const provider = JSON.parse(JSON.stringify(provider_data))
+
+          const current_date = new Date();
+          const notification_data = {
+            AppNotificationID: uuidv4(),
+            NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
+            NotificationContent: `The renewed document (${document.Name}) has been uploaded successfully.`,
+            NotificationDetailedContent: `The renewed document (${document.Name}) has been uploaded successfully.`,
+            Entity: 'Document',
+            ItemID: `${document.AttachmentID}`.toUpperCase(),
+            SendingUserType: 'Induvidual',
+            AssigneeID: `${provider.ProviderDoctorID}`.toUpperCase(),
+            AssignedTo: `${provider.ProviderDoctorID}`.toUpperCase(),
+            ProviderClientID: null,
+            ProviderGroupID: `${provider.ProviderGroupID}`,
+            ProviderDoctorID: `${provider.ProviderDoctorID}`,
+            IsActive: true,
+            Status: `b758e70d-3acc-4e55-902b-6644451e671c`.toUpperCase(),
+            CreatedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+            CreatedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+            ModifiedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+            ModifiedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+            RedirectLink: null,
+            PracticeManagerID: null,
+            ProviderUserID: null,
+            IsActionTaken: false,
+            IsNotificationfRead: false,
+            NotificationType: appConstant.NOTIFICATION_TYPE[0],
+          }
+          await commonService.create(notification_data, db.AppNotificationReceipts)
+
+          resolve(true)
+        }).catch(e => {
+          reject(e);
+        })
+
+      } catch (e) {
+        reject(e);
+      }
+    })
   }
 
 }
