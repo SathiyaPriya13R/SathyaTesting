@@ -148,7 +148,7 @@ export default class NotificationService {
 
             let entity_type: Array<string> = []
             if ((filter_data.entity_type && filter_data.entity_type == 'all') || filter_data.notification_for == 'alert') {
-                entity_type = ['Esign', ' ', 'Document']
+                entity_type = ['Esign', 'Payer Enrollment', 'Document']
             }
             else if (filter_data.entity_type && filter_data.entity_type == 'esign') {
                 entity_type = ['Esign']
