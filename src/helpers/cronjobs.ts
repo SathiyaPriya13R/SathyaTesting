@@ -38,4 +38,14 @@ export default class Corn {
     //     });
     // }
 
+    // async pushPayerEnrollNotification() {
+    //     const task = cron.schedule('0 0 */1 * * *', () => {
+    //         userService.generatePasswordCron().then(() => {
+    //             logger.info(__filename, appConstant.CRON_MESSAGE.GENERATE_PASSWORD_FUNCTION_COMPLETED);
+    //         }).catch((error: any) => {
+    //             logger.info(__filename, appConstant.CRON_MESSAGE.GENERATE_PASSWORD_FUNCTION_FAILED, error);
+    //         });
+    //     });
+    // }
+
 }
