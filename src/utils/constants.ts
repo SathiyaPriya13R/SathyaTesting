@@ -79,6 +79,7 @@ export default class AppConstants {
         USER_NOT_ALLOWED: "User Not allowed",
         NO_TOKEN_FOUND: "Unable to locate a valid user token. Please log out and log back in to resolve this issue",
         TOKEN_EXPIRED: "The token you provided is expired",
+        USER_LOGGEDIN_ANOTHER_ACC: "User is logged in to another device",
         DATA_FOUND: "{{}} data found",
         DATA_NOT_FOUND: "{{}} data not found",
         INVALID_USERTYPE: "Invalid user_type",

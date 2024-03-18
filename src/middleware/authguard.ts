@@ -58,7 +58,6 @@ app.use(async function (req: Request, res: Response, next) {
                             validToken = data;
                         }
                     })
-                    console.log('validToken ---',validToken);
                     if (tokenValid && !_.isEmpty(tokenValid) && validToken && validToken.authToken == token) {
                         // Check expiration time
                         const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -84,7 +83,7 @@ app.use(async function (req: Request, res: Response, next) {
                         req.user = JSON.parse(JSON.stringify(decodedToken));
                         next();
                     } else {
-                        res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_SESSION)) });
+                        res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.USER_LOGGEDIN_ANOTHER_ACC)) });
                     }
                 } catch (verifyError) {
                     res.status(401).send({ data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_TOKEN)) });
