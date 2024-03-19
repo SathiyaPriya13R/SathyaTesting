@@ -201,6 +201,12 @@ export default class AppConstants {
         GENERATE_PASSWORD_FUNCTION_STARTED: 'Generate password function started',
         GENERATE_PASSWORD_FUNCTION_COMPLETED: 'Generate password function completed',
         GENERATE_PASSWORD_FUNCTION_FAILED: 'Generate password function failed',
+        PUSH_DOCUMENT_NOTIFICATION_FUNCTION_COMPLETED: 'Generate password function completed',
+        PUSH_DOCUMENT_NOTIFICATION_FUNCTION_FAILED: 'Generate password function failed',
+        PUSH_DOCUMENT_ALERT_FUNCTION_COMPLETED: 'Generate password function completed',
+        PUSH_DOCUMENT_ALERT_FUNCTION_FAILED: 'Generate password function failed',
+        PUSH_PAYER_ENROLL_FUNCTION_COMPLETED: 'Generate password function completed',
+        PUSH_PAYER_ENROLL_FUNCTION_FAILED: 'Generate password function failed',
     }
 
     COUNT_MESSAGE = {
