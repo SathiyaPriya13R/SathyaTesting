@@ -60,6 +60,34 @@ export default class NotificationService {
             if (filter_data.detail_count && filter_data.detail_count == true && filter_data.notification_type == 'notification') {
                 appnotificationcondition.attributes = ['Entity']
             }
+            appnotificationcondition.include = [
+                {
+                    model: db.ProviderDoctor,
+                    as: 'provider',
+                    required: true,
+                    attributes: ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName']
+                }
+            ]
+
+
+            if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
+                const searchparams: Record<string, unknown> = {};
+                const searchtext = _.trim(filter_data.searchtext);
+                searchparams.NotificationContent = { $like: '%' + searchtext + '%' };
+                searchparams['$provider.FirstName$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$provider.MiddleName$'] = { $like: '%' + searchtext + '%' };
+                searchparams['$provider.LastName$'] = { $like: '%' + searchtext + '%' };
+
+                if (searchtext && !_.isNil(searchtext) && Date.parse(searchtext) != null && searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(searchtext))) {
+                    const start_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
+                    const end_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
+                    const date_range = [start_date, end_date]
+                    searchparams.NotificationDate = { $between: date_range };
+                }
+
+                appnotificationcondition.where['$or'] = searchparams;
+                appnotificationcondition.where = _.omit(appnotificationcondition.where, ['searchtext']);
+            }
 
             if (!appnotificationcondition.group) {
                 appnotificationcondition.group = ['Entity'];

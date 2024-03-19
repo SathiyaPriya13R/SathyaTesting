@@ -1,6 +1,6 @@
 import AppConstants from '../utils/constants';
 import UserService from '../services/userservices';
-import NotificationService from 'src/services/notificationservices';
+import NotificationService from '../services/notificationservices';
 const logger = require('../helpers/logger');
 
 const appConstant = new AppConstants();
