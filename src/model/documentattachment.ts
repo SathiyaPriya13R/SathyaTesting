@@ -125,6 +125,14 @@ export function DocumentAttachmentFactory(sequelize: Sequelize): DocumentAttachm
             type: SequelizeStatic.BOOLEAN,
             allowNull: false
         },
+        RefAttachmentID: {
+            type: SequelizeStatic.UUID,
+            allowNull: true
+        },
+        IsRenewed: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        }
     },
     {
         indexes: [],

@@ -102,7 +102,7 @@ export default class ProviderService {
                 provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
             }
 
-            provider_condition.order = [['FirstName','ASC']]
+            provider_condition.order = [['FirstName', 'ASC']]
 
             const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
             const provider_list = JSON.parse(JSON.stringify(provider_data));
@@ -339,7 +339,7 @@ export default class ProviderService {
                                 where: {
                                     IsActive: 1,
                                     IsLast: 1,
-                                    ...(!_.isNil(task_status) && { StatusID: { $eq: filter_data.task_status } })
+                                    ...(!_.isNil(task_status) && { StatusID: { $eq: filter_data.task_status }, ModifiedDate: { $between: [moment(filter_data.task_startdate, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000'), moment(filter_data.task_enddate, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')] } })
                                 },
                                 attributes: ['StatusID'],
                                 include: [

@@ -71,14 +71,24 @@ export default class DocumentController {
 
   async getProviderDocument(req: Request, res: Response) {
     try {
-      const filterData = !_.isNil(req.body) ? decrypt(req.body) : null
-      const data = req.user
-      const { limit, offset } = req.query as { limit: string, offset: string };
-      const documentsResult = await documentService.getDocuments(filterData, limit, offset, data);
-      res.status(200).send({ data: encrypt(JSON.stringify(documentsResult)) });
+      const decryptedData = (req.body.data) ? decrypt(req.body.data) : null;
+      const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : null
+      const { limit, offset }: { limit: number, offset: number } = JSON.parse(JSON.stringify(req.query));
+      filter_data.limit = (limit) ? limit : null;
+      filter_data.offset = (offset) ? offset : null
+      const user_data: { id: string, user_type: string } = JSON.parse(JSON.stringify(req.user))
+      await documentService.getDocuments(user_data, filter_data).then((data: any) => {
+        if (data.error) {
+          res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+        } else {
+          res.status(200).send({ data: encrypt(JSON.stringify(data)) });
+        }
+      }).catch((error) => {
+        res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+      });
     } catch (error) {
       logger.error(appConstant.DOCUMENT_MESSAGES.DOCUMENT_LISTALL_FUNCTION_FAILED, error);
-      res.status(400).send({ data: JSON.stringify(error) });
+      res.status(400).send({ data: encrypt(JSON.stringify(error)) });
     }
   }
 

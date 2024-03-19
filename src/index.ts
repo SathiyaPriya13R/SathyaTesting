@@ -6,13 +6,12 @@ const logger = require('./helpers/logger');
 const routes = require('./routes/route');
 const IORedis = require('ioredis');
 const appConstant = new AppConstants();
-const cron = require('node-cron');
 import Corn from './helpers/cronjobs';
 
 const app = express();
 const port = 3000;
 
-const corn = new Corn();
+const cron = new Corn();
 
 const redisClient = new IORedis({
     host: process.env.REDIS_SERVER_IP,
@@ -46,7 +45,10 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use('/api', routes.route);
 
 // define the cron instance
-corn.generatePassword();
+cron.generatePassword();
+cron.pushDocumentNotification();
+cron.pushDocumentAlert();
+cron.pushPayerEnrollmentNotification();
 
 app.listen(port, () => {
     return logger.info(`App is listing in port:${port}`);

@@ -13,6 +13,7 @@ require('dotenv').config();
 import _ from 'lodash';
 import { Sequelize } from "sequelize";
 const IORedis = require('ioredis');
+import jwt from 'jsonwebtoken';
 
 const appConstant = new AppConstants();
 
@@ -337,12 +338,17 @@ export default class UserService {
     /**
      *for reset password scenario need to update the new password based on the user id 
      */
-    async updatePassword(id: string, password: string, type: string, req: Request, res: Response): Promise<string> {
+    async updatePassword(id: string, password: string, type: string, req: Request, res: Response, token: any): Promise<string> {
         try {
             logger.info(appConstant.LOGGER_MESSAGE.UPDATE_PASSWORD);
             const commonService = new CommonService(db.user);
             const passwordHash = await commonService.hashPassword(password);
-            if (type == 'User') {
+            let decodedToken: any;
+            if (token != '') {
+                const secrectkey = `${process.env.JWT_SECREAT_KEK}`;
+                decodedToken = jwt.verify(token, secrectkey);
+            }
+            if (type == 'User' || (decodedToken && (decodedToken.type == 'User_Group' || decodedToken.type == 'User_Provider'))) {
                 const userCondition: sequelizeObj = {};
                 userCondition.where = {
                     Id: id,
@@ -360,13 +366,21 @@ export default class UserService {
                     const user = await commonService.update({ Id: id }, userPasswordCondition, db.User);
                     return appConstant.MESSAGES.SUCCESS
                 }
-            } else if (type == 'Group') {
+            } else if (type == 'Group' || (decodedToken && decodedToken.type == 'Group')) {
                 const groupCondition: sequelizeObj = {};
-                                    groupCondition.where = {
+                if (token == '') {
+                    groupCondition.where = {
                         ProviderGroupContactDetailID: id,
                         IsActive: 1
                     };
-                                const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
+                }
+                if (token != '') {
+                    groupCondition.where = {
+                        ProviderGroupContactDetailID: decodedToken.providerGroupContactId,
+                        IsActive: 1
+                    };
+                }
+                const groupData = await commonService.getData(groupCondition, db.ProviderGroupContact);
                 if (!_.isNil(groupData.PasswordHash)) {
                     const previousPasswordCheck = commonService.passwordHash(password, groupData);
                     if (previousPasswordCheck) {
@@ -376,7 +390,18 @@ export default class UserService {
                             PasswordHash: passwordHash,
                             ForgotPwd: 0
                         }
-                        const providerGroup = await commonService.update({ ProviderGroupContactDetailID: id }, groupPasswordCondition, db.ProviderGroupContact);
+                        let update_Condition: any;
+                        if (token == '') {
+                            update_Condition = {
+                                ProviderGroupContactDetailID: id
+                            }
+                        }
+                        if (token != '') {
+                            update_Condition = {
+                                ProviderGroupContactDetailID: decodedToken.providerGroupContactId
+                            }
+                        }
+                        const providerGroup = await commonService.update(update_Condition, groupPasswordCondition, db.ProviderGroupContact);
                         return appConstant.MESSAGES.SUCCESS
                     }
                 } else {
@@ -384,10 +409,21 @@ export default class UserService {
                         PasswordHash: passwordHash,
                         ForgotPwd: 0
                     }
-                    const providerGroup = await commonService.update({ ProviderGroupContactDetailID: id }, groupPasswordCondition, db.ProviderGroupContact);
+                    let update_Condition: any;
+                    if (token == '') {
+                        update_Condition = {
+                            ProviderGroupContactDetailID: id
+                        }
+                    }
+                    if (token != '') {
+                        update_Condition = {
+                            ProviderGroupContactDetailID: decodedToken.providerGroupContactId
+                        }
+                    }
+                    const providerGroup = await commonService.update(update_Condition, groupPasswordCondition, db.ProviderGroupContact);
                     return appConstant.MESSAGES.SUCCESS
                 }
-            } else if (type = 'Provider') {
+            } else if (type = 'Provider' || (decodedToken && decodedToken.type == 'Group')) {
                 const doctorCondition: sequelizeObj = {};
                 doctorCondition.where = {
                     ProviderDoctorID: id,

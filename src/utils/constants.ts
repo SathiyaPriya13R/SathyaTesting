@@ -79,6 +79,7 @@ export default class AppConstants {
         USER_NOT_ALLOWED: "User Not allowed",
         NO_TOKEN_FOUND: "Unable to locate a valid user token. Please log out and log back in to resolve this issue",
         TOKEN_EXPIRED: "The token you provided is expired",
+        USER_LOGGEDIN_ANOTHER_ACC: "User is logged in to another device",
         DATA_FOUND: "{{}} data found",
         DATA_NOT_FOUND: "{{}} data not found",
         INVALID_USERTYPE: "Invalid user_type",
@@ -200,6 +201,12 @@ export default class AppConstants {
         GENERATE_PASSWORD_FUNCTION_STARTED: 'Generate password function started',
         GENERATE_PASSWORD_FUNCTION_COMPLETED: 'Generate password function completed',
         GENERATE_PASSWORD_FUNCTION_FAILED: 'Generate password function failed',
+        PUSH_DOCUMENT_NOTIFICATION_FUNCTION_COMPLETED: 'Generate password function completed',
+        PUSH_DOCUMENT_NOTIFICATION_FUNCTION_FAILED: 'Generate password function failed',
+        PUSH_DOCUMENT_ALERT_FUNCTION_COMPLETED: 'Generate password function completed',
+        PUSH_DOCUMENT_ALERT_FUNCTION_FAILED: 'Generate password function failed',
+        PUSH_PAYER_ENROLL_FUNCTION_COMPLETED: 'Generate password function completed',
+        PUSH_PAYER_ENROLL_FUNCTION_FAILED: 'Generate password function failed',
     }
 
     COUNT_MESSAGE = {

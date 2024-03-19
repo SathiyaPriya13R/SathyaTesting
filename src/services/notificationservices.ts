@@ -5,11 +5,13 @@ import AppConstants from "../utils/constants";
 import CommonService from '../helpers/commonService';
 import moment from 'moment';
 import { v4 as uuidv4 } from 'uuid';
+import DateConvertor from '../helpers/date';
 
 const logger = require('../helpers/logger');
 const { Op } = require('sequelize');
 
 const appConstant = new AppConstants();
+const dateConvertor = new DateConvertor()
 
 export default class NotificationService {
 
@@ -152,7 +154,7 @@ export default class NotificationService {
 
             let entity_type: Array<string> = []
             if ((filter_data.entity_type && filter_data.entity_type == 'all') || filter_data.notification_for == 'alert') {
-                entity_type = ['Esign', ' ', 'Document']
+                entity_type = ['Esign', 'Payer Enrollment', 'Document']
             }
             else if (filter_data.entity_type && filter_data.entity_type == 'esign') {
                 entity_type = ['Esign']
@@ -165,7 +167,7 @@ export default class NotificationService {
             }
 
             let message_filter: Array<boolean> = []
-            if (filter_data.notification_for && (filter_data.notification_for == 'mymessage' || filter_data.notification_for == 'alert' || filter_data.notification_for == 'notification') ) {
+            if (filter_data.notification_for && (filter_data.notification_for == 'mymessage' || filter_data.notification_for == 'alert' || filter_data.notification_for == 'notification')) {
                 message_filter = (filter_data.message_filter) ? filter_data.message_filter : [];
             }
 
@@ -280,7 +282,7 @@ export default class NotificationService {
                 }
             ]
 
-            notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead', 'Entity']
+            notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead', 'Entity', 'NotificationDetailedContent']
 
             const notification_data = await commonService.getData(notification_condition, db.AppNotificationReceipts)
             const notifi_data = JSON.parse(JSON.stringify(notification_data))
@@ -349,7 +351,8 @@ export default class NotificationService {
                 where: {
                     IsActive: 1,
                     ExpiryDate: new Date(formatted_after_30_days),
-                    FileName: { $like: 'Provider%' }
+                    FileName: { $like: 'Provider%' },
+                    IsRenewed: false
                 },
                 attributes: ['AttachmentID', 'ExpiryDate', 'Name', 'ModifiedDate', 'ModifiedDate'],
                 include: [
@@ -375,6 +378,7 @@ export default class NotificationService {
                         AppNotificationID: uuidv4(),
                         NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
                         NotificationContent: notification_content,
+                        NotificationDetailedContent: notification_content,
                         Entity: 'Document',
                         ItemID: `${document.AttachmentID}`.toUpperCase(),
                         SendingUserType: 'Provider User',
@@ -436,7 +440,8 @@ export default class NotificationService {
                 where: {
                     IsActive: 1,
                     ExpiryDate: { $between: [new Date(formatted_current_date), new Date(formatted_after_15_days)] },
-                    FileName: { $like: 'Provider%' }
+                    FileName: { $like: 'Provider%' },
+                    IsRenewed: false
                 },
                 attributes: ['AttachmentID', 'ExpiryDate', 'Name'],
                 include: [
@@ -473,6 +478,7 @@ export default class NotificationService {
                             AppNotificationID: uuidv4(),
                             NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
                             NotificationContent: notification_content,
+                            NotificationDetailedContent: notification_content,
                             Entity: 'Document',
                             ItemID: `${document.AttachmentID}`.toUpperCase(),
                             SendingUserType: 'Induvidual',
@@ -515,6 +521,115 @@ export default class NotificationService {
 
         } catch (error: any) {
             logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_FAILED, error.message);
+            throw new Error(error.message)
+        }
+    }
+
+    /**
+     * This function used to push alert againts document exprires within 15 days notification.
+     */
+    async pushPayerEnrollmentNotification() {
+        try {
+            const commonService = new CommonService(db.user);
+            logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_STARTED);
+            const current_date = new Date();
+
+            const insurance_transaction_condition: sequelizeObj = {};
+
+            insurance_transaction_condition.where = { IsActive: 1 }
+            insurance_transaction_condition.attributes = ['InsuranceTransactionID', 'EffectiveDate', 'ProviderDoctorID', 'ProviderGroupID']
+            insurance_transaction_condition.include = [
+                {
+                    model: db.GroupInsurance,
+                    as: 'grp_insurance',
+                    where: {
+                        IsActive: 1,
+                    },
+                    attributes: ['GroupInsuranceID'],
+                    required: true,
+                    include: [
+                        {
+                            model: db.InsuranceMaster,
+                            as: 'insurance_name',
+                            where: { IsActive: 1 },
+                            required: true,
+                            attributes: ['InsuranceID', 'Name']
+                        }
+                    ]
+                },
+                {
+                    model: db.InsuranceFollowup,
+                    as: 'history_details_one',
+                    where: { IsActive: 1, IsLast: 1 },
+                    attributes: ['InsuranceFollowupID'],
+                    required: true,
+                    include: [
+                        {
+                            model: db.lookupValue,
+                            as: 'status_name',
+                            where: { IsActive: 1, Name: 'COMPLETED' },
+                            required: true,
+                            attributes: ['Name']
+                        }
+                    ]
+                }
+            ]
+
+            const insurance_history_data = await commonService.getAllList(insurance_transaction_condition, db.InsuranceTransaction)
+            const payer_data = JSON.parse(JSON.stringify(insurance_history_data));
+
+            if (payer_data && !_.isNil(payer_data) && payer_data.length > 0) {
+
+                const notification_create_data_array: Array<Record<string, any>> = []
+
+                await payer_data.map(async (payer: any) => {
+                    const effective_date = !_.isNil(payer.EffectiveDate) ? await dateConvertor.dateFormat(payer.EffectiveDate) : null
+                    const notification_content = `The payer ${payer.grp_insurance.insurance_name.Name} has been successfully credentialed and linked to the tax id effective ${!_.isNil(effective_date) ? effective_date : '-'}.`
+                    const form_notification_data = {
+                        AppNotificationID: uuidv4(),
+                        NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
+                        NotificationContent: notification_content,
+                        NotificationDetailedContent: notification_content,
+                        Entity: 'Payer Enrollment',
+                        ItemID: `${payer.InsuranceTransactionID}`.toUpperCase(),
+                        SendingUserType: 'Induvidual',
+                        AssigneeID: `${payer.ProviderDoctorID}`.toUpperCase(),
+                        AssignedTo: `${payer.ProviderDoctorID}`.toUpperCase(),
+                        ProviderClientID: null,
+                        ProviderGroupID: `${payer.ProviderGroupID}`,
+                        ProviderDoctorID: `${payer.ProviderDoctorID}`,
+                        IsActive: true,
+                        Status: `b758e70d-3acc-4e55-902b-6644451e671c`.toUpperCase(),
+                        CreatedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        CreatedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+                        ModifiedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        ModifiedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+                        RedirectLink: null,
+                        PracticeManagerID: null,
+                        ProviderUserID: null,
+                        IsActionTaken: false,
+                        IsNotificationfRead: false,
+                        NotificationType: appConstant.NOTIFICATION_TYPE[0],
+                        // AttachmentID: `${document.AttachmentID}`.toUpperCase(),
+                    }
+                    notification_create_data_array.push(form_notification_data)
+                })
+
+                await commonService.bulkCreate(notification_create_data_array, db.AppNotificationReceipts).then((saved_data) => {
+                    logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'Notification'));
+                    logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_COMPLETED);
+                }).catch((err: any) => {
+                    logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_FAILED, err.message);
+                })
+
+            }
+            else {
+                logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'No notification'));
+                logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_COMPLETED);
+            }
+
+        } catch (error: any) {
+            logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_FAILED, error.message);
             throw new Error(error.message)
         }
     }

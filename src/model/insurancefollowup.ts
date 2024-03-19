@@ -68,7 +68,7 @@ export function InsuranceFollowupFactory(sequelize: Sequelize): InsuranceFollowu
             allowNull: false
         },
         ModifiedDate: {
-            type: SequelizeStatic.DATE,
+            type: SequelizeStatic.STRING,
             allowNull: false
         },
         PermissionSetID: {

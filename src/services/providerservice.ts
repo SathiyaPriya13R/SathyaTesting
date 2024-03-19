@@ -86,14 +86,15 @@ export default class ProviderService {
             provider_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
             provider_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
 
-            provider_condition.order = [['FirstName','ASC']]
+            provider_condition.order = [['FirstName', 'ASC']]
 
             const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
             const provider_list = JSON.parse(JSON.stringify(provider_data));
 
             await provider_list.map((provider: any) => {
-                if (!_.isNil(provider.ProfileImage)) {
-                    const profileimage = btoa(provider.ProfileImage);
+                if (!_.isNil(provider.ProfileImage && provider.ProfileImage.data)) {
+                    const buffer: any = Buffer.from(provider.ProfileImage.data);
+                    const profileimage = btoa(buffer);
                     provider.ProfileImage = `data:image/png;base64, ${profileimage}`;
                 } else {
                     provider.ProfileImage = null
@@ -153,10 +154,10 @@ export default class ProviderService {
                         }
                     ],
                 };
-                if (!isNaN(new Date (convertedDate).getTime())) {
-                        providerspec_condition.where = {
-                    [Op.and]: Sequelize.literal(`CAST(IssueDate AS DATE) = '${convertedDate}'`),
-                    [Op.and]: Sequelize.literal(`CAST(ExpireDate AS DATE) = '${convertedDate}'`)
+                if (!isNaN(new Date(convertedDate).getTime())) {
+                    providerspec_condition.where = {
+                        [Op.and]: Sequelize.literal(`CAST(IssueDate AS DATE) = '${convertedDate}'`),
+                        [Op.and]: Sequelize.literal(`CAST(ExpireDate AS DATE) = '${convertedDate}'`)
                     }
                 }
             }
