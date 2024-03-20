@@ -209,4 +209,22 @@ export default class UserController {
         }
     }
 
+    async updateTheme(req: Request, res: Response) {
+        try {
+            const update_data = req.body;
+            const data: any = req.user;
+            console.log('token------>', data.token);
+            const decryptedToken = decrypt(data.token);
+
+            // const colorResult = await userService.updateTheme(update_data);
+
+            // console.log('Color Result:', colorResult);
+            // res.status(200).send(colorResult);
+
+        } catch (error) {
+            logger.error(appConstant.LOGGER_MESSAGE.COLOR_UPDATE_FAILED, error);
+            res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        }
+    }
+
 }

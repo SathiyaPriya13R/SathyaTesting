@@ -840,4 +840,11 @@ export default class UserService {
             throw new Error(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);
         }
     }
+
+    async updateTheme() {
+
+
+    }
+
+
 }

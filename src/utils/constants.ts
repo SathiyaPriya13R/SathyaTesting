@@ -58,6 +58,10 @@ export default class AppConstants {
         PROVIDER_SPEC_FUNCTION_COMPLETED: "Provider Spec function completed",
         PROVIDER_SPEC_FUNCTION_FAILED: "Provider Spec function failed",
         USER_ALREADY_LOGEEDIN: "The user is currently logged in on another device.",
+        COLOR_UPDATE_STARTED: "Color update function started",
+        COLOR_UPDATE_COMPLETED: "Color update function completed",
+        COLOR_UPDATE_FAILED: "Color update function failed",
+        COLOR_UPDATE_SUCCESSFULLY: "Color updated successfully",
     }
     MESSAGES = {
         EMPTY_TOKEN:
