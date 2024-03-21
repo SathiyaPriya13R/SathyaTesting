@@ -23,6 +23,7 @@ import { InsurancePlanFactory } from '../model/insuranceplan';
 import { DocumentAttachmentFactory } from '../model/documentattachment';
 import { DocumentCatgegoryFactory } from '../model/documentcategory';
 import { AppNotificationRecipientsFactory } from '../model/appnotificationrecipients'
+import { EsignFileDataFactory } from '../model/esignfiledata';
 
 
 require('dotenv').config();
@@ -62,6 +63,7 @@ export const InsurancePlan = InsurancePlanFactory(user);
 export const DocumentAttachment = DocumentAttachmentFactory(user)
 export const DocumentCategory = DocumentCatgegoryFactory(user);
 export const AppNotificationReceipts = AppNotificationRecipientsFactory(user);
+export const EsignFileData = EsignFileDataFactory(user);
 
 /**
  * Associations
@@ -136,3 +138,9 @@ InsuranceFollowup.belongsTo(lookupValue, { as: 'status', foreignKey: 'StatusID' 
  * For Notification associations
  */
 AppNotificationReceipts.belongsTo(ProviderDoctor, { as: 'provider', foreignKey: 'ProviderDoctorID' })
+
+/**
+ * Esign Creation Associations
+ */
+InsuranceFollowup.belongsTo(InsuranceTransaction, { as: 'InsuranceTransaction', foreignKey: 'InsuranceTransactionID'});
+InsuranceTransaction.hasMany(EsignFileData, {as: 'esigndata', foreignKey: "EnrollmentID"})

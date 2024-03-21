@@ -9,6 +9,9 @@ import eSign from '../helpers/docusign'
 import path from 'path';
 import ProviderService from '../services/payerservice';
 import DateConvertor from '../helpers/date';
+import { v4 as uuidv4 } from 'uuid';
+import moment from 'moment';
+import blobservice from '../helpers/blobservice';
 
 const appConstant = new AppConstants();
 const payerService = new ProviderService();
@@ -16,14 +19,14 @@ const dateConvert = new DateConvertor();
 
 export class eSignService {
 
-    async getEsignURI(body_data: { name: string, email: string }) {
-
+    async getEsignURI(body_data: { name: string, email: string }, saved_data?: any) {
+        const commonService = new CommonService(db.user);
         try {
             const token_data = await eSign.signClient()
 
             const envelope_api = await eSign.getEnvelopesApi(token_data.access_token)
 
-            const filepath = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
+            const filepath = path.join(__dirname, "Payer Dummy Document.pdf")
             // const filepath1 = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
             // const filepath2 = path.join(__dirname, "Payer_7a578154-8922-4f17-9614-40e901bcc260.pdf")
             // const filepath3 = path.join(__dirname, "1709052355542-Degree.pdf")
@@ -38,13 +41,32 @@ export class eSignService {
 
             console.log("🚀 ~ eSignService ~ getEsignURI ~ create_envople.envelopeId:", create_envople.envelopeId)
 
-            const viewRequest = await eSign.getDocusignRedirectUrl(body_data.email, body_data.name)
+            const viewRequest = await eSign.getDocusignRedirectUrl(body_data.email, body_data.name, create_envople.envelopeId, saved_data.FileDataID);
 
             const final_uri = await envelope_api.createRecipientView(
                 process.env.ACCOUNT_ID,
                 create_envople.envelopeId,
                 { recipientViewRequest: viewRequest }
             )
+
+
+            const updateCondition = {
+                FileDataID: saved_data.FileDataID
+            }
+            const currentDate = new Date();
+            const EsignExpireDate = new Date(currentDate.setDate(currentDate.getDate() + 2));
+
+            const esignFileUpdate = {
+                EnvelopeID: `${create_envople.envelopeId}`.toUpperCase(),
+                RecipientViewURL: final_uri.url,
+                Esigned: false,
+                EsignExpireDate: moment(EsignExpireDate).format('YYYY-MM-DD HH:mm:ss.SSS')
+            };
+            await commonService.update(updateCondition, esignFileUpdate, db.EsignFileData).then((data: any) => {
+                logger.info('EnvelopeId is updated');
+            }).catch((error: any) => {
+                logger.error(error);
+            })
 
             return { message: 'Successfully retrive Redirect URL', data: final_uri.url, envelope_id: create_envople.envelopeId }
         } catch (error: any) {
@@ -79,7 +101,7 @@ export class eSignService {
              */
             const esign_condition: sequelizeObj = {};
             esign_condition.where = {
-                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
+                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: '117D643E-73DC-4616-9C4D-1BE73636D65F',
                 ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
                 ...((filter_data.all == false && !_.isNil(filter_data.provider_id) && !_.isEmpty(filter_data.provider_id)) && { ProviderDoctorID: { $eq: filter_data.provider_id } }),
             };
@@ -155,6 +177,10 @@ export class eSignService {
                         }
                     ]
                 },
+                {
+                    model: db.EsignFileData,
+                    as: 'esigndata',
+                }
             ]
 
             if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
@@ -237,7 +263,8 @@ export class eSignService {
 
             logger.info(`signed document download function completed`);
 
-            return { message: signed_doc?.message }
+            // return { message: signed_doc?.message }
+            return { message: signed_doc }
 
         } catch (error: any) {
             logger.info(`signed document download function failed`);
@@ -270,6 +297,102 @@ export class eSignService {
 
         } catch (e: any) {
             throw new Error(e.message)
+        }
+    }
+
+    async esignCreationCron() {
+        try {
+            const commonService = new CommonService(db.user);
+            const insuranceFollowupCondition: sequelizeObj = {};
+            insuranceFollowupCondition.where = {
+                CronStatus: 0,
+                isLast: 1,
+            }
+            insuranceFollowupCondition.include = [
+                {
+                    model: db.lookupValue,
+                    as: 'status_name',
+                    where: { Name: 'E-SIGN' },
+                    required: true,
+                    attributes: ['LookupValueID', 'Name']
+                },
+                {
+                    model: db.InsuranceTransaction,
+                    as: 'InsuranceTransaction',
+                    attributes: ['InsuranceTransactionID', 'ProviderDoctorID'],
+                    required: true,
+                    include: [{
+                        model: db.ProviderDoctor,
+                        as: 'provider_details',
+                        required: true,
+                        attributes: ['FirstName', 'MiddleName', 'LastName', 'Email', 'ProviderDoctorID']
+                    }]
+                }
+            ]
+            const insurance = await commonService.getAllList(insuranceFollowupCondition, db.InsuranceFollowup);
+            const insuranceList = JSON.parse(JSON.stringify(insurance));
+            insuranceList.map(async (insuranceData: any) => {
+                if (insuranceData.InsuranceTransaction && insuranceData.InsuranceTransaction.provider_details) {
+                    const data = insuranceData.InsuranceTransaction.provider_details;
+                    const form_notification_data = {
+                        FileDataID: uuidv4(),
+                        EnrollmentID: `${insuranceData.InsuranceTransactionID ? insuranceData.InsuranceTransactionID : 'ECBBBA19-E8DD-47A9-8454-889966CB085D'}`.toUpperCase(),
+                        DocumentID: `7A578154-8922-4F17-9614-40E901BCC260`.toUpperCase(),
+                        FileData: '',
+                        IsActive: true,
+                        CreatedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        CreatedBy: `CDE38098-C3BB-4C40-88F8-1D8BE29D4A2E`.toUpperCase(),
+                        ModifiedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        ModifiedBy: `CDE38098-C3BB-4C40-88F8-1D8BE29D4A2E`.toUpperCase(),
+                        Esigned: false,
+                        EnvelopeID: null,
+                        RecipientViewURL: null,
+                        EsignedDate: null,
+                        EsignExpireDate: null,
+                        DocumentLocation: 'https://devorcadocuments.blob.core.windows.net/orca-provider/Provider_36c9122d-fb4f-41c0-9826-1de1b7b3578a.pdf',
+                        EsignedDocumentLocation: null,
+                    }
+                    await commonService.create(form_notification_data, db.EsignFileData).then((saved_data) => {
+                        logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'Alert notification'));
+                        logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_COMPLETED);
+                        const user_data = {
+                            name: `${data.FirstName} ${data.LastName}`,
+                            email: data.Email,
+                        }
+                        this.getEsignURI(user_data, saved_data);
+                    }).catch((err: any) => {
+                        logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_FAILED, err.message);
+                        throw new Error(err);
+                    })
+                }
+            })
+        } catch (error: any) {
+            throw new Error(error);
+        }
+    }
+
+    async docusignComplete(data: any) {
+        try {
+            const commonService = new CommonService(db.user);
+            const token_data = await eSign.signClient()
+            const signed_doc = await eSign.downloadCompletedDocument(data.EnvelopeID, token_data.access_token);
+            const esignUpdateConditon = {
+                FileDataID: data.InsuranceTransactionID
+            }
+
+            const esignUpdate = {
+                Esigned: 1,
+                EsignedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                EsignedDocumentLocation: `${signed_doc}`
+            }
+            await commonService.update(esignUpdateConditon, esignUpdate, db.EsignFileData).then((result) => {
+                return result;
+            }).catch((err) => {
+                throw new Error(err);
+            });
+        } catch (error: any) {
+            console.log(error)
+            throw new Error(error);
         }
     }
 }

@@ -19,6 +19,7 @@ export interface InsuranceFollowupAttributes {
     EmailID: string,
     SpokeWithORemailto: string,
     IsLast: boolean,
+    CronStatus: boolean,
 }
 
 export interface InsuranceFollowupModel extends Model<InsuranceFollowupAttributes>, InsuranceFollowupAttributes { }
@@ -92,6 +93,10 @@ export function InsuranceFollowupFactory(sequelize: Sequelize): InsuranceFollowu
             allowNull: true
         },
         IsLast: {
+            type: SequelizeStatic.BOOLEAN,
+            allowNull: false
+        },
+        CronStatus: {
             type: SequelizeStatic.BOOLEAN,
             allowNull: false
         },
