@@ -121,7 +121,7 @@ export class esignController {
             if (data.error) {
                 res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
             } else {
-                res.status(200).send({ data: encrypt(JSON.stringify(data)) });
+                res.status(200).send({ data: 'Esigned Successfully' });
             }
         }).catch((error: any) => {
             res.status(400).send({ data: encrypt(JSON.stringify(error)) });
