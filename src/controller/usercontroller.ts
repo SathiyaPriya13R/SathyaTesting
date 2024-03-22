@@ -14,35 +14,35 @@ export default class UserController {
      */
     async signinUser(req: Request, res: Response) {
         try {
-            const decryptedData = decrypt(req.body.data);
+            // const decryptedData = decrypt(req.body.data);
 
-            if (decryptedData) {
-                const data = JSON.parse(decryptedData)
-                let { email, password, mobiledeviceid } = data;
-                const query = req.query;
-                if (email) {
-                    // email = (email as string).toLowerCase();
-                    const userData = {
-                        Email: email,
-                        PasswordHash: password,
-                        mobileDeviceID: mobiledeviceid ? mobiledeviceid : '',
-                        signin: query ? query.signin : ''
-                    }
-                    await userService.signinUser(userData).then((data: any) => {
-                        if (data && data.error) {
-                            res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
-                        } else {
-                            res.status(200).send(data);
-                        }
-                    }).catch((error) => {
-                        res.status(400).send({ data: encrypt(JSON.stringify(error)) });
-                    });
-                } else {
-                    res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.EMAIL_EMPTY })) });
+            // if (decryptedData) {
+            //     const data = JSON.parse(decryptedData)
+            let { email, password, mobiledeviceid } = req.body;
+            const query = req.query;
+            if (email) {
+                // email = (email as string).toLowerCase();
+                const userData = {
+                    Email: email,
+                    PasswordHash: password,
+                    mobileDeviceID: mobiledeviceid ? mobiledeviceid : '',
+                    signin: query ? query.signin : ''
                 }
+                await userService.signinUser(userData).then((data: any) => {
+                    if (data && data.error) {
+                        res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+                    } else {
+                        res.status(200).send(data);
+                    }
+                }).catch((error) => {
+                    res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+                });
             } else {
-                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.EMAIL_EMPTY })) });
             }
+            // } else {
+            //     res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+            // }
         } catch (error) {
             logger.error(error);
             res.status(400).send({ data: encrypt(JSON.stringify(error)) });
@@ -144,6 +144,8 @@ export default class UserController {
     async profileUpdate(req: Request, res: Response): Promise<void> {
         try {
             const decryptedData = decrypt(req.body.data);
+            console.log('Decrypted Data:', decryptedData);
+
             const query = req.query;
             if (decryptedData) {
                 const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
@@ -209,21 +211,34 @@ export default class UserController {
         }
     }
 
-    async updateTheme(req: Request, res: Response) {
+    async updateTheme(req: Request, res: Response): Promise<void> {
         try {
-            const update_data = req.body;
-            const data: any = req.user;
-            console.log('token------>', data.token);
-            const decryptedToken = decrypt(data.token);
+            const decryptedData = decrypt(req.body.data);
 
-            // const colorResult = await userService.updateTheme(update_data);
+            if (decryptedData) {
 
-            // console.log('Color Result:', colorResult);
-            // res.status(200).send(colorResult);
-
-        } catch (error) {
-            logger.error(appConstant.LOGGER_MESSAGE.COLOR_UPDATE_FAILED, error);
-            res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+                const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
+                const reqdata = JSON.parse(decryptedData);
+                let themeStr;
+                if (reqdata.ThemeCode) {
+                    const str = reqdata.ThemeCode;
+                    themeStr = str
+                }
+                const data = {
+                    id: id,
+                    type: type,
+                    providergroupcontactid: providerGroupContactId
+                }
+                const finalRes = await userService.updateTheme(data, themeStr);
+                res.status(200).send(finalRes);
+            }
+            else {
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+            }
+        } catch (error: any) {
+            logger.error(`${appConstant.LOGGER_MESSAGE.THEME_UPDATE_FAILED} ${error.message}`);
+            // res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
+            res.status(400).send(error)
         }
     }
 

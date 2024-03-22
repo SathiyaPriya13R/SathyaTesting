@@ -108,6 +108,29 @@ export class esignController {
             response.status(400).send((error));
         }
     }
+    
+    /**
+     * Docusign Completed 
+     */
+
+    async docusignComplete(req: Request, res: Response) {
+        try {
+           const decryptedData = req.body.data ? decrypt(req.body.data): null;
+           const filter_data = !_.isNil(decryptedData) ? JSON.parse(decryptedData) : {}
+           await eSignService.docusignComplete(filter_data).then((data: any) => {
+            if (data.error) {
+                res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+            } else {
+                res.status(200).send({ data: encrypt(JSON.stringify(data)) });
+            }
+        }).catch((error: any) => {
+            res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+        });
+        } catch (error) {
+            logger.error('Get signed document function failed', error);
+            res.status(400).send((error));
+        }
+    }
 
 }
 

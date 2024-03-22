@@ -274,8 +274,8 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
             allowNull: false
         },
         ThemeCode: {
-            type: SequelizeStatic.STRING(256),
-            allowNull: false
+            type: SequelizeStatic.STRING(200),
+            allowNull: true
         }
 
 

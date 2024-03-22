@@ -20,7 +20,7 @@ export interface AppNotificationRecipientsAttributes {
     CreatedBy: UUID,
     ModifiedBy: UUID,
     ModifiedDate: Date,
-    RedirectLink: string,
+    RedirectLink: Text,
     PracticeManagerID: UUID,
     ProviderUserID: UUID,
     IsActionTaken: Boolean,
@@ -107,7 +107,7 @@ export function AppNotificationRecipientsFactory(sequelize: Sequelize): AppNotif
             allowNull: false
         },
         RedirectLink: {
-            type: SequelizeStatic.STRING,
+            type: SequelizeStatic.TEXT,
             allowNull: true,
         },
         PracticeManagerID: {

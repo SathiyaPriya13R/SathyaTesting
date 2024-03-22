@@ -4,6 +4,10 @@ import fs from 'fs';
 import pdf from 'pdf-parse';
 import path from 'path';
 import _ from 'lodash';
+import BlobService from './blobservice';;
+
+const blobservice = new BlobService();
+
 
 // https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=022c7050-974e-4360-a1fa-6fb0912dff70&redirect_uri=http://localhost:3000/api/esign
 
@@ -80,11 +84,10 @@ export class eSign {
 
     }
 
-    async getDocusignRedirectUrl(email: any, name: any) {
+    async getDocusignRedirectUrl(email: any, name: any, envelopeId: any, FileDataID: any) {
         try {
             const viewRequest = new docusign.RecipientViewRequest();
-
-            viewRequest.returnUrl = 'http://192.168.0.225:3000/api/esign/success' // This return url need to get from .env file process.env.ESIGN_RETURN_URL
+            viewRequest.returnUrl = `http://192.168.0.225:3000/api/esign/success?envelopId${envelopeId}&FileDataId${FileDataID}`; // This return url need to get from .env file process.env.ESIGN_RETURN_URL
             viewRequest.authenticationMethod = 'none' // OTHER METHODS - email, phone, sms, idCheck, kba
             viewRequest.email = email
             viewRequest.userName = name
@@ -135,7 +138,7 @@ export class eSign {
             let provider_document = new docusign.Document();
             let provider_document_b64 = Buffer.from(docPdfBytes).toString('base64');
             provider_document.documentBase64 = provider_document_b64;
-            provider_document.name = 'provider_mugundhan_pdf'; // can be different from actual file name
+            provider_document.name = 'provider_pdf'; // can be different from actual file name
             provider_document.fileExtension = 'pdf';
             provider_document.documentId = '7';
 
@@ -186,23 +189,27 @@ export class eSign {
             //     pageNumber: pageNumber.toString(),
             //     value: '06/03/2024'
             //   });
-              
+
             //   const tabs = docusign.Tabs.constructFromObject({
             //     dateSignedTabs: [dateSignedTab]
             //   });
-              
+
             //   signer.tabs = tabs;
             // Tabs are set per recipient / signer
             let provider_sign_tab = docusign.Tabs.constructFromObject({
                 signHereTabs: [provider_sign] // signed_date, provider_name
                 // dateSignedTabs: [signed_date] 
-            });            singer_provider.tabs = provider_sign_tab;
+            }); singer_provider.tabs = provider_sign_tab;
 
             // Add the recipient to the envelope object
             let recipients = docusign.Recipients.constructFromObject({
                 signers: [singer_provider],
             });
             env.recipients = recipients;
+
+
+            // Set expiry date
+            env.expireAfter = '2'; // Expiry in days
 
             // Request that the envelope be sent by setting |status| to "sent".
             // To request that the envelope be created as a draft, set to "created"
@@ -449,20 +456,26 @@ export class eSign {
             const pdfBytes = Buffer.from(results, 'binary');
 
             // Save PDF to local file
-            const directoryPath = path.join(__dirname, '..', 'signed_documents');
+            // const directoryPath = path.join(__dirname, '..', 'signed_documents');
 
-            // Check if the directory exists, if not create it
-            if (!fs.existsSync(directoryPath)) {
-                fs.mkdirSync(directoryPath, { recursive: true });
-            }
+            // // Check if the directory exists, if not create it
+            // if (!fs.existsSync(directoryPath)) {
+            //     fs.mkdirSync(directoryPath, { recursive: true });
+            // }
 
-            fs.writeFileSync(path.join(directoryPath, `signed_document_${envelopeId}.pdf`), pdfBytes);
+            // fs.writeFileSync(path.join(directoryPath, `signed_document_${envelopeId}.pdf`), pdfBytes);
 
-            const file_path = path.resolve(__dirname, '..', 'signed_documents', `signed_document_${envelopeId}.pdf`);
+            // const file_path = path.resolve(__dirname, '..', 'signed_documents', `signed_document_${envelopeId}.pdf`);
 
-            console.log('PDF document downloaded and saved successfully.');
+            // fs.writeFileSync(path.join(directoryPath, `signed_document_${envelopeId}.pdf`), pdfBytes);
 
-            return { message: `file stored in path: ${file_path}` }
+            // const file_path = path.resolve(__dirname, '..', 'signed_documents', `signed_document_${envelopeId}.pdf`);
+
+            const filename = `Provider_${envelopeId}${path.extname('signed_document_${envelopeId}.pdf')}`;
+            const filepath = await blobservice.uploadEsignDocuToBlobStorage(pdfBytes, filename)
+
+
+            return filepath;
 
         } catch (error) {
             console.error('Error downloading and saving PDF document:', error);

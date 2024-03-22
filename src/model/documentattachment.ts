@@ -25,6 +25,7 @@ export interface DocumentAttachmentAttributes {
     eSignDocumentStatus: String,
     DocumentFor: String,
     DocumentSoftDelete: Boolean,
+    SignPosition: String,
 }
 
 export interface DocumentAttachmentModel extends Model<DocumentAttachmentAttributes>, DocumentAttachmentAttributes { }
@@ -131,6 +132,10 @@ export function DocumentAttachmentFactory(sequelize: Sequelize): DocumentAttachm
         },
         IsRenewed: {
             type: SequelizeStatic.BOOLEAN,
+            allowNull: true
+        },
+        SignPosition: {
+            type: SequelizeStatic.TEXT,
             allowNull: true
         }
     },

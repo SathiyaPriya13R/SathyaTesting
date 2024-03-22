@@ -7,11 +7,13 @@ const routes = require('./routes/route');
 const IORedis = require('ioredis');
 const appConstant = new AppConstants();
 import Corn from './helpers/cronjobs';
+import { eSignService } from './services/esign';
 
 const app = express();
 const port = 3000;
 
 const cron = new Corn();
+const esign = new eSignService();
 
 const redisClient = new IORedis({
     host: process.env.REDIS_SERVER_IP,
@@ -49,6 +51,7 @@ cron.generatePassword();
 cron.pushDocumentNotification();
 cron.pushDocumentAlert();
 cron.pushPayerEnrollmentNotification();
+cron.esignCreation();
 
 app.listen(port, () => {
     return logger.info(`App is listing in port:${port}`);
