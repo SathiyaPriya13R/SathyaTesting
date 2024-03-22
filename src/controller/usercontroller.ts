@@ -18,7 +18,7 @@ export default class UserController {
 
             if (decryptedData) {
                 const data = JSON.parse(decryptedData)
-                let { email, password, mobiledeviceid } = req.body;
+                let { email, password, mobiledeviceid } = data;
                 const query = req.query;
                 if (email) {
                     // email = (email as string).toLowerCase();
