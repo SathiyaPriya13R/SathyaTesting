@@ -217,7 +217,6 @@ export default class UserService {
                             userid: data.ProviderDoctorID,
                             authToken: authtoken
                         }
-                        console.log('----->>>>>', TokenDetailsString)
 
                         const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
                         // Push the new token details into the array
@@ -848,47 +847,6 @@ export default class UserService {
         }
     }
 
-    // async updateTheme(update_data: { doctor_id: string, theme_color: string, user_type: string }) {
-    //     try {
-    //         const commonService = new CommonService(db.user);
-    //         logger.info(appConstant.LOGGER_MESSAGE.THEME_UPDATE_STARTED);
-
-    //         if (
-    //             (_.isNil(update_data.doctor_id) || update_data.doctor_id === '') ||
-    //             (_.isNil(update_data.theme_color) || update_data.theme_color === '') ||
-    //             (_.isNil(update_data.user_type) || update_data.user_type === '') ||
-    //             !appConstant.USER_TYPE.includes(update_data.user_type)
-    //         ) {
-    //             logger.info(appConstant.MESSAGES.INVALID_USERTYPE);
-    //             return { message: 'Please provide valid data for doctor_id, theme_color, and user_type' };
-    //         }
-    //         const { doctor_id, theme_color, user_type } = update_data;
-    //         let accessObject;
-    
-    //         switch (user_type) {
-    //             case appConstant.USER_TYPE[0]:
-    //                 accessObject = db.ProviderGroupContact;
-    //                 break;
-    //             case appConstant.USER_TYPE[1]:
-    //                 accessObject = db.ProviderDoctor;
-    //                 break;
-    //             case appConstant.USER_TYPE[2]:
-    //                 accessObject = db.User;
-    //                 break;
-    //             default:
-    //                 throw new Error(appConstant.MESSAGES.INVALID_USERTYPE);
-    //         }
-    
-    //         // Update the theme color based on the user type
-    //         await commonService.update({ ProviderDoctorID: doctor_id }, { ThemeColor: theme_color }, accessObject);
-    
-    //         return { message: "Theme color updated successfully" };
-    //     } catch (error: any) {
-    //         logger.error(appConstant.LOGGER_MESSAGE.THEME_UPDATE_FAILED, error.message);
-    //         throw new Error(error.message);
-    //     }
-    // }
-
     async updateTheme(data: any, theme: any) {
         try {
             const commonService = new CommonService(db.user);
@@ -916,7 +874,6 @@ export default class UserService {
                     if (!_.isNil(ptheme)) {
                         userUpdateCondition.ThemeCode = ptheme
                     }  
-                    console.log('---->>>>>>',userUpdateCondition)       
                     await commonService.update({ Id: data.id }, userUpdateCondition, db.User);
                     return { data: encrypt(JSON.stringify(appConstant.LOGGER_MESSAGE.THEME_UPDATE_SUCCESSFULLY)) }
                 default:

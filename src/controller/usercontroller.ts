@@ -14,35 +14,35 @@ export default class UserController {
      */
     async signinUser(req: Request, res: Response) {
         try {
-            // const decryptedData = decrypt(req.body.data);
+            const decryptedData = decrypt(req.body.data);
 
-            // if (decryptedData) {
-            //     const data = JSON.parse(decryptedData)
-            let { email, password, mobiledeviceid } = req.body;
-            const query = req.query;
-            if (email) {
-                // email = (email as string).toLowerCase();
-                const userData = {
-                    Email: email,
-                    PasswordHash: password,
-                    mobileDeviceID: mobiledeviceid ? mobiledeviceid : '',
-                    signin: query ? query.signin : ''
-                }
-                await userService.signinUser(userData).then((data: any) => {
-                    if (data && data.error) {
-                        res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
-                    } else {
-                        res.status(200).send(data);
+            if (decryptedData) {
+                const data = JSON.parse(decryptedData)
+                let { email, password, mobiledeviceid } = req.body;
+                const query = req.query;
+                if (email) {
+                    // email = (email as string).toLowerCase();
+                    const userData = {
+                        Email: email,
+                        PasswordHash: password,
+                        mobileDeviceID: mobiledeviceid ? mobiledeviceid : '',
+                        signin: query ? query.signin : ''
                     }
-                }).catch((error) => {
-                    res.status(400).send({ data: encrypt(JSON.stringify(error)) });
-                });
+                    await userService.signinUser(userData).then((data: any) => {
+                        if (data && data.error) {
+                            res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
+                        } else {
+                            res.status(200).send(data);
+                        }
+                    }).catch((error) => {
+                        res.status(400).send({ data: encrypt(JSON.stringify(error)) });
+                    });
+                } else {
+                    res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.EMAIL_EMPTY })) });
+                }
             } else {
-                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.EMAIL_EMPTY })) });
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
             }
-            // } else {
-            //     res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
-            // }
         } catch (error) {
             logger.error(error);
             res.status(400).send({ data: encrypt(JSON.stringify(error)) });
@@ -144,7 +144,6 @@ export default class UserController {
     async profileUpdate(req: Request, res: Response): Promise<void> {
         try {
             const decryptedData = decrypt(req.body.data);
-            console.log('Decrypted Data:', decryptedData);
 
             const query = req.query;
             if (decryptedData) {
@@ -237,8 +236,7 @@ export default class UserController {
             }
         } catch (error: any) {
             logger.error(`${appConstant.LOGGER_MESSAGE.THEME_UPDATE_FAILED} ${error.message}`);
-            // res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
-            res.status(400).send(error)
+            res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }
 
