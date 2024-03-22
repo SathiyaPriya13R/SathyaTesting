@@ -153,3 +153,23 @@ ALTER TABLE pvdr.DocumentAttachment ADD IsRenewed BIT DEFAULT 0;
 -- For notification
 ALTER TABLE ntf.AppNotificationRecipients ADD NotificationDetailedContent NVARCHAR(2000) DEFAULT NULL;
 -- End
+
+-- 20-03-2024 - Start
+-- For user theme save
+ALTER TABLE pvdr.ProviderDoctor ADD ThemeCode NVARCHAR(200) DEFAULT NULL;
+ALTER TABLE pvdr.ProviderGroupContactDetail ADD ThemeCode NVARCHAR(200) DEFAULT NULL;
+ALTER TABLE sec.[User] ADD ThemeCode NVARCHAR(200) DEFAULT NULL;
+-- End
+
+-- 20-03-2024 - Start
+-- For Esign creation
+ALTER TABLE pvdr.InsuranceFollowup ADD CornStatus BIT DEFAULT 0;
+ALTER TABLE pvdr.EsignFileData ADD EnvelopeID NVARCHAR DEFAULT NULL;
+ALTER TABLE pvdr.EsignFileData ADD RecipientViewURL NVARCHAR DEFAULT NULL;
+ALTER TABLE pvdr.EsignFileData ADD Esigned BIT DEFAULT 0;
+ALTER TABLE pvdr.EsignFileData ADD ESignedDate DATETIME DEFAULT NULL;
+ALTER TABLE pvdr.EsignFileData ADD EsignExpireDate DATETIME DEFAULT NULL;
+ALTER TABLE pvdr.EsignFileData ADD DocumentLocation NVARCHAR DEFAULT NULL;
+ALTER TABLE pvdr.EsignFileData ADD EsignedDocumentLocation NVARCHAR DEFAULT NULL;
+ALTER TABLE [ORCACRED PROD].ntf.AppNotificationRecipients ALTER COLUMN RedirectLink nvarchar(16) DEFAULT NULL;
+-- End
