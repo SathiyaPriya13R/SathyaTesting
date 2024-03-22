@@ -25,7 +25,7 @@ export default class AppConstants {
         FORGET_PASSWORD_COMPLETED: "Forget password function completed",
         FORGET_PASSWORD_FAILED: "Forget password failed",
         USER_NOT_FOUND: "The email and password combination provided does not match our records. Please verify and try again.",
-        EMAIL_NOT_FOUND: "The email you entered is not available in our database",
+        EMAIL_NOT_FOUND: "The email you entered is not linked to any registered account",
         UPDATE_PASSWORD: "Update password function initiated",
         UPDATE_PASSWORD_COMPLETED: "Updated password function completed",
         UPDATE_PASSWORD_FAILED: "Updated password function failed",
