@@ -19,7 +19,7 @@ const dateConvert = new DateConvertor();
 
 export class eSignService {
 
-    async getEsignURI(body_data: { name: string, email: string }, saved_data?: any) {
+    async getEsignURI(body_data: { name: string, email: string }, saved_data?: any, notifi_data?: any) {
         const commonService = new CommonService(db.user);
         try {
             const token_data = await eSign.signClient()
@@ -62,8 +62,43 @@ export class eSignService {
                 Esigned: false,
                 EsignExpireDate: moment(EsignExpireDate).format('YYYY-MM-DD HH:mm:ss.SSS')
             };
-            await commonService.update(updateCondition, esignFileUpdate, db.EsignFileData).then((data: any) => {
+            await commonService.update(updateCondition, esignFileUpdate, db.EsignFileData).then(async (data: any) => {
                 logger.info('EnvelopeId is updated');
+                const current_date = new Date();
+                const notification_content = `Please review and electronically sign the application provided in this link. The link will expire in (${EsignExpireDate}). The document has been e-signed successfully.`
+                const form_notification_data = {
+                    AppNotificationID: uuidv4(),
+                    NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
+                    NotificationContent: notification_content,
+                    NotificationDetailedContent: notifi_data.Remarks,
+                    Entity: 'Esign',
+                    ItemID: `${notifi_data.InsuranceTransactionID}`.toUpperCase(),
+                    SendingUserType: 'Induvidual',
+                    AssigneeID: `${notifi_data.InsuranceTransaction.provider_details.ProviderDoctorID}`.toUpperCase(),
+                    AssignedTo: `${notifi_data.InsuranceTransaction.provider_details.ProviderDoctorID}`.toUpperCase(),
+                    ProviderClientID: null,
+                    ProviderGroupID: `${notifi_data.InsuranceTransaction.provider_details.ProviderGroupID}`,
+                    ProviderDoctorID: `${notifi_data.InsuranceTransaction.provider_details.ProviderDoctorID}`,
+                    IsActive: true,
+                    Status: `b758e70d-3acc-4e55-902b-6644451e671c`.toUpperCase(),
+                    CreatedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                    CreatedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+                    ModifiedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                    ModifiedBy: `001edaf1-2b25-424e-aab1-d4fee51e8d4d`.toUpperCase(),
+                    RedirectLink: final_uri.url,
+                    PracticeManagerID: null,
+                    ProviderUserID: null,
+                    IsActionTaken: false,
+                    IsNotificationfRead: false,
+                    NotificationType: appConstant.NOTIFICATION_TYPE[0],
+                    // AttachmentID: `${document.AttachmentID}`.toUpperCase(),
+                }
+                await commonService.create(form_notification_data, db.AppNotificationReceipts).then((saved_data) => {
+                    logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'Notification'));
+                    logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_COMPLETED);
+                }).catch((err: any) => {
+                    logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_FAILED, err.message);
+                })
             }).catch((error: any) => {
                 logger.error(error);
             })
@@ -101,7 +136,7 @@ export class eSignService {
              */
             const esign_condition: sequelizeObj = {};
             esign_condition.where = {
-                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: '117D643E-73DC-4616-9C4D-1BE73636D65F',
+                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
                 ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
                 ...((filter_data.all == false && !_.isNil(filter_data.provider_id) && !_.isEmpty(filter_data.provider_id)) && { ProviderDoctorID: { $eq: filter_data.provider_id } }),
             };
@@ -321,11 +356,12 @@ export class eSignService {
                     as: 'InsuranceTransaction',
                     attributes: ['InsuranceTransactionID', 'ProviderDoctorID'],
                     required: true,
+                    where: { IsActive: 1 },
                     include: [{
                         model: db.ProviderDoctor,
                         as: 'provider_details',
                         required: true,
-                        attributes: ['FirstName', 'MiddleName', 'LastName', 'Email', 'ProviderDoctorID']
+                        attributes: ['FirstName', 'MiddleName', 'LastName', 'Email', 'ProviderDoctorID', 'ProviderGroupID']
                     }]
                 }
             ]
@@ -359,7 +395,11 @@ export class eSignService {
                             name: `${data.FirstName} ${data.LastName}`,
                             email: data.Email,
                         }
-                        this.getEsignURI(user_data, saved_data);
+                        const followUpdate = {
+                            CronStatus: true
+                        }
+                        commonService.update({InsuranceFollowupID: insuranceData.InsuranceFollowupID},followUpdate, db.InsuranceFollowup)
+                        this.getEsignURI(user_data, saved_data, insuranceData);
                     }).catch((err: any) => {
                         logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_ALERT_NOTIFICATION_FAILED, err.message);
                         throw new Error(err);

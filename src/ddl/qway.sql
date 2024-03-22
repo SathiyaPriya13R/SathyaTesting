@@ -171,4 +171,5 @@ ALTER TABLE pvdr.EsignFileData ADD ESignedDate DATETIME DEFAULT NULL;
 ALTER TABLE pvdr.EsignFileData ADD EsignExpireDate DATETIME DEFAULT NULL;
 ALTER TABLE pvdr.EsignFileData ADD DocumentLocation NVARCHAR DEFAULT NULL;
 ALTER TABLE pvdr.EsignFileData ADD EsignedDocumentLocation NVARCHAR DEFAULT NULL;
+ALTER TABLE [ORCACRED PROD].ntf.AppNotificationRecipients ALTER COLUMN RedirectLink nvarchar(16) DEFAULT NULL;
 -- End
