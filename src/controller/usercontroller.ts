@@ -144,6 +144,7 @@ export default class UserController {
     async profileUpdate(req: Request, res: Response): Promise<void> {
         try {
             const decryptedData = decrypt(req.body.data);
+
             const query = req.query;
             if (decryptedData) {
                 const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
@@ -205,6 +206,36 @@ export default class UserController {
             logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_COMPLETED);
         } catch (error: any) {
             logger.info(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);
+            res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
+        }
+    }
+
+    async updateTheme(req: Request, res: Response): Promise<void> {
+        try {
+            const decryptedData = decrypt(req.body.data);
+
+            if (decryptedData) {
+
+                const { id, type, providerGroupContactId }: { id: string, type: string, providerGroupContactId: string } = JSON.parse(JSON.stringify(req.user))
+                const reqdata = JSON.parse(decryptedData);
+                let themeStr;
+                if (reqdata.ThemeCode) {
+                    const str = reqdata.ThemeCode;
+                    themeStr = str
+                }
+                const data = {
+                    id: id,
+                    type: type,
+                    providergroupcontactid: providerGroupContactId
+                }
+                const finalRes = await userService.updateTheme(data, themeStr);
+                res.status(200).send(finalRes);
+            }
+            else {
+                res.status(400).send({ data: encrypt(JSON.stringify({ message: appConstant.MESSAGES.DECRYPT_ERROR })) });
+            }
+        } catch (error: any) {
+            logger.error(`${appConstant.LOGGER_MESSAGE.THEME_UPDATE_FAILED} ${error.message}`);
             res.status(400).send({ data: encrypt(JSON.stringify(error.message)) });
         }
     }

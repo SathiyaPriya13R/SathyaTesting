@@ -48,6 +48,7 @@ export interface ProviderDoctorAttributes {
     GenerateCronPassword: boolean,
     ForgetPwdCron: boolean,
     MobileDeviceId: string,
+    ThemeCode: string
 }
 
 export interface ProviderDoctorModel extends Model<ProviderDoctorAttributes>, ProviderDoctorAttributes { }
@@ -240,6 +241,11 @@ export function ProviderDoctorFactory(sequelize: Sequelize): ProviderDoctorStati
             type: SequelizeStatic.STRING(256),
             allowNull: false
         },
+        ThemeCode: {
+            type: SequelizeStatic.STRING(200),
+            allowNull: true
+        }
+
     },
         {
 

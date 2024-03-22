@@ -26,6 +26,7 @@ router.post('/resetpassword', usercontroller.changePassword);
 router.get('/logincms', usercontroller.TermsofservicePrivacyPolicy);
 router.get('/logout', AuthGuard, usercontroller.logOut);
 router.get('/pwdexpirationtime', usercontroller.passwordExpirationCheck);
+router.post('/themeupdate', AuthGuard, usercontroller.updateTheme)
 
 // dashboard routes
 router.post('/dashboard/summarycount', AuthGuard, dashboardcontroller.dashboardsummary);

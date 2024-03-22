@@ -22,6 +22,7 @@ export interface ProviderGroupContactDetailAttributes {
     GenerateCronPassword: boolean,
     ForgetPwdCron: boolean,
     MobileDeviceId: string,
+    ThemeCode: string
 }
 
 export interface ProviderGroupContactDetailModel extends Model<ProviderGroupContactDetailAttributes>, ProviderGroupContactDetailAttributes { }
@@ -109,6 +110,10 @@ export function ProviderGroupContactDetailFactory(sequelize: Sequelize): Provide
         MobileDeviceID: {
             type: SequelizeStatic.STRING(256),
             allowNull: false
+        },
+        ThemeCode: {
+            type: SequelizeStatic.STRING(200),
+            allowNull: true
         },
     },
     {

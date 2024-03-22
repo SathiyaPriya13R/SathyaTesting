@@ -93,6 +93,7 @@ export default class UserService {
                         } else {
                             const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName', 'ProviderClientID', 'ProviderGroupID']);
                             finalData.UserType = userType.Name;
+                            finalData.ThemeCode = data.ThemeCode
                             const permissions = await this.getRolePermission(finalData.UserType as any);
                             finalData.UserPermissions = permissions;
                             let tokenData: any = {
@@ -149,6 +150,7 @@ export default class UserService {
                         const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== providerGroupContact.ProviderGroupID);
                         const permissions = await this.getRolePermission(finalData.UserType as any);
                         finalData.UserPermissions = permissions;
+                        finalData.ThemeCode = providerGroupContact.ThemeCode
                         let tokenData: any = {
                             ID: providerGroupContact.ProviderGroupID,
                             Email: providerGroupContact.Email,
@@ -164,6 +166,7 @@ export default class UserService {
                             userid: providerGroupContact.ProviderGroupID,
                             authToken: authtoken
                         }
+
                         // Push the new token details into the array
                         newTokenDetailsArray.push(TokenDetailsString);
                         const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
@@ -197,6 +200,8 @@ export default class UserService {
                         const finalData: any = _.pick(provider, ['Email']);
                         finalData.Id = provider.ProviderDoctorID;
                         finalData.DisplayName = `${provider.FirstName} ${provider.LastName}`
+                        finalData.ThemeCode = provider.ThemeCode
+
                         let tokenData: any = {
                             ID: provider.ProviderDoctorID,
                             Email: data.Email,
@@ -212,6 +217,7 @@ export default class UserService {
                             userid: data.ProviderDoctorID,
                             authToken: authtoken
                         }
+
                         const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
                         // Push the new token details into the array
                         newTokenDetailsArray.push(TokenDetailsString);
@@ -840,4 +846,48 @@ export default class UserService {
             throw new Error(appConstant.LOGGER_MESSAGE.PWD_EXPIERATION_FAILED);
         }
     }
+
+    async updateTheme(data: any, theme: any) {
+        try {
+            const commonService = new CommonService(db.user);
+            let finalRes: any;
+            let ptheme;
+            ptheme = theme ? theme : null
+            switch (data.type) {
+                case appConstant.USER_TYPE[0]:
+                    const providerGroupUpdateCondition: any = {}
+                    if (!_.isNil(ptheme)) {
+                        providerGroupUpdateCondition.ThemeCode = ptheme      
+                    }
+                    await commonService.update({ ProviderGroupContactDetailID: data.providergroupcontactid }, providerGroupUpdateCondition, db.ProviderGroupContact);
+                    return { data: encrypt(JSON.stringify(appConstant.LOGGER_MESSAGE.THEME_UPDATE_SUCCESSFULLY)) }
+                case appConstant.USER_TYPE[1]:
+                    const providerUpdateConiditon: any = {}
+                    if (!_.isNil(ptheme)) {
+                        providerUpdateConiditon.ThemeCode = ptheme
+                    }
+                    await commonService.update({ ProviderDoctorID: data.id }, providerUpdateConiditon, db.ProviderDoctor);
+                    return { data: encrypt(JSON.stringify(appConstant.LOGGER_MESSAGE.THEME_UPDATE_SUCCESSFULLY)) }
+                case appConstant.USER_TYPE[2]:
+                case appConstant.USER_TYPE[3]:
+                    const userUpdateCondition: any = {}
+                    if (!_.isNil(ptheme)) {
+                        userUpdateCondition.ThemeCode = ptheme
+                    }  
+                    await commonService.update({ Id: data.id }, userUpdateCondition, db.User);
+                    return { data: encrypt(JSON.stringify(appConstant.LOGGER_MESSAGE.THEME_UPDATE_SUCCESSFULLY)) }
+                default:
+                    return appConstant.MESSAGES.INVALID_USERTYPE;
+            }
+        } catch (error: any) {
+            logger.error(appConstant.LOGGER_MESSAGE.THEME_UPDATE_FAILED, error.message);
+            throw new Error(appConstant.LOGGER_MESSAGE.THEME_UPDATE_FAILED);
+        }
+    }
+    
+    
+    
+    
+    
+   
 }

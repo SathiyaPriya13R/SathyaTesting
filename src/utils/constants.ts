@@ -58,6 +58,10 @@ export default class AppConstants {
         PROVIDER_SPEC_FUNCTION_COMPLETED: "Provider Spec function completed",
         PROVIDER_SPEC_FUNCTION_FAILED: "Provider Spec function failed",
         USER_ALREADY_LOGEEDIN: "The user is currently logged in on another device.",
+        THEME_UPDATE_STARTED: "Theme update function started",
+        THEME_UPDATE_COMPLETED: "Theme update function completed",
+        THEME_UPDATE_FAILED: "Theme update function failed",
+        THEME_UPDATE_SUCCESSFULLY: "Theme updated successfully",
     }
     MESSAGES = {
         EMPTY_TOKEN:
