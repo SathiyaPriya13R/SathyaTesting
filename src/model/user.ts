@@ -54,7 +54,8 @@ export interface UserAttributes {
     IsSystem: boolean,
     PwdExpireDate: Date,
     ForgotPwd: boolean,
-    mobileDeviceID: string
+    mobileDeviceID: string,
+    ThemeCode: string
 }
 
 export interface UserModel extends Model<UserAttributes>, UserAttributes { }
@@ -88,7 +89,7 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
             type: SequelizeStatic.TEXT,
             allowNull: true
         },
-        SecurityStamp:{
+        SecurityStamp: {
             type: SequelizeStatic.TEXT,
             allowNull: true
         },
@@ -272,8 +273,14 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
             type: SequelizeStatic.STRING(256),
             allowNull: false
         },
+        ThemeCode: {
+            type: SequelizeStatic.STRING(200),
+            allowNull: true
+        }
+
+
     },
-    {
+        {
 
             indexes: [],
             timestamps: false,
@@ -282,4 +289,4 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
             tableName: 'User'
         });
 
-    }
+}

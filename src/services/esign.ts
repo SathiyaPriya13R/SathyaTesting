@@ -65,7 +65,8 @@ export class eSignService {
             await commonService.update(updateCondition, esignFileUpdate, db.EsignFileData).then(async (data: any) => {
                 logger.info('EnvelopeId is updated');
                 const current_date = new Date();
-                const notification_content = `Please review and electronically sign the application provided in this link. The link will expire in (${EsignExpireDate}). The document has been e-signed successfully.`
+                const effective_date = !_.isNil(current_date) ? await dateConvert.dateFormat(current_date) : null;
+                const notification_content = `Please review and electronically sign the application provided in this link. The link will expire in (${effective_date}). The document has been e-signed successfully.`
                 const form_notification_data = {
                     AppNotificationID: uuidv4(),
                     NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
@@ -417,7 +418,7 @@ export class eSignService {
             const token_data = await eSign.signClient()
             const signed_doc = await eSign.downloadCompletedDocument(data.EnvelopeID, token_data.access_token);
             const esignUpdateConditon = {
-                FileDataID: data.InsuranceTransactionID
+                FileDataID: data.FileDataID
             }
 
             const esignUpdate = {

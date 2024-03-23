@@ -5,6 +5,8 @@ import pdf from 'pdf-parse';
 import path from 'path';
 import _ from 'lodash';
 import BlobService from './blobservice';;
+require('dotenv').config();
+
 
 const blobservice = new BlobService();
 
@@ -87,7 +89,7 @@ export class eSign {
     async getDocusignRedirectUrl(email: any, name: any, envelopeId: any, FileDataID: any) {
         try {
             const viewRequest = new docusign.RecipientViewRequest();
-            viewRequest.returnUrl = `http://192.168.0.225:3000/api/esign/success?envelopId${envelopeId}&FileDataId${FileDataID}`; // This return url need to get from .env file process.env.ESIGN_RETURN_URL
+            viewRequest.returnUrl = `${process.env.ESIGN_REDIRECT_LINK}?envelopId:${envelopeId}?FileDataId:${FileDataID}&apn=com.qway_mobile`; // This return url need to get from .env file process.env.ESIGN_RETURN_URL
             viewRequest.authenticationMethod = 'none' // OTHER METHODS - email, phone, sms, idCheck, kba
             viewRequest.email = email
             viewRequest.userName = name

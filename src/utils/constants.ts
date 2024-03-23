@@ -25,7 +25,7 @@ export default class AppConstants {
         FORGET_PASSWORD_COMPLETED: "Forget password function completed",
         FORGET_PASSWORD_FAILED: "Forget password failed",
         USER_NOT_FOUND: "The email and password combination provided does not match our records. Please verify and try again.",
-        EMAIL_NOT_FOUND: "The email you entered is not available in our database",
+        EMAIL_NOT_FOUND: "The email you entered is not linked to any registered account",
         UPDATE_PASSWORD: "Update password function initiated",
         UPDATE_PASSWORD_COMPLETED: "Updated password function completed",
         UPDATE_PASSWORD_FAILED: "Updated password function failed",
@@ -58,6 +58,10 @@ export default class AppConstants {
         PROVIDER_SPEC_FUNCTION_COMPLETED: "Provider Spec function completed",
         PROVIDER_SPEC_FUNCTION_FAILED: "Provider Spec function failed",
         USER_ALREADY_LOGEEDIN: "The user is currently logged in on another device.",
+        THEME_UPDATE_STARTED: "Theme update function started",
+        THEME_UPDATE_COMPLETED: "Theme update function completed",
+        THEME_UPDATE_FAILED: "Theme update function failed",
+        THEME_UPDATE_SUCCESSFULLY: "Theme updated successfully",
     }
     MESSAGES = {
         EMPTY_TOKEN:
