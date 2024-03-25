@@ -133,7 +133,7 @@ export class eSignService {
              */
             const esign_condition: sequelizeObj = {};
             esign_condition.where = {
-                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: 'B75E4250-53F3-432E-93F8-D5FDBC63EBFE',
+                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
                 ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
             };
             esign_condition.attributes = ['InsuranceTransactionID', 'CreatedBy', 'ModifiedBy', 'CreatedDate', 'ModifiedDate', 'ProviderDoctorID', 'LocationID', 'TaskID']
@@ -275,11 +275,7 @@ export class eSignService {
 
                 return acc;
             }, []);
-            if (groupedByDisplayName.length > 0) {
-                return groupedByDisplayName;
-            } else {
-                return 'No esign record found'
-            }
+            return groupedByDisplayName;
         } catch (error: any) {
             logger.error(appConstant.ESIGN_MESSAGE.ESIGN_FUNCTION_FAILED);
             throw new Error(error);
