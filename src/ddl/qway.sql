@@ -173,3 +173,49 @@ ALTER TABLE pvdr.EsignFileData ADD DocumentLocation NVARCHAR DEFAULT NULL;
 ALTER TABLE pvdr.EsignFileData ADD EsignedDocumentLocation NVARCHAR DEFAULT NULL;
 ALTER TABLE [ORCACRED PROD].ntf.AppNotificationRecipients ALTER COLUMN RedirectLink nvarchar(16) DEFAULT NULL;
 -- End
+
+-- 25-03-2024 - Start
+-- For Force Update
+CREATE TABLE ref.MobileAppVersion (
+    AppVersionId UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID() NOT NULL,
+    AndoridForceUpdateVersion NVARCHAR(50) NOT NULL,
+    AndoridCurrentVersion NVARCHAR(MAX) NOT NULL,
+    AndoridForceUpdateStatus BIT DEFAULT 0,
+    AndoridForceUpdateDate DATETIME DEFAULT GETDATE() NOT NULL,
+    AndoridCurrentVersionReleaseDate DATETIME DEFAULT GETDATE() NOT NULL,
+    iOSForceUpdateVersion NVARCHAR(50) NOT NULL,
+    iOSCurrentVersion NVARCHAR(MAX) NOT NULL,
+    iOSForceUpdateStatus BIT DEFAULT 0,
+    iOSForceupdateDate DATETIME DEFAULT GETDATE() NOT NULL,
+    iOSCurrentVersionReleaseDate DATETIME DEFAULT GETDATE() NOT NULL,
+    isLatest BIT DEFAULT 1
+);
+
+INSERT
+	INTO
+	[ORCACRED PROD].[ref].MobileAppVersion (AppVersionId,
+	AndoridForceUpdateVersion,
+	AndoridCurrentVersion,
+	AndoridForceUpdateStatus,
+	AndoridForceUpdateDate,
+	AndoridCurrentVersionReleaseDate,
+	iOSForceUpdateVersion,
+	iOSCurrentVersion,
+	iOSForceUpdateStatus,
+	iOSForceupdateDate,
+	iOSCurrentVersionReleaseDate,
+	isLatest)
+VALUES
+	 (N'94505AC4-CCC6-4508-8C14-0005120588AE',
+N'0.4',
+N'1',
+1,
+'2024-03-20 12:54:34.800',
+'2024-03-25 12:54:34.800',
+N'0.3',
+N'1.3',
+1,
+'2024-03-19 12:54:34.800',
+'2024-03-25 12:54:34.800',
+1);
+-- End

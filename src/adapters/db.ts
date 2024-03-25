@@ -24,7 +24,7 @@ import { DocumentAttachmentFactory } from '../model/documentattachment';
 import { DocumentCatgegoryFactory } from '../model/documentcategory';
 import { AppNotificationRecipientsFactory } from '../model/appnotificationrecipients'
 import { EsignFileDataFactory } from '../model/esignfiledata';
-
+import { MobileAppVersionFactory } from '../model/mobileappversion';
 
 require('dotenv').config();
 
@@ -64,6 +64,7 @@ export const DocumentAttachment = DocumentAttachmentFactory(user)
 export const DocumentCategory = DocumentCatgegoryFactory(user);
 export const AppNotificationReceipts = AppNotificationRecipientsFactory(user);
 export const EsignFileData = EsignFileDataFactory(user);
+export const MobileAppVersion = MobileAppVersionFactory(user);
 
 /**
  * Associations

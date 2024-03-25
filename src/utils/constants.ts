@@ -62,6 +62,10 @@ export default class AppConstants {
         THEME_UPDATE_COMPLETED: "Theme update function completed",
         THEME_UPDATE_FAILED: "Theme update function failed",
         THEME_UPDATE_SUCCESSFULLY: "Theme updated successfully",
+        APP_VERSION_FUNCTION_STARTED: "App version info function started",
+        APP_VERSION_FUNCTION_COMPLETED: "App version info function completed",
+        APP_VERSION_FUNCTION_FAILED: "App version info function failed",
+        APP_VERSION_FUNCTION_SUCCESSFULLY: "App version info  successfully",
     }
     MESSAGES = {
         EMPTY_TOKEN:

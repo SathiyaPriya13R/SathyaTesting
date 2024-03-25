@@ -114,10 +114,6 @@ export class eSignService {
         try {
             const commonService = new CommonService(db.user);
             logger.info(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_STARTED);
-            if ((filter_data.all == false) && (_.isNil(filter_data.provider_id) || filter_data.provider_id == '')) {
-                logger.info(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_FAILED);
-                return { message: 'Please enter provder id' };
-            }
             /**
              * Checking logged in as a user or not.
              */
@@ -137,9 +133,8 @@ export class eSignService {
              */
             const esign_condition: sequelizeObj = {};
             esign_condition.where = {
-                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
-                ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
-                ...((filter_data.all == false && !_.isNil(filter_data.provider_id) && !_.isEmpty(filter_data.provider_id)) && { ProviderDoctorID: { $eq: filter_data.provider_id } }),
+                [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: 'B75E4250-53F3-432E-93F8-D5FDBC63EBFE',
+                ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
             };
             esign_condition.attributes = ['InsuranceTransactionID', 'CreatedBy', 'ModifiedBy', 'CreatedDate', 'ModifiedDate', 'ProviderDoctorID', 'LocationID', 'TaskID']
 
@@ -223,14 +218,14 @@ export class eSignService {
                 const searchparams: Record<string, unknown> = {};
                 const searchtext = _.trim(filter_data.searchtext)
                 searchparams.TaskID = { $like: '%' + searchtext + '%' };
-                searchparams['$history_details.status.Name$'] = { $like: '%' + searchtext + '%' };
+                // searchparams['$history_details.status.Name$'] = { $like: '%' + searchtext + '%' };
                 searchparams['$insurance_location.Name$'] = { $like: '%' + searchtext + '%' };
                 searchparams['$grp_insurance.insurance_name.Name$'] = { $like: '%' + searchtext + '%' };
 
                 esign_condition.where['$or'] = searchparams;
                 esign_condition.where = _.omit(esign_condition.where, ['searchtext']);
             }
-
+            console.log('esign_conditon ----',esign_condition);
             const esign_data: Array<Record<string, any>> = await commonService.getAllList(esign_condition, db.InsuranceTransaction);
 
             const esign_list = JSON.parse(JSON.stringify(esign_data));
@@ -280,7 +275,11 @@ export class eSignService {
 
                 return acc;
             }, []);
-            return groupedByDisplayName;
+            if (groupedByDisplayName.length > 0) {
+                return groupedByDisplayName;
+            } else {
+                return 'No esign record found'
+            }
         } catch (error: any) {
             logger.error(appConstant.ESIGN_MESSAGE.ESIGN_FUNCTION_FAILED);
             throw new Error(error);

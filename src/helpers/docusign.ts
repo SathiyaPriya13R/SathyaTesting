@@ -209,10 +209,6 @@ export class eSign {
             });
             env.recipients = recipients;
 
-
-            // Set expiry date
-            env.expireAfter = '2'; // Expiry in days
-
             // Request that the envelope be sent by setting |status| to "sent".
             // To request that the envelope be created as a draft, set to "created"
             env.status = 'sent';
