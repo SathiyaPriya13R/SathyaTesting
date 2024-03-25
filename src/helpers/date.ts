@@ -12,4 +12,10 @@ export default class DateConvertor {
         const formattedDate = `${day} ${month} ${year}`;
         return formattedDate
     }
+    async DateFormatWithTime(dateString: any) {
+        const date = new Date(dateString);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const formattedDate = `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}:${('0' + date.getSeconds()).slice(-2)}`;
+        return formattedDate;
+    }
 }

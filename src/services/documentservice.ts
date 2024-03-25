@@ -39,7 +39,7 @@ export default class DocumentService {
       }];
       const documentDetails = await commonService.getData(documentCondition, db.DocumentAttachment);
       const documentAddress = JSON.parse(JSON.stringify(documentDetails));
-      documentAddress.ExpiryDate = !_.isNil(documentAddress.ExpiryDate) ? await dateConvert.dateFormat(documentAddress.ExpiryDate) : null;
+      documentAddress.ExpiryDate = !_.isNil(documentAddress.ExpiryDate) ? await dateConvert.DateFormatWithTime(documentAddress.ExpiryDate) : null;
       documentAddress.IssueDate = !_.isNil(documentAddress.IssueDate) ? await dateConvert.dateFormat(documentAddress.IssueDate) : null;
       documentAddress.CreatedDate = !_.isNil(documentAddress.CreatedDate) ? await dateConvert.dateFormat(documentAddress.CreatedDate) : null;
 
@@ -201,26 +201,27 @@ export default class DocumentService {
         }
       ]
 
-      if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
-        const searchparams: Record<string, unknown> = {};
-        const searchtext = _.trim(filter_data.searchtext);
+      // if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext) && filter_data.searchtext != '') {
+      //   const searchparams: Record<string, unknown> = {};
+      //   const searchtext = _.trim(filter_data.searchtext);
 
-        // searchparams['$provider_document.FileName$'] = { $like: '%' + searchtext + '%' };
-        searchparams['$provider_document.Name$'] = { $like: '%' + searchtext + '%' };
-        searchparams['$provider_document.category.Name$'] = { $like: '%' + searchtext + '%' };
+      //   // searchparams['$provider_document.FileName$'] = { $like: '%' + searchtext + '%' };
+      //   searchparams['$provider_document.Name$'] = { $like: '%' + searchtext + '%' };
+      //   searchparams['$provider_document.category.Name$'] = { $like: '%' + searchtext + '%' };
 
-        if (searchtext && !_.isNil(searchtext) && Date.parse(searchtext) != null && searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(searchtext))) {
-          const start_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
-          const end_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
-          const date_range = [start_date, end_date]
-          searchparams['$provider_document.ExpiryDate$'] = { $between: date_range };
-        }
+      //   if (searchtext && !_.isNil(searchtext) && Date.parse(searchtext) != null && searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(searchtext))) {
+      //     const start_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
+      //     const end_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
+      //     const date_range = [start_date, end_date]
+      //     searchparams['$provider_document.ExpiryDate$'] = { $between: date_range };
+      //   }
 
-        provider_condition.where['$or'] = searchparams;
-        provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
-      }
+      //   provider_condition.where['$or'] = searchparams;
+      //   provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
+      // }
 
       provider_condition.order = [['FirstName', 'ASC']]
+      // provider_condition.order = [[ 'ExpiryDate', 'ASC']]
 
       const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
       const provider_list = JSON.parse(JSON.stringify(provider_data));
