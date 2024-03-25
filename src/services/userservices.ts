@@ -885,8 +885,19 @@ export default class UserService {
         }
     }
     
-    
-    
+    async AppVersionInfo(): Promise<Record<string, any>> {
+        try {
+            const commonService = new CommonService(db.user);
+            logger.info(appConstant.LOGGER_MESSAGE.APP_VERSION_FUNCTION_STARTED)
+            const data = await commonService.getData({ where: { isLatest: 1 } }, db.MobileAppVersion);
+            const cms_data = JSON.parse(JSON.stringify(data));
+            logger.info(appConstant.LOGGER_MESSAGE.APP_VERSION_FUNCTION_COMPLETED);
+            return cms_data;
+        } catch (error: any) {
+            logger.info(appConstant.LOGGER_MESSAGE.TERMS_OF_SERVICE_FAILED);
+            throw new Error(error.message);
+        }
+    }
     
     
    
