@@ -74,10 +74,6 @@ export default class ProviderService {
                 const searchTerms = searchtext.split(' ');
                 if (searchTerms.length === 1) {
                     searchparams.FirstName = { $like: '%' + searchtext + '%' };
-                    searchparams.FirstName = { $like: '%' + searchtext + '%' };
-                    searchparams.MiddleName = { $like: '%' + searchtext + '%' };
-                    searchparams.FirstName = { $like: '%' + searchtext + '%' };
-                    searchparams.MiddleName = { $like: '%' + searchtext + '%' };
                     searchparams.LastName = { $like: '%' + searchtext + '%' };
                 } else if (searchTerms.length === 2) {
                     searchparams.FirstName = { $like: '%' + searchTerms[1] + '%' };
