@@ -39,9 +39,9 @@ export default class DocumentService {
       }];
       const documentDetails = await commonService.getData(documentCondition, db.DocumentAttachment);
       const documentAddress = JSON.parse(JSON.stringify(documentDetails));
-      documentAddress.ExpiryDate = !_.isNil(documentAddress.ExpiryDate) ? await dateConvert.DateFormatWithTime(documentAddress.ExpiryDate) : null;
+      documentAddress.ExpiryDate = !_.isNil(documentAddress.ExpiryDate) ? await dateConvert.dateFormat(documentAddress.ExpiryDate) : null;
       documentAddress.IssueDate = !_.isNil(documentAddress.IssueDate) ? await dateConvert.dateFormat(documentAddress.IssueDate) : null;
-      documentAddress.CreatedDate = !_.isNil(documentAddress.CreatedDate) ? await dateConvert.dateFormat(documentAddress.CreatedDate) : null;
+      documentAddress.CreatedDate = !_.isNil(documentAddress.CreatedDate) ? await dateConvert.DateFormatWithTime(documentAddress.CreatedDate) : null;
 
       const uploadedBy = {
         Name: documentAddress.provider ? `${documentAddress.provider.FirstName} ${documentAddress.provider.MiddleName || ''} ${documentAddress.provider.LastName}` : ""
