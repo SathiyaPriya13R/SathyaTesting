@@ -89,16 +89,11 @@ export default class NotificationService {
                 appnotificationcondition.where = _.omit(appnotificationcondition.where, ['searchtext']);
             }
 
-            if (!appnotificationcondition.group) {
-                appnotificationcondition.group = ['Entity'];
-            }
             let result: any;
 
             if (filter_data.detail_count == false && filter_data.notification_type && (filter_data.notification_type == 'alert' || filter_data.notification_type == 'notification')) {
                 result = await commonService.getCount(appnotificationcondition, db.AppNotificationReceipts);
-                entityCount = {
-                    count: result
-                }
+                entityCount = result         
             }
 
             if (filter_data.detail_count && filter_data.detail_count == true && filter_data.notification_type == 'notification') {
@@ -135,6 +130,7 @@ export default class NotificationService {
             logger.info(appConstant.COUNT_MESSAGE.COUNT_FUNCTION_FAILED, error);
             throw error;
         }
+
     }
 
     async getNotificationList(user_data: { id: string, user_type: string }, filter_data: any) {
