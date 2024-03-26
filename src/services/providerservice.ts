@@ -71,11 +71,14 @@ export default class ProviderService {
             if (!_.isNil(filter_data) && !_.isNil(filter_data.searchtext)) {
                 const searchparams: Record<string, unknown> = {};
                 const searchtext = _.trim(filter_data.searchtext)
-                searchparams.FirstName = { $like: '%' + searchtext + '%' };
-                searchparams.MiddleName = { $like: '%' + searchtext + '%' };
-                searchparams.LastName = { $like: '%' + searchtext + '%' };
-                // searchparams.IsActive = { $like: '%' + searchtext + '%' };
-                // searchparams['$provider_group_detail.Name$'] = { $like: '%' + searchtext + '%' };
+                const searchTerms = searchtext.split(' ');
+                if (searchTerms.length === 1) {
+                    searchparams.FirstName = { $like: '%' + searchtext + '%' };
+                    searchparams.LastName = { $like: '%' + searchtext + '%' };
+                } else if (searchTerms.length === 2) {
+                    searchparams.FirstName = { $like: '%' + searchTerms[1] + '%' };
+                    searchparams.LastName = { $like: '%' + searchTerms[1] + '%' };
+                }
                 searchparams['$suffix_name.Name$'] = { $like: '%' + searchtext + '%' };
                 searchparams['$certification_name.Name$'] = { $like: '%' + searchtext + '%' };
 
@@ -106,6 +109,7 @@ export default class ProviderService {
             if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
                 logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_COMPLETED)
                 return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER) };
+
             } else {
                 logger.info(appConstant.PROVIDER_MESSAGES.PROVIDER_FUNCTION_COMPLETED)
                 return { data: null, message: appConstant.MESSAGES.DATA_NOT_FOUND.replace('{{}}', appConstant.PROVIDER_MESSAGES.PROVIDER) };

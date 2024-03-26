@@ -95,7 +95,7 @@ export default class NotificationService {
 
             if (filter_data.detail_count == false && filter_data.notification_type && (filter_data.notification_type == 'alert' || filter_data.notification_type == 'notification')) {
                 result = await commonService.getCount(appnotificationcondition, db.AppNotificationReceipts);
-                entityCount = result
+                entityCount = result         
             }
 
             if (filter_data.detail_count && filter_data.detail_count == true && filter_data.notification_type == 'notification') {
