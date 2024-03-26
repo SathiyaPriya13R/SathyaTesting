@@ -232,7 +232,7 @@ export default class NotificationService {
 
             notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead', 'ItemID', 'AttachmentID']
 
-            notification_condition.order = [['NotificationDate', 'DESC']]
+            notification_condition.order = [ ['NotificationDate', 'DESC'] ]
 
             notification_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
             notification_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
