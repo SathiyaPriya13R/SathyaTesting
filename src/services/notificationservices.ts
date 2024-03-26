@@ -6,6 +6,8 @@ import CommonService from '../helpers/commonService';
 import moment from 'moment';
 import { v4 as uuidv4 } from 'uuid';
 import DateConvertor from '../helpers/date';
+import { Sequelize } from 'sequelize';
+import sequelize from 'sequelize/types/sequelize';
 
 const logger = require('../helpers/logger');
 const { Op } = require('sequelize');
@@ -209,13 +211,28 @@ export default class NotificationService {
                     model: db.ProviderDoctor,
                     as: 'provider',
                     required: true,
-                    attributes: ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName']
+                    attributes: ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName'],
+                    include: [
+                        {
+                            model: db.lookupValue,
+                            as: 'suffix_name',
+                            required: true,
+                            where: { IsActive: 1 },
+                            attributes: ['Name']
+                        },
+                        {
+                            model: db.lookupValue,
+                            as: 'certification_name',
+                            where: { IsActive: 1 },
+                            attributes: ['Name']
+                        }
+                    ]
                 }
             ]
 
             notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead', 'ItemID', 'AttachmentID']
 
-            notification_condition.order = [['NotificationDate', 'DESC']]
+            notification_condition.order = [ ['NotificationDate', 'DESC'] ]
 
             notification_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
             notification_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
@@ -246,6 +263,13 @@ export default class NotificationService {
                 await notifi_data.forEach(async (ntf: any) => {
                     const formattedNotificationDate = !_.isNil(ntf.NotificationDate) ? moment(ntf.NotificationDate).format('DD MMM YYYY') : null
                     ntf.NotificationDate = formattedNotificationDate
+                    let prefix: any;
+                    if (ntf.provider.certification_name && ntf.provider.certification_name.Name === 'MD') {
+                        prefix = 'Dr';
+                    } else {
+                        prefix = '';
+                    }
+                    ntf.providerName = `${prefix} ${ntf.provider.FirstName} ${ntf.provider.LastName} ${ntf.provider.certification_name ? ntf.provider.certification_name.Name : ''}`;
                 })
             }
 
