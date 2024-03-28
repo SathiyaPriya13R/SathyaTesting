@@ -59,7 +59,7 @@ export function DocumentAttachmentFactory(sequelize: Sequelize): DocumentAttachm
             allowNull: true,
         },
         ExpiryDate: {
-            type: SequelizeStatic.DATE,
+            type: SequelizeStatic.STRING,
             allowNull: true,
         },
         IsActive: {
@@ -139,11 +139,11 @@ export function DocumentAttachmentFactory(sequelize: Sequelize): DocumentAttachm
             allowNull: true
         }
     },
-    {
-        indexes: [],
-        timestamps: false,
-        freezeTableName: true,
-        schema: "pvdr",
-        tableName: 'DocumentAttachment'
-    });
+        {
+            indexes: [],
+            timestamps: false,
+            freezeTableName: true,
+            schema: "pvdr",
+            tableName: 'DocumentAttachment'
+        });
 }

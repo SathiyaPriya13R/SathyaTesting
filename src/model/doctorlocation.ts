@@ -13,7 +13,8 @@ export interface DoctorLocationAttributes {
     ModifiedDate: Date,
     PermissionSetID: UUID,
     ID: number,
-    IsPrimary: boolean
+    IsPrimary: boolean,
+    AddressTermDate:Date
 }
 
 export interface DoctorLocationModel extends Model<DoctorLocationAttributes>, DoctorLocationAttributes { }
@@ -69,6 +70,10 @@ export function DoctorLocationFactory(sequelize: Sequelize): DoctorLocationStati
         IsPrimary: {
             type: SequelizeStatic.STRING(20),
             allowNull: true
+        },
+        AddressTermDate:{
+            type:SequelizeStatic.STRING,
+            allowNull:true
         }
     },
     {
