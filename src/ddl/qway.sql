@@ -219,3 +219,8 @@ N'1.3',
 '2024-03-25 12:54:34.800',
 1);
 -- End
+
+--27-03-2024 - Start
+--For DoctorLocation
+ALTER TABLE pvdr.DoctorLocation ADD AddressTermDate DATETIME DEFAULT NULL;
+--End

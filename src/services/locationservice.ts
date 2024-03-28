@@ -5,9 +5,11 @@ import * as db from '../adapters/db';
 import _ from 'lodash';
 import AppConstants from "../utils/constants";
 import CommonService from '../helpers/commonService';
+import DateConvertor from '../helpers/date';
 const logger = require('../helpers/logger');
 
 const appConstant = new AppConstants();
+const dateConvert = new DateConvertor()
 
 export default class LocationService {
 
@@ -70,7 +72,7 @@ export default class LocationService {
                         ...((filter_data.all == true && !_.isNil(filter_datas) && !_.isEmpty(filter_datas.locations)) && { LocationID: { $in: filter_datas.locations } })
                     },
                     required: true,
-                    attributes: ['IsActive', 'DoctorLocationID'],
+                    attributes: ['IsActive', 'DoctorLocationID', 'AddressTermDate'],
                     include: [
                         {
                             model: db.Location,
@@ -105,8 +107,12 @@ export default class LocationService {
             const provider_ids: Array<string> = provider_list.map((provider: any) => provider.ProviderDoctorID)
 
             const location_array: Array<any> = await this.getAllLocations(provider_ids, location_status, filter_data, filter_datas)
-
+            const termdatedata :any=[]
             await provider_list.map((provider: any) => {
+                termdatedata.push({
+                    termdate : provider.provider_location.AddressTermDate,
+                    ProviderDoctorID : provider.ProviderDoctorID
+                })
                 delete provider.provider_location
             })
 
@@ -118,6 +124,13 @@ export default class LocationService {
                         if (!provider.provider_location) {
                             provider.provider_location = [];
                         }
+                        termdatedata.map(async (termdata:any)=>{
+                            if(termdata.ProviderDoctorID === location.location_provider.ProviderDoctorID && !_.isNil(termdata.termdate)){   
+                                location.TermDate = await dateConvert.dateFormat(termdata.termdate);
+                                location.address_term_date = termdata.termdate
+                            }
+                            
+                        })
                         provider.provider_location.push(location);
                     }
                 })
@@ -216,7 +229,7 @@ export default class LocationService {
 
     }
 
-    async updateLocationStatus(update_data: { doctor_location_id: string, location_status: boolean }) {
+    async updateLocationStatus(update_data: { doctor_location_id: string, location_status: boolean, address_term_date: any }) {
         try {
 
             const commonService = new CommonService(db.user);
@@ -227,7 +240,11 @@ export default class LocationService {
                 return { message: 'Please enter valid location id or location status' };
             }
 
-            let updated_data = await commonService.update({ DoctorLocationID: update_data.doctor_location_id }, { IsActive: update_data.location_status }, db.DoctorLocation)
+            let updated_data = await commonService.update(
+                { DoctorLocationID: update_data.doctor_location_id },
+                { IsActive: update_data.location_status, AddressTermDate: update_data.address_term_date },
+                db.DoctorLocation
+            );
             updated_data = JSON.parse(JSON.stringify(updated_data))
 
             if (update_data && !_.isNil(update_data) && !_.isEmpty(update_data)) {

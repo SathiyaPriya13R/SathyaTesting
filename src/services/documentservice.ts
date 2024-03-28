@@ -90,6 +90,7 @@ export default class DocumentService {
         doc_data.DocumentSoftDelete = 0
         doc_data.IsRenewed = 0
         doc_data.RefAttachmentID = attachment_data.RefAttachmentID
+        doc_data.ExpiryDate = moment(attachment_data.ExpiryDate).format('YYYY-MM-DD')
 
         const saved_data: any = await commonService.create(doc_data, db.DocumentAttachment)
 
