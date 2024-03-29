@@ -22,8 +22,7 @@ export default class DashboardController {
                     if (data.error) {
                         res.status(400).send({ data: encrypt(JSON.stringify(data.error)) });
                     } else {
-                        // res.status(200).send({ data: encrypt(JSON.stringify(data)) });
-                        res.status(200).send(data);
+                        res.status(200).send({ data: encrypt(JSON.stringify(data)) })
                     }
                 }).catch((error) => {
                     res.status(400).send({ data: encrypt(JSON.stringify(error)) });
