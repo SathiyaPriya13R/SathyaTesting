@@ -77,8 +77,13 @@ export default class UserService {
                             }
                         } else if (!_.isNil(data.PasswordExpirationDate) && data.PasswordExpirationDate < new Date()) {
                             logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
+                            const responseData = {
+                                Id: data.Id,
+                                UserType: userType.Name,
+                                PasswordExpire: true,
+                            }
                             return {
-                                data: encrypt(JSON.stringify({ PasswordExpire: true }))
+                                data: encrypt(JSON.stringify(responseData))
                             }
                         } else {
                             const finalData: any = _.pick(data, ['Id', 'Email', 'ProviderClientID', 'ProviderGroupID']);
@@ -137,8 +142,13 @@ export default class UserService {
                         }
                     } else if (!_.isNil(groupData.PasswordExpirationDate) && groupData.PasswordExpirationDate < new Date()) {
                         logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
+                        const responseData = {
+                            Id: groupData.ProviderGroupContactDetailID,
+                            UserType: appConstant.USER_TYPE[0],
+                            PasswordExpire: true,
+                        }
                         return {
-                            data: encrypt(JSON.stringify({ PasswordExpire: true }))
+                            data: encrypt(JSON.stringify(responseData))
                         }
                     } else {
                         const finalData: any = _.pick(providerGroupContact, ['Email']);
@@ -197,8 +207,13 @@ export default class UserService {
                         }
                     } else if (!_.isNil(data.PasswordExpirationDate) && data.PasswordExpirationDate < new Date()) {
                         logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
+                        const responseData = {
+                            Id: data.ProviderDoctorID,
+                            UserType: appConstant.USER_TYPE[1],
+                            PasswordExpire: true,
+                        }
                         return {
-                            data: encrypt(JSON.stringify({ PasswordExpire: true }))
+                            data: encrypt(JSON.stringify(responseData))
                         }
                     } else {
                         const finalData: any = _.pick(provider, ['Email']);
