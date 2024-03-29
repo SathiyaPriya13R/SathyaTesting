@@ -106,14 +106,15 @@ export default class LocationService {
             const provider_list = JSON.parse(JSON.stringify(provider_data));
             const provider_ids: Array<string> = provider_list.map((provider: any) => provider.ProviderDoctorID)
 
-            const location_array: Array<any> = await this.getAllLocations(provider_ids, location_status, filter_data, filter_datas)
+            const location_array: Array<any> = await this.getAllLocations(provider_ids, location_status, filter_data, filter_datas);
             const termdatedata :any=[]
             await provider_list.map((provider: any) => {
                 provider.provider_location.map((data: any)=> {
                     if (data) {
                         termdatedata.push({
                             termdate : data.AddressTermDate,
-                            ProviderDoctorID : provider.ProviderDoctorID
+                            ProviderDoctorID : provider.ProviderDoctorID,
+                            DoctorLocationID: data.DoctorLocationID
                         })
                     }
                 })
@@ -129,7 +130,7 @@ export default class LocationService {
                             provider.provider_location = [];
                         }
                         termdatedata.map(async (termdata:any)=>{
-                            if(termdata.ProviderDoctorID === location.location_provider.ProviderDoctorID && !_.isNil(termdata.termdate)){   
+                            if(termdata.DoctorLocationID === location.DoctorLocationID && !_.isNil(termdata.termdate)){   
                                 location.TermDate = await dateConvert.dateFormat(termdata.termdate);
                                 location.address_term_date = termdata.termdate
                             } else {
