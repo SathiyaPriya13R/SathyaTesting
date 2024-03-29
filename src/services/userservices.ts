@@ -75,8 +75,8 @@ export default class UserService {
                             return {
                                 data: encrypt(JSON.stringify({ multiLogin: true }))
                             }
-                        } else if (data.PasswordExpirationDate < new Date()) {
-                            logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
+                        } else if (!_.isNil(data.PasswordExpirationDate) && data.PasswordExpirationDate < new Date()) {
+                            logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
                             return {
                                 data: encrypt(JSON.stringify({ PasswordExpire: true }))
                             }
@@ -135,8 +135,8 @@ export default class UserService {
                         return {
                             data: encrypt(JSON.stringify({ multiLogin: true }))
                         }
-                    } else if (groupData.PasswordExpirationDate < new Date()) {
-                        logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
+                    } else if (!_.isNil(groupData.PasswordExpirationDate) && groupData.PasswordExpirationDate < new Date()) {
+                        logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
                         return {
                             data: encrypt(JSON.stringify({ PasswordExpire: true }))
                         }
@@ -195,8 +195,8 @@ export default class UserService {
                         return {
                             data: encrypt(JSON.stringify({ multiLogin: true }))
                         }
-                    } else if (data.PasswordExpirationDate < new Date()) {
-                        logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
+                    } else if (!_.isNil(data.PasswordExpirationDate) && data.PasswordExpirationDate < new Date()) {
+                        logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
                         return {
                             data: encrypt(JSON.stringify({ PasswordExpire: true }))
                         }
