@@ -419,10 +419,22 @@ export class eSignService {
             const esignUpdate = {
                 Esigned: 1,
                 EsignedDate: moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSS'),
-                EsignedDocumentLocation: `${signed_doc}`
+                EsignedDocumentLocation: `${signed_doc}`,
             }
             await commonService.update(esignUpdateConditon, esignUpdate, db.EsignFileData).then((result) => {
-                return result;
+                const esignFiledata = JSON.parse(JSON.stringify(result));
+                const InsuranceConditon = {
+                    InsuranceTransactionID: esignFiledata.EnrollmentID,
+                    IsLast: 1
+                };
+
+                const esignUpdate = {
+                    StatusID: '3B666496-46D4-4AC3-9D40-6C1F47392CBF'
+                };
+                commonService.update(InsuranceConditon, esignUpdate, db.InsuranceFollowup).then((followup)=>{
+                    return result;
+                })
+
             }).catch((err) => {
                 throw new Error(err);
             });

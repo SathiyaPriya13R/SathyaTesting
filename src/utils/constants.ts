@@ -66,6 +66,7 @@ export default class AppConstants {
         APP_VERSION_FUNCTION_COMPLETED: "App version info function completed",
         APP_VERSION_FUNCTION_FAILED: "App version info function failed",
         APP_VERSION_FUNCTION_SUCCESSFULLY: "App version info  successfully",
+        PASSWORD_EXPIRED: "Current password is expired",
     }
     MESSAGES = {
         EMPTY_TOKEN:

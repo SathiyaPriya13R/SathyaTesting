@@ -14,6 +14,7 @@ import _ from 'lodash';
 import { Sequelize } from "sequelize";
 const IORedis = require('ioredis');
 import jwt from 'jsonwebtoken';
+import moment from 'moment';
 
 const appConstant = new AppConstants();
 
@@ -62,36 +63,31 @@ export default class UserService {
                     });
                 }).catch((error: any) => { throw new Error(error) });
                 const tokenDetailsArray = currentData ? JSON.parse(currentData) : [];
-                const id = (user && user.ID) || (providerGroupContact && providerGroupContact.ProviderGroupID) || (provider && provider.ProviderDoctorID) || '';
+                const id = (user && user.Id) || (providerGroupContact && providerGroupContact.ProviderGroupID) || (provider && provider.ProviderDoctorID) || '';
                 const TokenDetails = tokenDetailsArray.filter((item: any) => item.userid === id);
                 if (user && password) {
-                    const data = user;
+                    const data: any = user;
                     const userTypeCondition: sequelizeObj = { where: { LookupValueID: data.UserTypeId, IsActive: 1 } };
                     const userType = await commonService.getData(userTypeCondition, db.lookupValue);
                     if (userType.Name === appConstant.USER_TYPE[0] || userType.Name === appConstant.USER_TYPE[1]) {
-                        if (TokenDetails && !userData.signin) {
+                        if (!_.isEmpty(TokenDetails) && !userData.signin) {
                             logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
-                            const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== data.Id);
-                            // Push the new token details into the array
-                            const updatedTokenDetailsString = JSON.stringify(newTokenDetailsArray);
-                            await new Promise((resolve, reject) => {
-                                redisClient.set(appConstant.REDIS_AUTH_TOKEN_KEYNAME, updatedTokenDetailsString, (setError: any, setResult: any) => {
-                                    if (setError) {
-                                        console.error(appConstant.ERROR_MESSAGE.ERROR_STORING_TOKEN_DETAILS, setError);
-                                        reject(setError)
-                                        throw new Error(appConstant.ERROR_MESSAGE.TOKEN_FAILED);
-                                    } else {
-                                        console.log(appConstant.MESSAGES.TOEKN_DETAILS_STORED_SUCCESSFULLY, setResult);
-                                        logger.info(appConstant.LOGGER_MESSAGE.TOKEN_OTHER_SERVICE_COMPLETED);
-                                        resolve(setResult)
-                                    }
-                                });
-                            }).catch((error: any) => { throw new Error(error) });
                             return {
                                 data: encrypt(JSON.stringify({ multiLogin: true }))
                             }
+                        } else if (!_.isNil(data.PasswordExpirationDate) && data.PasswordExpirationDate < new Date()) {
+                            logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
+                            const responseData = {
+                                Id: data.Id,
+                                UserType: userType.Name,
+                                PasswordExpire: true,
+                            }
+                            return {
+                                data: encrypt(JSON.stringify(responseData))
+                            }
                         } else {
-                            const finalData: any = _.pick(data, ['Id', 'Email', 'DisplayName', 'ProviderClientID', 'ProviderGroupID']);
+                            const finalData: any = _.pick(data, ['Id', 'Email', 'ProviderClientID', 'ProviderGroupID']);
+                            finalData.DisplayName = _.trim(data.DisplayName)
                             finalData.UserType = userType.Name;
                             finalData.ThemeCode = data.ThemeCode
                             const permissions = await this.getRolePermission(finalData.UserType as any);
@@ -106,6 +102,7 @@ export default class UserService {
                             const authtoken = commonService.generateAuthToken(tokenData);
                             finalData.token = authtoken;
                             finalData.multiLogin = false;
+                            finalData.PasswordExpire = false;
                             const TokenDetailsString = {
                                 userid: data.Id,
                                 authToken: authtoken
@@ -137,15 +134,26 @@ export default class UserService {
                         return { error: appConstant.LOGGER_MESSAGE.USER_NOT_FOUND };
                     }
                 } else if (providerGroupContact && password) {
-                    if (TokenDetails && !userData.signin) {
+                    const groupData: any = providerGroupContact;
+                    if (!_.isEmpty(TokenDetails) && !userData.signin) {
                         logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
                         return {
                             data: encrypt(JSON.stringify({ multiLogin: true }))
                         }
+                    } else if (!_.isNil(groupData.PasswordExpirationDate) && groupData.PasswordExpirationDate < new Date()) {
+                        logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
+                        const responseData = {
+                            Id: groupData.ProviderGroupContactDetailID,
+                            UserType: appConstant.USER_TYPE[0],
+                            PasswordExpire: true,
+                        }
+                        return {
+                            data: encrypt(JSON.stringify(responseData))
+                        }
                     } else {
                         const finalData: any = _.pick(providerGroupContact, ['Email']);
                         finalData.Id = providerGroupContact.ProviderGroupID;
-                        finalData.DisplayName = providerGroupContact.ContactPerson;
+                        finalData.DisplayName = _.trim(groupData.ContactPerson);
                         finalData.UserType = appConstant.USER_TYPE[0];
                         const newTokenDetailsArray = tokenDetailsArray.filter((item: any) => item.userid !== providerGroupContact.ProviderGroupID);
                         const permissions = await this.getRolePermission(finalData.UserType as any);
@@ -162,6 +170,7 @@ export default class UserService {
                         const authtoken = commonService.generateAuthToken(tokenData);
                         finalData.token = authtoken;
                         finalData.multiLogin = false;
+                        finalData.PasswordExpire = false;
                         const TokenDetailsString = {
                             userid: providerGroupContact.ProviderGroupID,
                             authToken: authtoken
@@ -190,16 +199,26 @@ export default class UserService {
                         return { data: encrypt(JSON.stringify(finalData)) };
                     }
                 } else if (provider && password) {
-                    if (TokenDetails && !userData.signin) {
+                    const data: any = provider;
+                    if (!_.isEmpty(TokenDetails) && !userData.signin) {
                         logger.info(appConstant.LOGGER_MESSAGE.USER_ALREADY_LOGEEDIN);
                         return {
                             data: encrypt(JSON.stringify({ multiLogin: true }))
                         }
+                    } else if (!_.isNil(data.PasswordExpirationDate) && data.PasswordExpirationDate < new Date()) {
+                        logger.info(appConstant.LOGGER_MESSAGE.PASSWORD_EXPIRED);
+                        const responseData = {
+                            Id: data.ProviderDoctorID,
+                            UserType: appConstant.USER_TYPE[1],
+                            PasswordExpire: true,
+                        }
+                        return {
+                            data: encrypt(JSON.stringify(responseData))
+                        }
                     } else {
-                        const data = provider;
                         const finalData: any = _.pick(provider, ['Email']);
                         finalData.Id = provider.ProviderDoctorID;
-                        finalData.DisplayName = `${provider.FirstName} ${provider.LastName}`
+                        finalData.DisplayName = `${_.trim(data.FirstName)} ${_.trim(data.LastName)}`
                         finalData.ThemeCode = provider.ThemeCode
 
                         let tokenData: any = {
@@ -213,6 +232,7 @@ export default class UserService {
                         finalData.token = authtoken;
                         finalData.UserType = appConstant.USER_TYPE[1];
                         finalData.multiLogin = false;
+                        finalData.PasswordExpire = false;
                         const TokenDetailsString = {
                             userid: data.ProviderDoctorID,
                             authToken: authtoken
@@ -281,11 +301,13 @@ export default class UserService {
             const providerGroupContact = await commonService.getData(emailValidation, db.ProviderGroupContact);
             const provider = await commonService.getData(emailValidation, db.ProviderDoctor);
             const currentDate = new Date();
-            const expireDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+            const expireDate = new Date(currentDate);
+            const expirationDate = expireDate.setDate(currentDate.getDate() + 60);
             const updateExpireDate = {
                 PwdExpireDate: Sequelize.literal('CURRENT_TIMESTAMP'),
                 ForgotPwd: 1,
-                ForgetPwdCron: 1
+                ForgetPwdCron: 1,
+                PasswordExpirationDate: moment(expirationDate).format('YYYY-MM-DD HH:mm:ss.SSS'),
             }
             if (!_.isNil(user) || !_.isNil(providerGroupContact) || !_.isNil(provider)) {
                 const type = user ? 'User' : providerGroupContact ? 'Group' : provider ? 'Provider' : null;
@@ -550,8 +572,8 @@ export default class UserService {
                     } else {
                         finalRes.ProfileImage = null
                     }
-                    finalRes.FirstName = first_name;
-                    finalRes.LastName = last_name;
+                    finalRes.FirstName = _.trim(first_name);
+                    finalRes.LastName = _.trim(last_name);
                     return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[1]:
                     const providerConiditon: sequelizeObj = {};
@@ -568,8 +590,8 @@ export default class UserService {
                     } else {
                         finalRes.ProfileImage = null
                     }
-                    finalRes.FirstName = provider.FirstName;
-                    finalRes.LastName = provider.LastName;
+                    finalRes.FirstName = _.trim(provider.FirstName);
+                    finalRes.LastName = _.trim(provider.LastName);
                     return { data: encrypt(JSON.stringify(finalRes)) };
                 case appConstant.USER_TYPE[2]:
                 case appConstant.USER_TYPE[3]:
@@ -587,8 +609,8 @@ export default class UserService {
                     } else {
                         finalRes.ProfileImage = null
                     }
-                    finalRes.FirstName = user.FirstName;
-                    finalRes.LastName = user.LastName;
+                    finalRes.FirstName = _.trim(user.FirstName);
+                    finalRes.LastName = _.trim(user.LastName);
                     return { data: encrypt(JSON.stringify(finalRes)) };
                 default:
                     return { data: encrypt(JSON.stringify(appConstant.MESSAGES.INVALID_USERTYPE)) };
@@ -857,7 +879,7 @@ export default class UserService {
                 case appConstant.USER_TYPE[0]:
                     const providerGroupUpdateCondition: any = {}
                     if (!_.isNil(ptheme)) {
-                        providerGroupUpdateCondition.ThemeCode = ptheme      
+                        providerGroupUpdateCondition.ThemeCode = ptheme
                     }
                     await commonService.update({ ProviderGroupContactDetailID: data.providergroupcontactid }, providerGroupUpdateCondition, db.ProviderGroupContact);
                     return { data: encrypt(JSON.stringify(appConstant.LOGGER_MESSAGE.THEME_UPDATE_SUCCESSFULLY)) }
@@ -873,7 +895,7 @@ export default class UserService {
                     const userUpdateCondition: any = {}
                     if (!_.isNil(ptheme)) {
                         userUpdateCondition.ThemeCode = ptheme
-                    }  
+                    }
                     await commonService.update({ Id: data.id }, userUpdateCondition, db.User);
                     return { data: encrypt(JSON.stringify(appConstant.LOGGER_MESSAGE.THEME_UPDATE_SUCCESSFULLY)) }
                 default:
@@ -884,7 +906,7 @@ export default class UserService {
             throw new Error(appConstant.LOGGER_MESSAGE.THEME_UPDATE_FAILED);
         }
     }
-    
+
     async AppVersionInfo(): Promise<Record<string, any>> {
         try {
             const commonService = new CommonService(db.user);
@@ -898,7 +920,7 @@ export default class UserService {
             throw new Error(error.message);
         }
     }
-    
-    
-   
+
+
+
 }

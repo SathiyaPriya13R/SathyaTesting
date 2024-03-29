@@ -138,7 +138,7 @@ export function UserFactory(sequelize: Sequelize): UserStatic {
             allowNull: false
         },
         PasswordExpirationDate: {
-            type: SequelizeStatic.DATE,
+            type: SequelizeStatic.STRING,
             allowNull: false
         },
         CreatedDate: {

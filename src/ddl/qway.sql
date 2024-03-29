@@ -224,3 +224,10 @@ N'1.3',
 --For DoctorLocation
 ALTER TABLE pvdr.DoctorLocation ADD AddressTermDate DATETIME DEFAULT NULL;
 --End
+
+-- 29-03-2024
+-- To change password 60 days once
+ALTER TABLE pvdr.ProviderDoctor ADD PasswordExpirationDate DATETIME DEFAULT NULL;
+ALTER TABLE pvdr.ProviderGroupContactDetail ADD PasswordExpirationDate DATETIME DEFAULT NULL;
+ALTER TABLE pvdr.InsuranceFollowup ADD NotifiCronStatus BIT DEFAULT 0;
+-- End

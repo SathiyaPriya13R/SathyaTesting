@@ -156,7 +156,14 @@ export default class DashboardService {
                 function generateWeeklyData(statistic_count: any, statuses: any) {
 
                     const today = new Date()
-                    const sixMonthsAgo = new Date(today.getFullYear(), (today.getMonth() + 1) - 6, 1);
+                    let sixMonthsAgo: any;
+                    if (data.statistics_type == appConstant.STATISTICS_TYPE[0]) {
+                        sixMonthsAgo = new Date(today.getFullYear(), (today.getMonth() + 1) - 6, 1);
+                    } else {
+                        sixMonthsAgo = new Date(today.getFullYear(), (today.getMonth() + 1) - 1, 1);
+                    }
+                    // Week and month count changes
+                    // const sixMonthsAgo = new Date(today.getFullYear(), (today.getMonth() + 1) - 6, 1);
 
                     // Initialize weeklyData object to store data by year, month, and week number
                     const weekly_data: any = {};
@@ -346,28 +353,55 @@ export default class DashboardService {
 
             let monthlyData: any = [];
             if (data.statistics_type == appConstant.STATISTICS_TYPE[0] && !_.isNil(statuses) && !_.isNil(statistic_count)) {
-                statuses.followupstatus.forEach((statusItem: any) => {
-                    // Check if there is a matching status in month_array
-                    const matchingStatus = statistic_count.find((monthItem: any) => monthItem.LookupValueID === statusItem.LookupValueID);
+                const today = new Date()
+                const sixMonthsAgo = new Date(today.getFullYear(), (today.getMonth() + 1) - 6, 1);
+                for (let d = new Date(sixMonthsAgo); d <= today; d.setMonth(d.getMonth() + 1)) {
+                    const year = d.getFullYear();
+                    const month = d.getMonth();
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-                    // If a matching status is found in month_array, use its count
-                    if (matchingStatus) {
-                        monthlyData.push({
-                            year: matchingStatus.year,
-                            month: matchingStatus.month,
-                            status: statusItem.Name,
-                            LookupValueID: statusItem.LookupValueID,
-                            status_count: matchingStatus.status_count
-                        });
-                    } else {
-                        // If no matching status is found, set the count value to 0
-                        monthlyData.push({
-                            status: statusItem.Name,
-                            LookupValueID: statusItem.LookupValueID,
-                            status_count: 0
-                        });
+                    const selectedMonthName = monthNames[month];
+                    statuses.followupstatus.forEach((statusItem: any) => {
+                        // Check if there is a matching status in month_array
+                        const matchingStatus = statistic_count.find((monthItem: any) => monthItem.LookupValueID === statusItem.LookupValueID);
+                        // If a matching status is found in month_array, use its count
+                        if (matchingStatus && matchingStatus.month == selectedMonthName) {
+                            monthlyData.push({
+                                year: year,
+                                month: selectedMonthName,
+                                status: statusItem.Name,
+                                LookupValueID: statusItem.LookupValueID,
+                                status_count: matchingStatus.status_count
+                            });
+                        } else {
+                            // If no matching status is found, set the count value to 0
+                            monthlyData.push({
+                                year: year,
+                                month: selectedMonthName,
+                                status: statusItem.Name,
+                                LookupValueID: statusItem.LookupValueID,
+                                status_count: 0
+                            });
+                        }
+                    });
+                }
+            }
+
+            const groupDataByMonth = (data: any) => {
+                const groupedData: any = {};
+                data.forEach((entry: any) => {
+                    const { year, month } = entry;
+                    const key = `${year}-${month}`;
+                    if (!groupedData[key]) {
+                        groupedData[key] = [];
                     }
+                    groupedData[key].push(entry);
                 });
+                return groupedData;
+            };
+            let groupedMonthlyData;
+            if (monthlyData.length > 0) {
+                groupedMonthlyData = groupDataByMonth(monthlyData);
             }
 
             let final_data: any;
@@ -375,7 +409,7 @@ export default class DashboardService {
                 final_data = (!_.isNil(weeklyData)) ? (data.initial) ? sortedData : weeklyData : null
             }
             if (data.statistics_type == appConstant.STATISTICS_TYPE[0]) {
-                final_data = (!_.isNil(monthlyData)) ? monthlyData : null
+                final_data = (!_.isNil(groupedMonthlyData)) ? groupedMonthlyData : null
             }
 
             if (final_data && !_.isNil(final_data) && !_.isEmpty(final_data)) {

@@ -22,7 +22,8 @@ export interface ProviderGroupContactDetailAttributes {
     GenerateCronPassword: boolean,
     ForgetPwdCron: boolean,
     MobileDeviceId: string,
-    ThemeCode: string
+    ThemeCode: string,
+    PasswordExpirationDate: Date,
 }
 
 export interface ProviderGroupContactDetailModel extends Model<ProviderGroupContactDetailAttributes>, ProviderGroupContactDetailAttributes { }
@@ -114,6 +115,10 @@ export function ProviderGroupContactDetailFactory(sequelize: Sequelize): Provide
         ThemeCode: {
             type: SequelizeStatic.STRING(200),
             allowNull: true
+        },
+        PasswordExpirationDate: {
+            type: SequelizeStatic.STRING,
+            allowNull: false
         },
     },
     {
