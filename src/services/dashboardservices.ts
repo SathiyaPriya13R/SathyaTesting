@@ -155,7 +155,7 @@ export default class DashboardService {
                 // Main function to generate weekly data
                 function generateWeeklyData(statistic_count: any, statuses: any) {
 
-                    const today = new Date()
+                    const today = new Date();
                     let sixMonthsAgo: any;
                     if (data.statistics_type == appConstant.STATISTICS_TYPE[0]) {
                         sixMonthsAgo = new Date(today.getFullYear(), (today.getMonth() + 1) - 6, 1);
@@ -227,7 +227,7 @@ export default class DashboardService {
                             adjustedDate.setDate(date.getDate()); // Move the date to the nearest Monday
                             // adjustedDate.setDate(date.getDate() + offset); // Move the date to the nearest Monday
 
-                            const weekNumber = Math.ceil((adjustedDate.getDate()) / 7) + 1;
+                            const weekNumber = Math.ceil((adjustedDate.getDate()) / 7);
                             return weekNumber;
                         }
 
