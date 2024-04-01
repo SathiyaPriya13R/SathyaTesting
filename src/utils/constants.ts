@@ -242,7 +242,9 @@ export default class AppConstants {
         PUSH_ALERT_NOTIFICATION_STARTED: 'Push alert notification function started',
         PUSH_ALERT_NOTIFICATION_COMPLETED: 'Push alert notification function completed',
         PUSH_ALERT_NOTIFICATION_FAILED: 'Push alert notification function failed',
-        NOTIFICATION_RECORD_INSERTED: '{{}} record inserted'
+        NOTIFICATION_RECORD_INSERTED: '{{}} record inserted',
+        INSURANCE_UPDATED_SUCCESSFULLY: 'Insucrance updated successfully',
+        INSURANCE_UPDATED_FAILED: 'Insucrance updated failed'
     }
 
     NOTIFICATION_TYPE = ['Notification', 'Alert']

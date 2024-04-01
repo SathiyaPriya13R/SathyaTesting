@@ -11,9 +11,17 @@ import sequelize from 'sequelize/types/sequelize';
 
 const logger = require('../helpers/logger');
 const { Op } = require('sequelize');
+const IORedis = require('ioredis');
 
 const appConstant = new AppConstants();
 const dateConvertor = new DateConvertor()
+
+const redisClient = new IORedis({
+    host: process.env.REDIS_SERVER_IP,
+    port: process.env.REDIS_SERVER_PORT,
+    password: process.env.REDIS_PASSWORD,
+    db: process.env.REDIS_SERVER_DEFAULT_DB,
+});
 
 export default class NotificationService {
 
@@ -95,7 +103,7 @@ export default class NotificationService {
 
             if (filter_data.detail_count == false && filter_data.notification_type && (filter_data.notification_type == 'alert' || filter_data.notification_type == 'notification')) {
                 result = await commonService.getCount(appnotificationcondition, db.AppNotificationReceipts);
-                entityCount = result         
+                entityCount = result
             }
 
             if (filter_data.detail_count && filter_data.detail_count == true && filter_data.notification_type == 'notification') {
@@ -232,7 +240,7 @@ export default class NotificationService {
 
             notification_condition.attributes = ['AppNotificationID', 'NotificationDate', 'NotificationContent', 'IsNotificationfRead', 'ItemID', 'AttachmentID']
 
-            notification_condition.order = [ ['NotificationDate', 'DESC'] ]
+            notification_condition.order = [['NotificationDate', 'DESC']]
 
             notification_condition.limit = (filter_data.limit) ? +filter_data.limit : undefined
             notification_condition.offset = (filter_data.offset) ? +filter_data.offset : undefined
@@ -608,8 +616,8 @@ export default class NotificationService {
                 {
                     model: db.InsuranceFollowup,
                     as: 'history_details_one',
-                    where: { IsActive: 1, IsLast: 1 },
-                    attributes: ['InsuranceFollowupID'],
+                    where: { IsActive: 1, IsLast: 1, NotifiCronStatus: 0 },
+                    attributes: ['InsuranceFollowupID', 'Remarks'],
                     required: true,
                     include: [
                         {
@@ -629,6 +637,7 @@ export default class NotificationService {
             if (payer_data && !_.isNil(payer_data) && payer_data.length > 0) {
 
                 const notification_create_data_array: Array<Record<string, any>> = []
+                const InsuranceFollowupIDs: any = []
 
                 await payer_data.map(async (payer: any) => {
                     const effective_date = !_.isNil(payer.EffectiveDate) ? await dateConvertor.dateFormat(payer.EffectiveDate) : null
@@ -637,7 +646,7 @@ export default class NotificationService {
                         AppNotificationID: uuidv4(),
                         NotificationDate: moment(new Date(current_date)).format('YYYY-MM-DD'),
                         NotificationContent: notification_content,
-                        NotificationDetailedContent: notification_content,
+                        NotificationDetailedContent: payer.history_details_one.Remarks,
                         Entity: 'Payer Enrollment',
                         ItemID: `${payer.InsuranceTransactionID}`.toUpperCase(),
                         SendingUserType: 'Induvidual',
@@ -660,12 +669,36 @@ export default class NotificationService {
                         NotificationType: appConstant.NOTIFICATION_TYPE[0],
                         // AttachmentID: `${document.AttachmentID}`.toUpperCase(),
                     }
+                    InsuranceFollowupIDs.push({
+                        InsuranceFollowupID: payer.history_details_one.InsuranceFollowupID,
+                    })
                     notification_create_data_array.push(form_notification_data)
-                })
+                });
 
-                await commonService.bulkCreate(notification_create_data_array, db.AppNotificationReceipts).then((saved_data) => {
+                await commonService.bulkCreate(notification_create_data_array, db.AppNotificationReceipts).then(async (saved_data) => {
                     logger.info(appConstant.NOTIFICATION_MESSAGES.NOTIFICATION_RECORD_INSERTED.replace('{{}}', 'Notification'));
                     logger.info(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_COMPLETED);
+                    const index = 0;
+                    updateinsurance(index);
+                    async function updateinsurance(index: any) {
+                        const insurance = InsuranceFollowupIDs[index];
+                        const body = {
+                            NotifiCronStatus: 1
+                        }
+                        commonService.update({ InsuranceFollowupID: insurance.InsuranceFollowupID }, body, db.InsuranceFollowup).then((result) => {
+                            logger.info(appConstant.NOTIFICATION_MESSAGES.INSURANCE_UPDATED_SUCCESSFULLY);
+                        }).catch((err) => {
+                            logger.error(appConstant.NOTIFICATION_MESSAGES.INSURANCE_UPDATED_FAILED, err.message);
+                        });
+                        index++;
+                        if (index != InsuranceFollowupIDs.length) {
+                            updateinsurance(index);
+                        }
+
+                        if (InsuranceFollowupIDs.length === index) {
+                            return
+                        }
+                    }
                 }).catch((err: any) => {
                     logger.error(appConstant.NOTIFICATION_MESSAGES.PUSH_NOTIFICATION_FAILED, err.message);
                 })

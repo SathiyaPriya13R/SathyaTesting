@@ -13,9 +13,9 @@ export default `<!DOCTYPE html>
         <div>
             <div>
                 <p>Hi <%= username %>,</p>
-                <p>This mail is regarding to the password change activity form the user</p>
+                <p>This mail is regarding to the password change activity from the user</p>
                 <p>Kindly, click the below link to change the password accordingly!</p>
-                <p><a href="<%= redirecturl %>?id=<%= userid %>?type=<%= userType %>&apn=com.qway_mobile">Reset Password</a> to your resetpassword</p>
+                <p><a href="<%= redirecturl %>?id=<%= userid %>?type=<%= userType %>&apn=com.qway_mobile">Reset Password</a> to your reset password.</p>
             </div>
         </div>
     </div>

@@ -245,13 +245,13 @@ export default class ProviderService {
                 // searchparams['$history_details.status_name.Name$'] = { $like: '%' + searchtext + '%' };
                 searchparams['$history_details.followedby_user.DisplayName$'] = { $like: '%' + searchtext + '%' };
 
-                if (searchtext && !_.isNil(searchtext) && Date.parse(searchtext) != null && searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(searchtext))) {
+                // if (searchtext && !_.isNil(searchtext) && Date.parse(searchtext) != null && searchtext.toString() != 'Invalid date' && !isNaN(Date.parse(searchtext))) {
                     // const start_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 00:00:00.000')
                     // const end_date = moment(searchtext, 'DD MMM YYYY').format('YYYY-MM-DD 23:59:59.999')
                     // const date_range = [start_date, end_date]
                     // searchparams['$history_details.ModifiedDate$'] = { $between: date_range };
                     // searchparams['$history_details.NextFollowupDate$'] = { $between: date_range };
-                }
+                // }
 
                 insurance_transaction_condition.where['$or'] = searchparams;
                 insurance_transaction_condition.where = _.omit(insurance_transaction_condition.where, ['searchtext']);

@@ -42,6 +42,7 @@ export default class ProviderService {
             provider_condition.where = {
                 [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id,
                 ...((!_.isNil(filter_datas) && !_.isEmpty(filter_datas.providers)) && { ProviderDoctorID: { $in: filter_datas.providers } }),
+                isActive: 1
             };
 
             provider_condition.attributes = ['ProviderDoctorID', 'ProfileImage', 'FirstName', 'MiddleName', 'LastName', 'IsActive']
