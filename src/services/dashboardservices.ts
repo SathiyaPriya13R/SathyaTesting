@@ -520,8 +520,24 @@ export default class DashboardService {
              */
             const provider_condition: sequelizeObj = {
                 where: { [user_data.user_type === appConstant.USER_TYPE[0] ? 'ProviderGroupID' : 'ProviderDoctorID']: user_data.id, IsActive: 1 },
-                attributes: ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName']
-            };
+                attributes: ['ProviderDoctorID', 'FirstName', 'MiddleName', 'LastName'],
+                include: [
+                    {
+                        model: db.lookupValue,
+                        as: 'suffix_name',
+                        required: true,
+                        where: { IsActive: 1 },
+                        attributes: ['Name']
+                    },
+                    {
+                        model: db.lookupValue,
+                        as: 'certification_name',
+                        where: { IsActive: 1 },
+                        attributes: ['Name']
+                    }
+                ]
+            }
+
             const provider_data: Array<Record<string, any>> = await commonService.getAllList(provider_condition, db.ProviderDoctor);
             const provider_ids: Array<string> = provider_data.map(provider => provider.ProviderDoctorID);
             /**
@@ -584,6 +600,18 @@ export default class DashboardService {
                 payers: JSON.parse(JSON.stringify(payer_data)),
                 location: JSON.parse(JSON.stringify(unique_locations))
             };
+
+            if (finalResult.providers && !_.isNil(finalResult.providers)) {
+                finalResult.providers.forEach((dashboard: any) => {
+                    let prefix: any;
+                    if (dashboard.certification_name && dashboard.certification_name.Name === 'MD') {
+                        prefix = 'Dr';
+                    } else {
+                        prefix = '';
+                    }
+                    dashboard.ProviderName = `${prefix} ${_.trim(dashboard.FirstName)} ${_.trim(dashboard.MiddleName)} ${_.trim(dashboard.LastName)} ${dashboard.certification_name ? dashboard.certification_name.Name : ''}`;
+                });
+            }
 
             if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
                 return { data: finalResult, message: appConstant.MESSAGES.DATA_FOUND.replace('{{}}', appConstant.DASHBOARD_MESSAGES.APP_FILTER) };

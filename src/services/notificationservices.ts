@@ -95,7 +95,7 @@ export default class NotificationService {
 
             if (filter_data.detail_count == false && filter_data.notification_type && (filter_data.notification_type == 'alert' || filter_data.notification_type == 'notification')) {
                 result = await commonService.getCount(appnotificationcondition, db.AppNotificationReceipts);
-                entityCount = result         
+                entityCount = result
             }
 
             if (filter_data.detail_count && filter_data.detail_count == true && filter_data.notification_type == 'notification') {
@@ -334,6 +334,17 @@ export default class NotificationService {
 
             const notification_data = await commonService.getData(notification_condition, db.AppNotificationReceipts)
             const notifi_data = JSON.parse(JSON.stringify(notification_data))
+
+            const certificationName = notifi_data.provider.certification_name ? notifi_data.provider.certification_name.Name : '';
+            let prefix = '';
+            if (certificationName === 'MD') {
+                prefix = 'DR.';
+            }
+            else {
+                prefix = '';
+            }
+            const ProviderName = `${prefix} ${_.trim(notifi_data.provider.FirstName)} ${_.trim(notifi_data.provider.MiddleName)} ${_.trim(notifi_data.provider.LastName)} ${certificationName}`;
+            notifi_data.ProviderName = ProviderName;
 
             notifi_data.NotificationDate = !_.isNil(notifi_data.NotificationDate) ? moment(notifi_data.NotificationDate).format('DD MMM YYYY') : null
 
