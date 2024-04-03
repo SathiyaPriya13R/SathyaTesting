@@ -73,15 +73,19 @@ export default class ProviderService {
                 const searchparams: Record<string, unknown> = {};
                 const searchtext = _.trim(filter_data.searchtext)
                 const searchTerms = searchtext.split(' ');
-                if (searchTerms.length === 1) {
-                    searchparams.FirstName = { $like: '%' + searchtext + '%' };
-                    searchparams.LastName = { $like: '%' + searchtext + '%' };
-                } else if (searchTerms.length === 2) {
-                    searchparams.FirstName = { $like: '%' + searchTerms[1] + '%' };
-                    searchparams.LastName = { $like: '%' + searchTerms[1] + '%' };
-                }
-                searchparams['$suffix_name.Name$'] = { $like: '%' + searchtext + '%' };
-                searchparams['$certification_name.Name$'] = { $like: '%' + searchtext + '%' };
+
+                                searchparams['$or'] = [
+                                    { FirstName: { $like: '%'+ searchtext + '%' }},
+                                    { MiddleName: { $like: '%'+searchtext +'%' } },
+                                { LastName: { $like: '%'+searchtext +'%' } },
+                                { '$suffix_name.Name$': { $like: '%'+searchtext+'%' } },
+                        { '$certification_name.Name$': { $like: '%'+ searchtext +'%' } },
+ 
+                        Sequelize.literal(`CONCAT(FirstName, ' ', MiddleName, ' ', LastName) LIKE '%${searchtext}%'`),
+                        Sequelize.literal(`CONCAT(FirstName, ' ', LastName) LIKE '%${searchtext}%'`),
+                        Sequelize.literal(`CONCAT(FirstName, ' ', MiddleName) LIKE '%${searchtext}%'`),
+                        Sequelize.literal(`CONCAT(MiddleName, ' ', LastName) LIKE '%${searchtext}%'`),
+                ];
 
                 provider_condition.where['$or'] = searchparams;
                 provider_condition.where = _.omit(provider_condition.where, ['searchtext']);
