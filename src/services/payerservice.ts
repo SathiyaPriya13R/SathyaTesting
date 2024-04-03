@@ -142,8 +142,21 @@ export default class ProviderService {
                     })
                 }
             })
+            let notifi_data: any = []
+            if (!_.isNil(filter_data.insurance_transactionId)) {
+                await final_data.map((data: any) => {
+                    if (!_.isNil(data.insurance_details)) {
+                        notifi_data.push(data);
+                    }
+                })
+            }
+            let finalResult: Array<Record<string, any>>
 
-            const finalResult: Array<Record<string, any>> = await final_data
+            if (!_.isNil(filter_data.insurance_transactionId)) {
+                finalResult = await notifi_data
+            } else {
+                finalResult = await final_data
+            }
 
             if (finalResult && !_.isNil(finalResult) && !_.isEmpty(finalResult)) {
                 logger.info(appConstant.PAYER_MESSAGES.PAYER_FUNCTION_COMPLETED);
@@ -292,6 +305,7 @@ export default class ProviderService {
             const commonService = new CommonService(db.user);
             try {
                 const task_status = (!_.isNil(filter_data) && !_.isNil(filter_data.task_status)) ? filter_data.task_status : null;
+                const insurance_transactionId = (!_.isNil(filter_data) && !_.isNil(filter_data.insurance_transactionId)) ? filter_data.insurance_transactionId : null;
                 const payer_datas: Array<any> = []
                 const payer_condition: sequelizeObj = {}
                 const idx: number = 0;
@@ -299,7 +313,7 @@ export default class ProviderService {
                 async function grtPayers(idx: number) {
                     const provider_id = provider_ids[idx];
                     if (idx != provider_ids.length) {
-                        payer_condition.where = { IsActive: 1, ProviderDoctorID: { $eq: provider_id } }
+                        payer_condition.where = { IsActive: 1, ProviderDoctorID: { $eq: provider_id }, ...(!_.isNil(insurance_transactionId) && { InsuranceTransactionId: insurance_transactionId }) }
 
                         payer_condition.attributes = ['InsuranceTransactionID', 'TaskID', 'EffectiveDate', 'RecredentialingDate']
 

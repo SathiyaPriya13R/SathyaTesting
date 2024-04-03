@@ -96,6 +96,15 @@ export default class ProviderService {
             const provider_list = JSON.parse(JSON.stringify(provider_data));
 
             await provider_list.map((provider: any) => {
+                if (!_.isNil(provider.FirstName)) {
+                    provider.FirstName = _.trim(provider.FirstName)
+                }
+                if (!_.isNil(provider.LastName)) {
+                    provider.LastName = _.trim(provider.LastName)
+                }
+                if (!_.isNil(provider.MiddleName)) {
+                    provider.MiddleName = _.trim(provider.MiddleName)
+                }
                 if (!_.isNil(provider.ProfileImage && provider.ProfileImage.data)) {
                     const buffer: any = Buffer.from(provider.ProfileImage.data);
                     const profileimage = btoa(buffer);
