@@ -231,3 +231,9 @@ ALTER TABLE pvdr.ProviderDoctor ADD PasswordExpirationDate DATETIME DEFAULT NULL
 ALTER TABLE pvdr.ProviderGroupContactDetail ADD PasswordExpirationDate DATETIME DEFAULT NULL;
 ALTER TABLE pvdr.InsuranceFollowup ADD NotifiCronStatus BIT DEFAULT 0;
 -- End
+
+
+--02-04-2024
+-- Add CronStatus column 
+ALTER TABLE pvdr.DoctorLocation ADD CronStatus BIT DEFAULT 0;
+--End
