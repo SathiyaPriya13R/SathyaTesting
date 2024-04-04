@@ -4,7 +4,7 @@ import AppConstants from "../utils/constants";
 import {Op} from "sequelize";
 const dotenv = require('dotenv');
 dotenv.config()
-
+//liukujyj
 const appConstant = new AppConstants;
 export interface configInterface {
     logging: boolean | ((sql: string, timing?: number) => void);
